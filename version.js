@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '3.2.0', date: '2026-11-02' };
+const VERSION = { numero: '3.2.1', date: '2026-11-02' };
 
 const HISTORIQUE = [
+  { numero: '3.2.1', date: '2026-11-02', nouveautes: [
+    "Correction : l'app ne se fige plus si index.html n'est pas à jour (le bouton d'annonce est ajouté tout seul).",
+    "En cas d'erreur, un message s'affiche à l'écran avec le numéro de version, au lieu d'une app figée.",
+  ]},
   { numero: '3.2.0', date: '2026-11-02', nouveautes: [
     "Ingrédient secret : en début de manche, l'app appelle chaque sorcière à tour de rôle et lui montre en secret un ingrédient de la recette.",
     "L'annonce se fait avant de brasser, ou juste après avoir entendu sa réponse (bouton « J'annonce maintenant »). Une seule annonce par tour.",
@@ -73,3 +77,16 @@ const HISTORIQUE = [
     "Première version : modes Concours et Pleine Lune, sons, fumée, lecture des QR codes.",
   ]},
 ];
+
+/* ---------- Filet de sécurité : si une erreur survient, on l'affiche au lieu de figer l'app ---------- */
+window.addEventListener('error', e => {
+  try {
+    let b = document.getElementById('bandeau-erreur');
+    if (!b) {
+      b = document.createElement('div'); b.id = 'bandeau-erreur';
+      b.style.cssText = 'position:fixed;left:10px;right:10px;top:10px;z-index:999;padding:12px 14px;border-radius:12px;background:#5a1a1a;color:#fff;font:14px/1.35 sans-serif;box-shadow:0 6px 20px #0008';
+      document.body.appendChild(b);
+    }
+    b.innerHTML = `<b>Oups, le chaudron a avalé une erreur.</b><br>${e.message || e}<br><small>Version ${VERSION.numero}. Vérifie que tous les fichiers de l'app sont à jour sur GitHub, puis recharge.</small>`;
+  } catch (x) {}
+});

@@ -22,6 +22,13 @@
    ========================================================= */
 
 /* ---------- 1. OUTILS ---------- */
+// compatibilité : un index.html plus ancien n'a pas le bouton d'annonce, on l'ajoute
+if (!document.getElementById('actions-annonce')) {
+  const zone = document.createElement('div'); zone.className = 'actions'; zone.id = 'actions-annonce';
+  zone.innerHTML = `<button class="bouton-annonce" id="btn-annonce">📜 J'annonce la recette</button>`;
+  const avant = document.getElementById('actions-pouvoirs');
+  avant.parentNode.insertBefore(zone, avant);
+}
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const hasard = arr => arr[Math.floor(Math.random() * arr.length)];
