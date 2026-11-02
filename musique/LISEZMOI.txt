@@ -1,0 +1,4 @@
+Dépose ici ta musique de fond en mp3.
+Par défaut, l'app cherche musique/theme.mp3.
+Pour plusieurs morceaux, liste-les dans contenu.js (fichiersMusique) : ils s'enchaîneront au hasard.
+Astuce : un morceau qui boucle bien (même début et même fin) sonne mieux.

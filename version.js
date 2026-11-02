@@ -9,9 +9,14 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '2.2.0', date: '2026-11-02' };
+const VERSION = { numero: '2.3.0', date: '2026-11-02' };
 
 const HISTORIQUE = [
+  { numero: '2.3.0', date: '2026-11-02', nouveautes: [
+    "Musique de fond : tes morceaux du dossier musique/, ou une musique mystérieuse composée par l'app s'il n'y en a pas.",
+    "Bouton 🎵 pendant la partie et option Musique sur l'écran de préparation.",
+    "La musique baisse quand le chaudron parle, et le son se coupe quand l'app passe en arrière-plan.",
+  ]},
   { numero: '2.2.0', date: '2026-11-02', nouveautes: [
     "Numéro de version affiché sur l'écran titre, avec l'historique des changements.",
     "Alerte quand une nouvelle version est en ligne, avec un bouton pour recharger.",

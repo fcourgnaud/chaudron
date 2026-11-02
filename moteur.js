@@ -47,6 +47,7 @@ function montrer(id) { $$('.ecran').forEach(e => e.classList.toggle('actif', e.i
 
 $$('#ecran-titre [data-mode]').forEach(b => b.onclick = () => {
   debloquerAudio();
+  if ($('#opt-musique').checked) Musique.demarrer();
   R.mode = b.dataset.mode;
   $('#prep-titre').textContent = R.mode === 'concours' ? 'Le Concours' : 'La Pleine Lune';
   $('#prep-sorcieres').hidden = R.mode !== 'concours';
@@ -91,6 +92,8 @@ function demarrerPartie() {
   montrer('ecran-jeu');
   remplirEtagere(); remplirLegendeFumees();
   if ($('#opt-ambiance').checked) Ambiance.demarrer(); majBoutonAmbiance();
+  if ($('#opt-musique').checked) Musique.demarrer(); else Musique.arreter();
+  majBoutonMusique();
   if ($('#opt-camera').checked) Camera.demarrer(); else $('#oeil').hidden = true;
   garderEcranAllume();
   nouvelleManche(true);
@@ -573,6 +576,111 @@ const Ambiance = {
     if (this.audio) { this.audio.pause(); this.audio = null; }
   },
 };
+/* Musique de fond : tes fichiers (CONFIG.fichiersMusique) ou une musique composée par l'app */
+const Musique = {
+  actif: false, sortie: null, source: null, morceaux: {}, trouves: [], minuteur: null, prete: null,
+
+  // au lancement : on cherche les fichiers de musique
+  charger() {
+    this.prete = Promise.all(CONFIG.fichiersMusique.map(async f => {
+      try {
+        const r = await fetch(f);
+        const type = r.headers.get('content-type') || '';
+        if (!r.ok || type.includes('text/html')) return;
+        this.morceaux[f] = await r.arrayBuffer();
+        this.trouves.push(f);
+      } catch (e) {}
+    })).then(() => {
+      $('#musique-info').textContent = this.trouves.length
+        ? `${this.trouves.length} morceau(x) trouvé(s)`
+        : (CONFIG.musiqueComposee ? "Musique composée par l'app (aucun fichier trouvé)" : 'Aucun fichier trouvé');
+    });
+  },
+
+  async demarrer() {
+    if (this.actif || !AC) return;
+    this.actif = true; majBoutonMusique();
+    this.sortie = AC.createGain(); this.sortie.gain.value = 0.0001; this.sortie.connect(AC.destination);
+    this.sortie.gain.exponentialRampToValueAtTime(CONFIG.volumeMusique, AC.currentTime + 2.5); // fondu d'entrée
+    await this.prete;
+    if (!this.actif) return;
+    if (this.trouves.length) this.morceauSuivant(); else if (CONFIG.musiqueComposee) this.composer();
+  },
+
+  async morceauSuivant() {
+    if (!this.actif) return;
+    const f = hasard(this.trouves);
+    try {
+      if (!(this.morceaux[f] instanceof AudioBuffer)) this.morceaux[f] = await new Promise((ok, ko) => AC.decodeAudioData(this.morceaux[f].slice(0), ok, ko));
+    } catch (e) { return; }
+    if (!this.actif) return;
+    const src = AC.createBufferSource(); src.buffer = this.morceaux[f];
+    src.loop = this.trouves.length === 1;
+    src.connect(this.sortie); src.start();
+    src.onended = () => { if (this.source === src) this.morceauSuivant(); };
+    this.source = src;
+  },
+
+  // petite musique mystérieuse : nappe grave + arpèges en ré mineur avec écho
+  composer() {
+    const sortie = this.sortie;
+    const echo = AC.createDelay(); echo.delayTime.value = .42;
+    const retour = AC.createGain(); retour.gain.value = .38;
+    const filtreEcho = AC.createBiquadFilter(); filtreEcho.type = 'lowpass'; filtreEcho.frequency.value = 2200;
+    echo.connect(filtreEcho).connect(retour).connect(echo); retour.connect(sortie);
+    const accords = [ [62, 65, 69], [58, 62, 65], [55, 58, 62], [57, 61, 64] ];   // Rém, Sib, Solm, La
+    const hz = n => 440 * Math.pow(2, (n - 69) / 12);
+    let mesure = 0;
+    const nappe = (t, accord, duree) => accord.forEach(n => [-6, 6].forEach(desaccord => {
+      const o = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
+      o.type = 'sawtooth'; o.frequency.value = hz(n - 24); o.detune.value = desaccord;
+      f.type = 'lowpass'; f.frequency.value = 420;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(.085, t + 2); g.gain.linearRampToValueAtTime(0.0001, t + duree);
+      o.connect(f).connect(g).connect(sortie); o.start(t); o.stop(t + duree + .1);
+    }));
+    const note = (t, n, vol) => {
+      const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = hz(n);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+      o.connect(g); g.connect(sortie); g.connect(echo); o.start(t); o.stop(t + 1.5);
+    };
+    const tempsMesure = 4.8, pas = tempsMesure / 8;
+    const boucle = () => {
+      if (!this.actif) return;
+      const t0 = AC.currentTime + .05, accord = accords[Math.floor(mesure / 2) % accords.length];
+      if (mesure % 2 === 0) nappe(t0, accord, tempsMesure * 2 + 1);
+      const gamme = [...accord, accord[0] + 12, accord[1] + 12];
+      for (let k = 0; k < 8; k++) if (Math.random() < (k % 2 ? .35 : .75)) note(t0 + k * pas, hasard(gamme), .13 + Math.random() * .08);
+      mesure++;
+      this.minuteur = setTimeout(boucle, tempsMesure * 1000);
+    };
+    boucle();
+  },
+
+  arreter() {
+    if (!this.actif) return;
+    this.actif = false; clearTimeout(this.minuteur); majBoutonMusique();
+    const s = this.sortie, src = this.source; this.sortie = null; this.source = null;
+    if (s && AC) { s.gain.cancelScheduledValues(AC.currentTime); s.gain.setValueAtTime(s.gain.value, AC.currentTime); s.gain.linearRampToValueAtTime(0, AC.currentTime + .8); }
+    setTimeout(() => { try { src?.stop(); } catch (e) {} s?.disconnect(); }, 900);
+  },
+
+  // la musique baisse pendant que le chaudron parle
+  baisser(oui) {
+    if (!this.sortie || !AC) return;
+    const g = this.sortie.gain, t = AC.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(Math.max(g.value, 0.0001), t);
+    g.linearRampToValueAtTime(CONFIG.volumeMusique * (oui ? CONFIG.baisseMusiqueVoix : 1), t + (oui ? .3 : 1.2));
+  },
+};
+function majBoutonMusique() { $('#btn-musique').classList.toggle('eteint', !Musique.actif); }
+$('#btn-musique').onclick = () => { debloquerAudio(); Musique.actif ? Musique.arreter() : Musique.demarrer(); };
+$('#opt-musique').onchange = e => { debloquerAudio(); e.target.checked ? Musique.demarrer() : Musique.arreter(); };
+// on coupe le son quand l'app passe en arrière-plan
+document.addEventListener('visibilitychange', () => {
+  if (!AC) return;
+  if (document.visibilityState === 'hidden') AC.suspend(); else AC.resume();
+});
+
 function majBoutonAmbiance() { $('#btn-ambiance').classList.toggle('eteint', !Ambiance.actif); }
 $('#btn-ambiance').onclick = () => { debloquerAudio(); Ambiance.actif ? Ambiance.arreter() : Ambiance.demarrer(); majBoutonAmbiance(); };
 
@@ -654,6 +762,11 @@ async function dire(texte, discret = false, fichier = null) {
   if (!discret) { p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); }
   if (!S.voix) return attendre(900 + texte.length * 30);
   Voix.arreter();
+  Musique.baisser(true);
+  try { await parlerVraiment(texte, fichier); } finally { Musique.baisser(false); }
+}
+
+async function parlerVraiment(texte, fichier) {
   if (fichier && await Voix.jouer(fichier)) return;
   if (!('speechSynthesis' in window)) return attendre(900 + texte.length * 30);
   return new Promise(r => {
@@ -777,6 +890,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 $$('[data-chaudron]').forEach((el, k) => { el.innerHTML = $('#modele-chaudron').innerHTML.replace(/(g-corps|g-potion|clip-potion)/g, `$1-${k}`); });
 majSaisieSorcieres();
 Voix.charger();
+Musique.charger();
 afficherVersion();
 verifierMiseAJour();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

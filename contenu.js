@@ -21,6 +21,14 @@ const CONFIG = {
   formatVoix: 'mp3',
   volumeVoix: 1,              // 0 à 1
 
+  // Musique de fond : mets tes morceaux (mp3) dans le dossier "musique"
+  // et liste-les ici. Plusieurs morceaux = ils s'enchaînent au hasard.
+  // Si aucun fichier n'est trouvé, l'app joue une musique qu'elle compose elle-même.
+  fichiersMusique: ['musique/theme.mp3'],
+  volumeMusique: 0.35,        // 0 à 1
+  baisseMusiqueVoix: 0.35,    // pendant que le chaudron parle, la musique descend à 35 % de son volume
+  musiqueComposee: true,      // false = pas de musique du tout si aucun fichier n'est trouvé
+
   // Tes propres sons (optionnel). Mets les fichiers dans le dossier "sons"
   // et liste-les ici, ex. bulle: ['sons/bulle1.mp3', 'sons/bulle2.mp3'].
   // Liste vide = le téléphone fabrique le son lui-même.
