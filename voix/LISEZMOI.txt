@@ -1,0 +1,4 @@
+Dépose ici tes voix enregistrées, en mp3.
+Les noms des fichiers sont dans l'onglet « Voix à enregistrer » du Google Sheet Le Chaudron
+(accueil-1.mp3, tour-1.mp3, moquerie-1.mp3, etc.).
+S'il manque un fichier, le téléphone lit la phrase lui-même.

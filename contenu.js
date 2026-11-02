@@ -15,6 +15,12 @@ const CONFIG = {
   voixHauteur: 0.55,          // 0 (grave) à 2 (aigu)
   dureeRideau: 1800,          // durée des écrans "Au tour de..." (ms)
 
+  // Voix enregistrées : fichiers mp3 dans le dossier "voix" (voir VOIX plus bas).
+  // S'il manque un fichier, le téléphone lit la phrase lui-même.
+  dossierVoix: 'voix/',
+  formatVoix: 'mp3',
+  volumeVoix: 1,              // 0 à 1
+
   // Tes propres sons (optionnel). Mets les fichiers dans le dossier "sons"
   // et liste-les ici, ex. bulle: ['sons/bulle1.mp3', 'sons/bulle2.mp3'].
   // Liste vide = le téléphone fabrique le son lui-même.
@@ -100,6 +106,48 @@ const PHRASES = {
   lunePerdu: ['La lune est levée. Trop tard. Ma recette était : {recette}.'],
   serpentOui:['Oui… il est dans ma recette.'],
   serpentNon:['Non. Jamais de la vie.'],
+  luneDebut: ['La Pleine Lune. Ma recette compte {n} ingrédients. Vous avez {essais} essais.'],
   chouette:  ['Colle-moi à ton oreille…'],
   secret:    ["Chut… c'est notre secret."],
+};
+
+// =========================================================
+// VOIX ENREGISTRÉES
+// Pour chaque moment, la liste des fichiers du dossier voix/
+// (sans le ".mp3"). Ce sont les noms de l'onglet
+// « Voix à enregistrer » du Google Sheet. L'app tire au hasard
+// parmi les fichiers présents. Tu peux en ajouter : il suffit
+// de mettre le fichier dans voix/ et son nom dans la bonne liste.
+// =========================================================
+const VOIX = {
+  accueil:            ['accueil-1', 'accueil-2', 'accueil-3'],
+  'manche-apprentie': ['manche-apprentie'],
+  'manche-sorciere':  ['manche-sorciere'],
+  'manche-archimage': ['manche-archimage'],
+  tour:               ['tour-1', 'tour-2', 'tour-3', 'tour-4'],
+  moquerie:           ['moquerie-1', 'moquerie-2', 'moquerie-3', 'moquerie-4'],
+  rate:               ['rate-1', 'rate-2', 'rate-3', 'rate-4', 'rate-5', 'rate-6'],
+  presque:            ['presque-1', 'presque-2', 'presque-3'],
+  explosion:          ['explosion-1', 'explosion-2'],
+  protege:            ['protege-1'],
+  passe:              ['passe-1'],
+  doublon:            ['doublon-1'],
+  victoire:           ['victoire-1', 'victoire-2'],
+  grande:             ['grande-1'],
+  'lune-debut-3':     ['lune-debut-3'],
+  'lune-debut-4':     ['lune-debut-4'],
+  'lune-debut-5':     ['lune-debut-5'],
+  'lune-reste-7':     ['lune-reste-7'],
+  'lune-reste-6':     ['lune-reste-6'],
+  'lune-reste-5':     ['lune-reste-5'],
+  'lune-reste-4':     ['lune-reste-4'],
+  'lune-reste-3':     ['lune-reste-3'],
+  'lune-reste-2':     ['lune-reste-2'],
+  luneDerniere:       ['lune-derniere-1'],
+  luneGagne:          ['lune-gagne-1'],
+  lunePerdu:          ['lune-perdu-1'],
+  serpentOui:         ['serpent-oui-1'],
+  serpentNon:         ['serpent-non-1'],
+  chouette:           ['chouette-1'],
+  secret:             ['secret-1'],
 };

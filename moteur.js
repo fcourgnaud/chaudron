@@ -112,14 +112,15 @@ async function nouvelleManche(premiere) {
 
   if (S.mode === 'lune') {
     await rideau(`<div class="icone">🌕</div><div class="petit-titre">Mode coopératif</div><div class="grand-titre">La Pleine Lune</div><div class="sous-titre">${taille} ingrédients · ${CONFIG.essaisPleineLune} essais</div>`, CONFIG.dureeRideau + 600);
-    await dire(`La Pleine Lune. Ma recette compte ${taille} ingrédients. Vous avez ${CONFIG.essaisPleineLune} essais.`);
+    await parler('luneDebut', { n: taille, essais: CONFIG.essaisPleineLune });
     S.phase = 'brassage'; majPlateau();
     $('#consigne').innerHTML = 'Jetez vos cartes une par une, <b>dans l\'ordre</b>';
     return;
   }
   const m = MANCHES[S.manche];
   await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${taille} ingrédients · l'ordre compte</div>`, CONFIG.dureeRideau + 600);
-  await dire((premiere ? phrase('accueil') + ' ' : '') + phrase('manche', { manche: m.nom, n: taille }));
+  if (premiere) await parler('accueil');
+  await parler('manche', { manche: m.nom, n: taille });
   await debutTour(false);
 }
 
@@ -130,7 +131,7 @@ async function debutTour(avecRideau = true) {
   $('#consigne').innerHTML = `<b>${j.nom}</b> : cueille une carte, puis jette-en 3 ou ${S.max} dans l'ordre`;
   if (S.joueurs.length > 1) {
     if (avecRideau) await rideau(`<div class="icone">🧙‍♀️</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>`, CONFIG.dureeRideau);
-    dire(phrase('tour', { joueur: j.nom }));
+    parler('tour', { joueur: j.nom });
   }
 }
 
@@ -138,7 +139,7 @@ async function tourSuivant() {
   for (let k = 0; k < S.joueurs.length; k++) {
     S.courant = (S.courant + 1) % S.joueurs.length;
     const j = S.joueurs[S.courant];
-    if (j.passe && S.joueurs.length > 1) { j.passe = false; majSorcieres(); await dire(phrase('passe', { joueur: j.nom })); continue; }
+    if (j.passe && S.joueurs.length > 1) { j.passe = false; majSorcieres(); await parler('passe', { joueur: j.nom }); continue; }
     j.passe = false; break;
   }
   colorerPotion(null);
@@ -151,7 +152,7 @@ function ajouterIngredient(n) {
   if (!ING(n)) return;
   if (S.question) return Pouvoirs.repondreSerpent(n);
   if (S.phase !== 'brassage') return;
-  if (S.brassage.includes(n)) { dire(phrase('doublon')); return; }
+  if (S.brassage.includes(n)) { parler('doublon'); return; }
   if (S.brassage.length >= S.max) return;
   S.brassage.push(n);
   Sons.jouer('scan');
@@ -199,9 +200,9 @@ async function brasser() {
     colorerPotion(varCSS('--fumee-explosion')); Fumee.bouffee(varCSS('--fumee-explosion'), 140);
     if (S.secret) { S.secret = false; fermerFenetre(); }
     ajouterJournal({ qui: j.nom, explosion: `${a} + ${b}` });
-    await dire(phrase('explosion', { a, b }));
+    await parler('explosion', { a, b });
     if (S.mode === 'concours') {
-      if (j.pouvoirs.includes('amulette') && !j.utilises.has('amulette')) { j.utilises.add('amulette'); await dire(phrase('protege', { joueur: j.nom })); }
+      if (j.pouvoirs.includes('amulette') && !j.utilises.has('amulette')) { j.utilises.add('amulette'); await parler('protege', { joueur: j.nom }); }
       else j.passe = true;
       majSorcieres();
     }
@@ -215,7 +216,7 @@ async function brasser() {
 
   if (!secret && !gagne) {
     const bete = ids.find((n, i) => S.absents.has(n) || (S.malPlaces[n] && S.malPlaces[n].has(i)));
-    if (bete) await dire(phrase('moquerie', { ingredient: ING(bete).nom }));
+    if (bete) await parler('moquerie', { ingredient: ING(bete).nom });
   }
   if (!secret) ids.forEach((n, i) => {
     if (res[i] === 'pschitt') S.absents.add(n);
@@ -232,7 +233,7 @@ async function brasser() {
   if (secret) { S.secret = false; colorerPotion(null); fermerFenetre(); majPlateau(); }
   if (gagne) return victoireManche();
   const bulles = res.filter(r => r === 'bulle').length;
-  await dire(secret ? phrase('secret') : phrase(bulles >= S.recette.length - 1 ? 'presque' : 'rate'));
+  await parler(secret ? 'secret' : bulles >= S.recette.length - 1 ? 'presque' : 'rate');
   finDuBrassage();
 }
 
@@ -255,8 +256,8 @@ async function finDuBrassage() {
   if (S.mode === 'lune') {
     majTitre();
     const reste = CONFIG.essaisPleineLune - S.essais;
-    if (reste <= 0) { await dire(phrase('lunePerdu', { recette: S.recette.map(n => ING(n).nom).join(', ') })); return finPartie(false); }
-    await dire(reste === 1 ? phrase('luneDerniere') : phrase('lune', { n: reste }));
+    if (reste <= 0) { await parler('lunePerdu', { recette: S.recette.map(n => ING(n).nom).join(', ') }); return finPartie(false); }
+    await (reste === 1 ? parler('luneDerniere') : parler('lune', { n: reste }));
     await attendre(600);
     S.brassage = []; S.phase = 'brassage'; colorerPotion(null); majPlateau(); majActions('brassage');
     return;
@@ -281,14 +282,14 @@ async function victoireManche() {
   Sons.jouer('victoire');
   Fumee.bouffee(varCSS('--fumee-victoire'), 160);
   const j = S.joueurs[S.courant];
-  if (S.mode === 'lune') { await dire(phrase('luneGagne')); return finPartie(true); }
+  if (S.mode === 'lune') { await parler('luneGagne'); return finPartie(true); }
   j.victoires++; majSorcieres();
-  await dire(phrase('victoire', { joueur: j.nom }));
+  await parler('victoire', { joueur: j.nom });
 
   const solo = S.joueurs.length === 1;
   const derniere = S.manche === MANCHES.length - 1;
   if (derniere || (!solo && j.victoires >= 2)) {
-    if (!solo) await dire(phrase('grande', { joueur: meilleure().nom }));
+    if (!solo) await parler('grande', { joueur: meilleure().nom });
     return finPartie(true);
   }
   // choisir un pouvoir parmi 3
@@ -323,14 +324,14 @@ function finPartie(gagne) {
   $('#f-rejouer').onclick = () => { fermerFenetre(); Camera.arreter(); demarrerPartie(); };
 }
 
-function quitter() { Camera.arreter(); Ambiance.arreter(); speechSynthesis?.cancel(); montrer('ecran-titre'); }
+function quitter() { Camera.arreter(); Ambiance.arreter(); Voix.arreter(); montrer('ecran-titre'); }
 $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre le feu ?</h2><p>La partie en cours sera perdue.</p>')) quitter(); };
 
 /* ---------- 6. POUVOIRS ---------- */
 const Pouvoirs = {
   utiliser(id, bouton) {
     const j = S.joueurs[S.courant];
-    if (id === 'chouette') { S.secret = true; dire(phrase('chouette')); }
+    if (id === 'chouette') { S.secret = true; parler('chouette'); }
     if (id === 'sablier') { S.sablier = true; }
     if (id === 'serpent') { S.question = true; this.ouvrirSerpent(); }
     j.utilises.add(id); bouton.disabled = true; bouton.classList.add('on');
@@ -344,7 +345,7 @@ const Pouvoirs = {
     fenetre(`<p style="font-size:3rem">🐍</p><p>Le chaudron chuchote…</p>`, true);
     const oui = S.recette.includes(n);
     Sons.jouer(oui ? 'bulle' : 'pschitt');
-    await dire(phrase(oui ? 'serpentOui' : 'serpentNon'), true);
+    await parler(oui ? 'serpentOui' : 'serpentNon', {}, true);
     await attendre(500);
     fermerFenetre();
     ajouterJournal({ qui: S.joueurs[S.courant].nom, serpent: true });
@@ -574,13 +575,87 @@ const Ambiance = {
 function majBoutonAmbiance() { $('#btn-ambiance').classList.toggle('eteint', !Ambiance.actif); }
 $('#btn-ambiance').onclick = () => { debloquerAudio(); Ambiance.actif ? Ambiance.arreter() : Ambiance.demarrer(); majBoutonAmbiance(); };
 
-/* ---------- 10. VOIX DU CHAUDRON ---------- */
-function dire(texte, discret = false) {
+/* ---------- 10. VOIX DU CHAUDRON ----------
+   parler('moquerie', { ingredient: 'Soufre' }) :
+   - affiche la phrase complète (avec les noms) à l'écran ;
+   - joue un enregistrement du dossier voix/ s'il existe pour ce moment,
+     sinon le téléphone lit la phrase lui-même.                        */
+const Voix = {
+  trouvees: new Set(),   // noms des fichiers présents dans voix/
+  donnees: {},           // fichier -> contenu brut
+  tampons: {},           // fichier -> son décodé
+  enCours: null,
+
+  // au démarrage : on cherche chaque fichier listé dans VOIX (et on le garde en mémoire)
+  async charger() {
+    const noms = [...new Set(Object.values(VOIX).flat())];
+    await Promise.all(noms.map(async nom => {
+      try {
+        const r = await fetch(`${CONFIG.dossierVoix}${nom}.${CONFIG.formatVoix}`);
+        const type = r.headers.get('content-type') || '';
+        if (!r.ok || type.includes('text/html')) return;
+        this.donnees[nom] = await r.arrayBuffer();
+        this.trouvees.add(nom);
+      } catch (e) {}
+    }));
+    const info = $('#voix-info');
+    if (info) info.textContent = this.trouvees.size
+      ? `${this.trouvees.size} voix enregistrée(s) trouvée(s), le téléphone lit les autres`
+      : 'Le téléphone lit les phrases (aucune voix enregistrée trouvée)';
+  },
+
+  async tampon(nom) {
+    if (this.tampons[nom]) return this.tampons[nom];
+    const copie = this.donnees[nom].slice(0);
+    this.tampons[nom] = await new Promise((ok, ko) => AC.decodeAudioData(copie, ok, ko));
+    return this.tampons[nom];
+  },
+
+  async jouer(nom) {
+    if (!AC) return false;
+    try {
+      const buf = await this.tampon(nom);
+      return await new Promise(r => {
+        const src = AC.createBufferSource(), g = AC.createGain();
+        g.gain.value = CONFIG.volumeVoix;
+        src.buffer = buf; src.connect(g).connect(AC.destination);
+        src.onended = () => { this.enCours = null; r(true); };
+        this.enCours = src; src.start();
+      });
+    } catch (e) { return false; }
+  },
+
+  arreter() { try { this.enCours?.stop(); } catch (e) {} this.enCours = null; speechSynthesis?.cancel(); },
+};
+
+const sansAccent = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+// le moment qui correspond aux listes de VOIX (les nombres et les manches ont leurs propres fichiers)
+function momentVoix(cle, vars) {
+  if (cle === 'manche') return 'manche-' + sansAccent(vars.manche);
+  if (cle === 'lune') return 'lune-reste-' + vars.n;
+  if (cle === 'luneDebut') return 'lune-debut-' + vars.n;
+  return cle;
+}
+
+function parler(cle, vars = {}, discret = false) {
+  const textes = PHRASES[cle];
+  const liste = VOIX[momentVoix(cle, vars)] || [];
+  const dispo = liste.filter(f => Voix.trouvees.has(f));
+  let i, fichier = null;
+  if (dispo.length) { fichier = hasard(dispo); i = liste.indexOf(fichier) % textes.length; }
+  else i = Math.floor(Math.random() * textes.length);
+  const texte = textes[i].replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+  return dire(texte, discret, fichier);
+}
+
+async function dire(texte, discret = false, fichier = null) {
   const p = $('#parole');
   if (!discret) { p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); }
-  if (!S.voix || !('speechSynthesis' in window)) return attendre(900 + texte.length * 30);
+  if (!S.voix) return attendre(900 + texte.length * 30);
+  Voix.arreter();
+  if (fichier && await Voix.jouer(fichier)) return;
+  if (!('speechSynthesis' in window)) return attendre(900 + texte.length * 30);
   return new Promise(r => {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(texte);
     u.lang = 'fr-FR'; u.rate = CONFIG.voixVitesse; u.pitch = CONFIG.voixHauteur;
     const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith('fr'));
@@ -669,4 +744,5 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // copie le dessin du chaudron partout où il y a [data-chaudron] (avec des id uniques)
 $$('[data-chaudron]').forEach((el, k) => { el.innerHTML = $('#modele-chaudron').innerHTML.replace(/(g-corps|g-potion|clip-potion)/g, `$1-${k}`); });
 majSaisieSorcieres();
+Voix.charger();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
