@@ -9,9 +9,20 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '2.3.2', date: '2026-11-02' };
+const VERSION = { numero: '2.5.0', date: '2026-11-02' };
 
 const HISTORIQUE = [
+  { numero: '2.5.0', date: '2026-11-02', nouveautes: [
+    "Chaudron plus petit et cartes jetées beaucoup plus grandes (illustration et nom plus lisibles).",
+    "Les cartes jetées prennent toute la largeur disponible : plus grandes à 3 ou 4 cartes, un peu moins à 5.",
+    "Chaque carte jetée apparaît en grand au centre pendant un instant, puis se range (durée : dureeApercuCarte dans contenu.js).",
+    "Tailles réglables dans theme.css : --taille-chaudron, --hauteur-scene, --largeur-carte.",
+  ]},
+  { numero: '2.4.0', date: '2026-11-02', nouveautes: [
+    "La signification de la fumée est écrite sur le chaudron après chaque brassage (ex. « Fumée verte : il manque des Plantes »), et dans le grimoire.",
+    "« Bonne place », « Mauvaise place » ou « Absent » s'affiche sous chaque icône de réponse, aussi en mode expert.",
+    "Textes modifiables dans contenu.js : LIBELLES_REPONSES et TEXTES_FUMEE.",
+  ]},
   { numero: '2.3.2', date: '2026-11-02', nouveautes: [
     "Correction du bouton « Mettre à jour » : il retélécharge maintenant chaque fichier depuis GitHub au lieu de reprendre ceux gardés en mémoire par le téléphone.",
     "Si la nouvelle version n'est pas encore arrivée sur le téléphone, le bandeau le dit au lieu de reproposer la même mise à jour.",

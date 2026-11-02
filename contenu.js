@@ -14,12 +14,14 @@ const CONFIG = {
   voixVitesse: 0.9,           // 0.5 à 2
   voixHauteur: 0.55,          // 0 (grave) à 2 (aigu)
   dureeRideau: 1800,          // durée des écrans "Au tour de..." (ms)
+  dureeApercuCarte: 1200,     // durée d'affichage en grand d'une carte qu'on vient de jeter (ms)
 
   // Voix enregistrées : fichiers mp3 dans le dossier "voix" (voir VOIX plus bas).
   // S'il manque un fichier, le téléphone lit la phrase lui-même.
   dossierVoix: 'voix/',
   formatVoix: 'mp3',
   volumeVoix: 1,              // 0 à 1
+  pauseEntrePhrases: 2000,    // silence entre deux phrases du chaudron (millisecondes)
 
   // Musique de fond : mets tes morceaux (mp3) dans le dossier "musique"
   // et liste-les ici. Plusieurs morceaux = ils s'enchaînent au hasard.
@@ -43,12 +45,23 @@ const MANCHES = [
 
 // Les icônes sont dans le dossier images/ (fam-plantes.svg, etc.)
 const FAMILLES = {
-  plantes:   { nom: 'Plantes'   },
-  bestioles: { nom: 'Bestioles' },
-  mineraux:  { nom: 'Minéraux'  },
-  liquides:  { nom: 'Liquides'  },
-  ossements: { nom: 'Ossements' },
-  etoiles:   { nom: 'Étoiles'   },
+  plantes:   { nom: 'Plantes',   fumee: 'verte'     },
+  bestioles: { nom: 'Bestioles', fumee: 'orange'    },
+  mineraux:  { nom: 'Minéraux',  fumee: 'turquoise' },
+  liquides:  { nom: 'Liquides',  fumee: 'bleue'     },
+  ossements: { nom: 'Ossements', fumee: 'ivoire'    },
+  etoiles:   { nom: 'Étoiles',   fumee: 'violette'  },
+};
+
+// Textes affichés sous les icônes de réponse
+const LIBELLES_REPONSES = { bulle: 'Bonne place', sifflement: 'Mauvaise place', pschitt: 'Absent' };
+
+// Texte écrit sur le chaudron après chaque brassage. {couleur} et {famille} sont remplacés.
+const TEXTES_FUMEE = {
+  famille:   'Fumée {couleur} : il manque des {famille}',
+  complete:  'Fumée dorée : toutes les familles sont là',
+  victoire:  'Fumée blanche : potion réussie !',
+  explosion: 'Fumée rouge : explosion !',
 };
 
 // n = numéro de la carte = son QR code. Pour mettre ton illustration,

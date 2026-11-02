@@ -57,6 +57,11 @@
   --flamme-3: #e2452b;
   --buche: #4a2e1c;
 
+  /* ---------- Tailles de l'écran de jeu ---------- */
+  --taille-chaudron: 165px;   /* largeur du chaudron */
+  --hauteur-scene: 205px;     /* hauteur de la zone chaudron + fumée */
+  --largeur-carte: 104px;     /* largeur maximale d'une carte jetée (elle rétrécit s'il en faut 5) */
+
   --rayon: 16px;
   --ombre: 0 8px 24px rgba(0, 0, 0, .45);
 }
@@ -179,11 +184,11 @@ button:disabled { opacity: .35; cursor: default; }
 .lunes span.levee { background: radial-gradient(circle at 35% 35%, #fffbe8, var(--lune)); box-shadow: 0 0 10px rgba(246, 236, 201, .6); border-color: var(--lune); }
 
 /* la scène du chaudron */
-.scene { position: relative; height: 300px; width: 100%; max-width: 420px; margin: 0 auto; --lueur: transparent; }
-.scene::before { content: ''; position: absolute; left: 50%; bottom: 40px; width: 280px; height: 200px; transform: translateX(-50%);
+.scene { position: relative; height: var(--hauteur-scene); width: 100%; max-width: 420px; margin: 0 auto; --lueur: transparent; }
+.scene::before { content: ''; position: absolute; left: 50%; bottom: 20px; width: calc(var(--taille-chaudron) * 1.2); height: calc(var(--taille-chaudron) * .85); transform: translateX(-50%);
   background: radial-gradient(ellipse, var(--lueur), transparent 65%); opacity: .55; transition: background 1s; }
 #fumee { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-.grand-chaudron { position: absolute; left: 50%; bottom: 0; width: 250px; transform: translateX(-50%); z-index: 1; }
+.grand-chaudron { position: absolute; left: 50%; bottom: 0; width: var(--taille-chaudron); transform: translateX(-50%); z-index: 1; }
 .scene.secoue { animation: secoue .6s; }
 @keyframes secoue { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-12px) rotate(-1deg)} 35%{transform:translateX(10px) rotate(1deg)} 55%{transform:translateX(-7px)} 75%{transform:translateX(4px)} }
 
@@ -222,21 +227,24 @@ button:disabled { opacity: .35; cursor: default; }
 .consigne b { color: var(--texte-nuit); }
 
 /* les cartes jetées dans le chaudron */
-.plateau { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-.emplacement { position: relative; width: 66px; height: 96px; border-radius: 10px; border: 2px dashed rgba(226, 181, 82, .3);
+.plateau { --lc: min(var(--largeur-carte), calc((100vw - 28px - (var(--nb, 4) - 1) * 8px) / var(--nb, 4)));
+  display: grid; grid-template-columns: repeat(var(--nb, 4), var(--lc)); justify-content: center; gap: 8px; margin-top: 6px; }
+.emplacement { position: relative; width: 100%; aspect-ratio: 63 / 88; min-height: 0; border-radius: 10px; border: 2px dashed rgba(226, 181, 82, .3);
   display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--texte-nuit-doux); font-family: var(--police-titre); }
 .emplacement .facultatif { font-family: var(--police-texte); font-size: .65rem; }
-.emplacement.plein { border: none; padding: 4px; justify-content: flex-start; gap: 2px;
+.emplacement.plein { border: none; padding: calc(var(--lc) * 0.07) calc(var(--lc) * 0.04) calc(var(--lc) * 0.22); justify-content: flex-start; gap: calc(var(--lc) * 0.04);
   background: radial-gradient(ellipse at 50% 30%, var(--parchemin-clair), var(--parchemin) 70%, var(--parchemin-fonce));
   box-shadow: 0 0 0 3px var(--c), var(--ombre); color: var(--encre); animation: tombe .35s ease; }
 @keyframes tombe { from { transform: translateY(-30px) rotate(-8deg); opacity: 0; } }
-.emplacement .rang { position: absolute; top: -9px; left: -7px; width: 20px; height: 20px; border-radius: 50%; background: var(--violet); color: var(--or-clair); font-size: .7rem; display: grid; place-items: center; font-family: var(--police-texte); }
-.emplacement .vignette { width: 44px; height: 44px; object-fit: contain; }
-.emplacement .nom { font-family: var(--police-magie); font-size: .72rem; line-height: 1.05; text-align: center; }
-.emplacement .reponse { position: absolute; bottom: -14px; left: 50%; width: 34px; height: 34px; transform: translateX(-50%) scale(0); transition: transform .35s cubic-bezier(.3, 1.6, .5, 1); filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+.emplacement .rang { position: absolute; top: -9px; left: -7px; width: 24px; height: 24px; border-radius: 50%; background: var(--violet); color: var(--or-clair); font-size: .7rem; display: grid; place-items: center; font-family: var(--police-texte); }
+.emplacement .vignette { width: calc(var(--lc) * 0.64); height: calc(var(--lc) * 0.64); flex: none; object-fit: contain; }
+.emplacement .nom { font-family: var(--police-magie); font-size: calc(var(--lc) * 0.135); line-height: 1.05; text-align: center; font-weight: bold; overflow-wrap: anywhere; hyphens: auto; }
+.emplacement .reponse { position: absolute; bottom: -14px; left: 50%; width: 40px; height: 40px; transform: translateX(-50%) scale(0); transition: transform .35s cubic-bezier(.3, 1.6, .5, 1); filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
 .emplacement .reponse.visible { transform: translateX(-50%) scale(1); }
 .reponses-expert { display: flex; justify-content: center; gap: 10px; min-height: 8px; margin-top: 10px; }
-.reponses-expert img { width: 38px; height: 38px; animation: tombe .35s ease; }
+.reponses-expert figure { margin: 0; width: 66px; display: flex; flex-direction: column; align-items: center; gap: 3px; animation: tombe .35s ease; }
+.reponses-expert img { width: 38px; height: 38px; }
+.reponses-expert figcaption { font-size: .68rem; line-height: 1.05; text-align: center; color: var(--texte-nuit); }
 
 .actions { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 14px; }
 .actions .bouton-or { min-width: 160px; }
@@ -330,3 +338,43 @@ button:disabled { opacity: .35; cursor: default; }
   background: rgba(30, 20, 45, .96); border: 1px solid var(--or-fonce); box-shadow: var(--ombre); animation: monte .4s ease; }
 .bandeau-maj span { flex: 1; font-size: .9rem; }
 .bandeau-maj .bouton-or { padding: 9px 16px; font-size: .9rem; }
+
+/* =========================================================
+   INFOS ÉCRITES : fumée sur le chaudron, libellés des réponses
+   ========================================================= */
+.etiquette-fumee { position: absolute; left: 50%; bottom: calc(var(--taille-chaudron) * .2); transform: translateX(-50%); z-index: 3; width: max-content; max-width: calc(var(--taille-chaudron) + 30px);
+  display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px;
+  background: rgba(14, 9, 22, .82); border: 2px solid var(--c); box-shadow: 0 0 14px var(--c);
+  color: var(--texte-nuit); font-size: .76rem; line-height: 1.15; text-align: left; }
+.etiquette-fumee .pastille-fumee { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+.etiquette-fumee.nouvelle { animation: monte-fumee .5s ease; }
+@keyframes monte-fumee { from { opacity: 0; transform: translate(-50%, 10px); } }
+
+.plateau { padding-bottom: 34px; }
+.emplacement .libelle { position: absolute; top: calc(100% + 24px); left: -4px; right: -4px; text-align: center;
+  font-size: .74rem; line-height: 1.05; color: var(--texte-nuit); opacity: 0; transition: opacity .3s .15s; }
+.emplacement .libelle.visible { opacity: 1; }
+.emplacement .libelle.bulle { color: #9fe39f; }
+.emplacement .libelle.sifflement { color: var(--or-clair); }
+.emplacement .libelle.pschitt { color: var(--texte-nuit-doux); }
+
+.fumee-journal { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--encre-douce); font-style: italic; }
+.fumee-journal::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--c); border: 1px solid #0004; }
+
+/* carte jetée affichée en grand un instant */
+.apercu-carte { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; pointer-events: none; opacity: 0; }
+.apercu-carte.visible { animation: apercu var(--duree-apercu, 1.2s) ease forwards; }
+@keyframes apercu {
+  0% { opacity: 0; transform: scale(.6) translateY(40px); }
+  15% { opacity: 1; transform: scale(1.04); }
+  25%, 75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(.45) translateY(55vh); } }
+.apercu-boite { position: relative; width: min(58vw, 240px); aspect-ratio: 63 / 88; border-radius: 16px; padding: 18px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: var(--encre);
+  background: radial-gradient(ellipse at 50% 30%, var(--parchemin-clair), var(--parchemin) 70%, var(--parchemin-fonce));
+  box-shadow: 0 0 0 5px var(--c), 0 0 40px var(--c), var(--ombre); }
+.apercu-boite .vignette { width: 78%; aspect-ratio: 1; object-fit: contain; }
+.apercu-boite b { font-family: var(--police-magie); font-size: 1.5rem; line-height: 1.05; }
+.apercu-boite small { color: var(--encre-douce); text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; }
+.apercu-boite .rang { position: absolute; top: -14px; left: -14px; width: 38px; height: 38px; border-radius: 50%; background: var(--violet); color: var(--or-clair);
+  display: grid; place-items: center; font-family: var(--police-titre); font-size: 1.1rem; box-shadow: var(--ombre); }

@@ -160,6 +160,7 @@ function ajouterIngredient(n) {
   if (S.brassage.length >= S.max) return;
   S.brassage.push(n);
   Sons.jouer('scan');
+  montrerEnGrand(ING(n), S.brassage.length);
   Fumee.bouffee(varCSS('--fumee-repos'), 12);
   majPlateau(); majEtagere();
   if (S.brassage.length === S.max) { fermerTiroirs(); brasser(); }
@@ -175,12 +176,14 @@ function calculerReponses(brassage, recette) {
 }
 
 // fumée : une famille de la recette absente du brassage ; dorée si toutes y sont
-function couleurDeFumee(ids, gagne) {
-  if (gagne) return varCSS('--fumee-victoire');
+function fumeeDe(ids, gagne) {
+  if (gagne) return { couleur: varCSS('--fumee-victoire'), texte: TEXTES_FUMEE.victoire };
   const famRecette = [...new Set(S.recette.map(n => ING(n).fam))];
   const famJetees = new Set(ids.map(n => ING(n).fam));
   const manquantes = famRecette.filter(f => !famJetees.has(f));
-  return manquantes.length ? couleurFamille(hasard(manquantes)) : varCSS('--fumee-complete');
+  if (!manquantes.length) return { couleur: varCSS('--fumee-complete'), texte: TEXTES_FUMEE.complete };
+  const f = hasard(manquantes);
+  return { couleur: couleurFamille(f), texte: TEXTES_FUMEE.famille.replace('{couleur}', FAMILLES[f].fumee).replace('{famille}', FAMILLES[f].nom) };
 }
 
 async function brasser() {
@@ -201,7 +204,7 @@ async function brasser() {
     const [a, b] = S.instables.map(n => ING(n).nom);
     $('#scene').classList.add('secoue'); setTimeout(() => $('#scene').classList.remove('secoue'), 700);
     Sons.jouer('explosion');
-    colorerPotion(varCSS('--fumee-explosion')); Fumee.bouffee(varCSS('--fumee-explosion'), 140);
+    colorerPotion(varCSS('--fumee-explosion'), S.secret ? '' : TEXTES_FUMEE.explosion); Fumee.bouffee(varCSS('--fumee-explosion'), 140);
     if (S.secret) { S.secret = false; fermerFenetre(); }
     ajouterJournal({ qui: j.nom, explosion: `${a} + ${b}` });
     await parler('explosion', { a, b });
@@ -227,12 +230,12 @@ async function brasser() {
     if (res[i] === 'sifflement') (S.malPlaces[n] ||= new Set()).add(i);
   });
 
-  const couleur = couleurDeFumee(ids, gagne);
+  const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
   S.derniere = { res, secret };
-  colorerPotion(couleur); Fumee.bouffee(couleur, 70);
+  colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);
   await jouerReponses(res, secret);
 
-  ajouterJournal(secret ? { qui: j.nom, secret: true } : { qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais}`, ids, res, couleur });
+  ajouterJournal(secret ? { qui: j.nom, secret: true } : { qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais}`, ids, res, couleur, texteFumee });
 
   if (secret) { S.secret = false; colorerPotion(null); fermerFenetre(); majPlateau(); }
   if (gagne) return victoireManche();
@@ -246,8 +249,12 @@ async function jouerReponses(res, secret) {
   $('#reponses-expert').innerHTML = '';
   for (let i = 0; i < ordre.length; i++) {
     if (!secret) {
-      if (S.expert) $('#reponses-expert').insertAdjacentHTML('beforeend', `<img src="${imgReponse(ordre[i])}" alt="${ordre[i]}">`);
-      else { const el = $('#rep-' + i); if (el) { el.src = imgReponse(ordre[i]); el.classList.add('visible'); } }
+      if (S.expert) $('#reponses-expert').insertAdjacentHTML('beforeend', `<figure><img src="${imgReponse(ordre[i])}" alt=""><figcaption>${LIBELLES_REPONSES[ordre[i]]}</figcaption></figure>`);
+      else {
+        const el = $('#rep-' + i), lib = $('#lib-' + i);
+        if (el) { el.src = imgReponse(ordre[i]); el.classList.add('visible'); }
+        if (lib) { lib.textContent = LIBELLES_REPONSES[ordre[i]]; lib.className = 'libelle visible ' + ordre[i]; }
+      }
     }
     Sons.jouer(ordre[i]);
     if (ordre[i] === 'bulle') Fumee.bouffee(Fumee.couleur, 30);
@@ -389,15 +396,28 @@ function majSorcieres() {
   }).join('');
 }
 
+// la carte qu'on vient de jeter apparaît en grand au centre, puis se range
+let minuteurApercu = null;
+function montrerEnGrand(ing, rang) {
+  const a = $('#apercu-carte');
+  a.style.setProperty('--c', couleurFamille(ing.fam));
+  a.style.setProperty('--duree-apercu', CONFIG.dureeApercuCarte + 'ms');
+  a.innerHTML = `<div class="apercu-boite"><span class="rang">${rang}</span>${imgIngredient(ing, 'vignette')}<b>${ing.nom}</b><small>${FAMILLES[ing.fam].nom}</small></div>`;
+  a.classList.remove('visible'); void a.offsetWidth; a.classList.add('visible');
+  clearTimeout(minuteurApercu);
+  minuteurApercu = setTimeout(() => a.classList.remove('visible'), CONFIG.dureeApercuCarte);
+}
+
 function majPlateau() {
   const box = $('#plateau'); box.innerHTML = '';
+  box.style.setProperty('--nb', S.max);
   for (let i = 0; i < S.max; i++) {
     const n = S.brassage[i];
     if (n) {
       const ing = ING(n);
       box.insertAdjacentHTML('beforeend', `<div class="emplacement plein" style="--c:${couleurFamille(ing.fam)}">
         <span class="rang">${i + 1}</span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
-        <img class="reponse" id="rep-${i}" alt=""></div>`);
+        <img class="reponse" id="rep-${i}" alt=""><span class="libelle" id="lib-${i}"></span></div>`);
     } else {
       box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}${i >= CONFIG.minBrassage ? '<span class="facultatif">facultatif</span>' : ''}</div>`);
     }
@@ -416,8 +436,14 @@ function majActions(quoi) {
   if (quoi !== 'brassage') $('#actions-pouvoirs').innerHTML = '';
 }
 
-function colorerPotion(couleur) {
-  const c = $('#ecran-jeu .grand-chaudron'), scene = $('#scene');
+function colorerPotion(couleur, texte = '') {
+  const c = $('#ecran-jeu .grand-chaudron'), scene = $('#scene'), etiquette = $('#etiquette-fumee');
+  etiquette.hidden = !(couleur && texte);
+  if (couleur && texte) {
+    etiquette.innerHTML = `<span class="pastille-fumee"></span><span>${texte.replace(/ ([:!?;])/g, '\u00a0$1')}</span>`;
+    etiquette.style.setProperty('--c', couleur);
+    etiquette.classList.remove('nouvelle'); void etiquette.offsetWidth; etiquette.classList.add('nouvelle');
+  }
   if (!couleur) {
     c.style.removeProperty('--potion'); c.style.removeProperty('--potion-clair');
     scene.style.setProperty('--lueur', 'transparent'); Fumee.couleur = varCSS('--fumee-repos'); return;
@@ -440,7 +466,7 @@ function majJournal() {
     else if (S.expert) corps = e.ids.map(n => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}">${ING(n).nom}</span>`).join(' ') +
       ` <span class="expert">${[...e.res].sort((a, b) => ORDRE_REP.indexOf(a) - ORDRE_REP.indexOf(b)).map(r => `<img src="${imgReponse(r)}" alt="">`).join('')}</span>`;
     else corps = e.ids.map((n, i) => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}"><img class="r" src="${imgReponse(e.res[i])}" alt="">${ING(n).nom}</span>`).join(' ');
-    const fumee = e.couleur ? `<span title="fumée" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${e.couleur};border:1px solid #0004"></span>` : '';
+    const fumee = e.couleur ? `<span class="fumee-journal" style="--c:${e.couleur}">${e.texteFumee || ''}</span>` : '';
     return `<div class="ligne-journal"><span class="qui">${e.qui}</span>${corps} ${fumee}</div>`;
   }).join('');
 }
@@ -800,11 +826,16 @@ async function parlerVraiment(texte, fichier) {
 const Fumee = (() => {
   const cv = $('#fumee'), ctx = cv.getContext('2d'); let parts = [];
   const obj = { couleur: '#7a6f86' };
-  const ajuster = () => { const r = cv.getBoundingClientRect(); cv.width = r.width * devicePixelRatio; cv.height = r.height * devicePixelRatio; };
+  let origineY = .62, largeurBouche = .32;
+  const ajuster = () => {
+    const r = cv.getBoundingClientRect(); cv.width = r.width * devicePixelRatio; cv.height = r.height * devicePixelRatio;
+    const ch = $('#ecran-jeu .grand-chaudron').getBoundingClientRect();
+    if (r.height && ch.height) { origineY = (ch.top + ch.height * .3 - r.top) / r.height; largeurBouche = ch.width * .7 / r.width; }
+  };
   addEventListener('resize', ajuster);
   function particule(c, force = 1) {
     const w = cv.width, h = cv.height, d = devicePixelRatio;
-    parts.push({ x: w / 2 + (Math.random() - .5) * w * .32, y: h * .62, r: (10 + Math.random() * 16) * d,
+    parts.push({ x: w / 2 + (Math.random() - .5) * w * largeurBouche, y: h * origineY, r: (10 + Math.random() * 16) * d,
       vx: (Math.random() - .5) * .7 * d * force, vy: -(.6 + Math.random() * 1.1) * d * force, vie: 1, c });
   }
   obj.bouffee = (c, n) => { for (let i = 0; i < n; i++) particule(c, 1.9); };
