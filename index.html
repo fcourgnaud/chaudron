@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#120d1c">
+<title>Le Chaudron</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="theme.css">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+</head>
+<body>
+<!--
+  LE CHAUDRON — index.html
+  Ce fichier contient seulement la STRUCTURE des écrans.
+  Le look est dans theme.css, le contenu dans contenu.js,
+  le fonctionnement dans moteur.js.
+-->
+
+<div class="ciel" aria-hidden="true"><div class="lune-deco"></div></div>
+
+<!-- ==================== 1. ÉCRAN TITRE ==================== -->
+<section id="ecran-titre" class="ecran actif">
+  <div class="titre-scene">
+    <div class="mini-chaudron" data-chaudron></div>
+  </div>
+  <h1 class="titre-jeu">Le Chaudron</h1>
+  <p class="accroche">Concours de sorcières · trouvez la recette à l'oreille</p>
+  <div class="menu">
+    <button class="bouton-or" data-mode="concours">
+      <span class="b-titre">Le Concours</span><span class="b-sous">1 à 4 sorcières · 3 manches</span>
+    </button>
+    <button class="bouton-or bouton-nuit" data-mode="lune">
+      <span class="b-titre">La Pleine Lune</span><span class="b-sous">coopératif · 8 essais</span>
+    </button>
+  </div>
+</section>
+
+<!-- ==================== 2. PRÉPARATION ==================== -->
+<section id="ecran-preparation" class="ecran">
+  <header class="entete-ecran">
+    <button class="rond" id="prep-retour" aria-label="Retour">←</button>
+    <h2 id="prep-titre">Le Concours</h2>
+  </header>
+
+  <div class="parchemin" id="prep-sorcieres">
+    <h3>Les sorcières</h3>
+    <div class="choix" id="choix-nombre">
+      <button data-n="1">1</button><button data-n="2" class="on">2</button><button data-n="3">3</button><button data-n="4">4</button>
+    </div>
+    <div class="liste-sorcieres" id="liste-sorcieres"></div>
+  </div>
+
+  <div class="parchemin" id="prep-taille" hidden>
+    <h3>Taille de la recette</h3>
+    <div class="choix" id="choix-taille">
+      <button data-t="3">3</button><button data-t="4" class="on">4</button><button data-t="5">5</button>
+    </div>
+    <p class="aide">Mains cachées. On ne parle que de familles d'ingrédients.</p>
+  </div>
+
+  <div class="parchemin">
+    <h3>Sortilèges</h3>
+    <label class="interrupteur"><input type="checkbox" id="opt-expert"><span><b>Mode expert</b><small>Les réponses sont mélangées</small></span></label>
+    <label class="interrupteur"><input type="checkbox" id="opt-voix" checked><span><b>Voix du chaudron</b><small>Le téléphone parle</small></span></label>
+    <label class="interrupteur"><input type="checkbox" id="opt-ambiance" checked><span><b>Ambiance</b><small>Bouillonnement et feu de bois</small></span></label>
+    <label class="interrupteur"><input type="checkbox" id="opt-camera" checked><span><b>Caméra frontale</b><small>Lire les QR codes des cartes</small></span></label>
+  </div>
+
+  <button class="bouton-or grand" id="btn-allumer">🔥 Allumer le feu</button>
+</section>
+
+<!-- ==================== 3. JEU ==================== -->
+<section id="ecran-jeu" class="ecran">
+  <header class="barre-jeu">
+    <button class="rond" id="btn-quitter" aria-label="Quitter">✕</button>
+    <div class="titre-manche" id="titre-manche"></div>
+    <button class="rond" id="btn-ambiance" aria-label="Ambiance">🔊</button>
+    <button class="rond" id="btn-grimoire" aria-label="Grimoire">📖</button>
+  </header>
+
+  <div class="sorcieres" id="sorcieres"></div>
+  <div class="lunes" id="lunes" hidden></div>
+
+  <div class="scene" id="scene">
+    <canvas id="fumee"></canvas>
+    <div class="grand-chaudron" data-chaudron></div>
+  </div>
+
+  <div class="bulle-parole" id="parole"></div>
+
+  <div class="consigne" id="consigne"></div>
+  <div class="plateau" id="plateau"></div>
+  <div class="reponses-expert" id="reponses-expert"></div>
+
+  <div class="actions" id="actions-brassage">
+    <button class="rond grand-rond" id="btn-retirer" aria-label="Retirer la dernière carte">↩</button>
+    <button class="bouton-or" id="btn-brasser" disabled>Brasser !</button>
+    <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
+  </div>
+  <div class="actions" id="actions-pouvoirs"></div>
+  <div class="actions" id="actions-suite" hidden>
+    <button class="bouton-or" id="btn-suivant">Au suivant ➜</button>
+  </div>
+
+  <div class="oeil" id="oeil" hidden>
+    <video id="video" playsinline muted></video>
+    <span id="oeil-etat">…</span>
+  </div>
+  <canvas id="canvas-scan" hidden></canvas>
+</section>
+
+<!-- ==================== TIROIRS ==================== -->
+<div class="tiroir" id="tiroir-grimoire">
+  <div class="tiroir-boite">
+    <div class="tiroir-tete"><h3>Grimoire</h3><button class="rond" data-fermer>✕</button></div>
+    <div class="legende-sons">
+      <span><img src="images/rep-bulle.svg" alt=""> bonne place</span>
+      <span><img src="images/rep-sifflement.svg" alt=""> mauvaise place</span>
+      <span><img src="images/rep-pschitt.svg" alt=""> absent</span>
+    </div>
+    <div class="legende-fumees" id="legende-fumees"></div>
+    <div class="journal" id="journal"></div>
+  </div>
+</div>
+
+<div class="tiroir" id="tiroir-main">
+  <div class="tiroir-boite">
+    <div class="tiroir-tete"><h3 id="main-titre">Choisir un ingrédient</h3><button class="rond" data-fermer>✕</button></div>
+    <div class="etagere" id="etagere"></div>
+    <div class="tiroir-pied">
+      <span id="main-compte"></span>
+      <button class="rond grand-rond" id="btn-retirer-main" aria-label="Retirer la dernière carte">↩</button>
+      <button class="bouton-or" id="btn-brasser-main" disabled>Brasser !</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FENÊTRES ==================== -->
+<div class="rideau" id="rideau"><div class="rideau-contenu" id="rideau-contenu"></div></div>
+<div class="fenetre" id="fenetre"><div class="fenetre-boite parchemin" id="fenetre-boite"></div></div>
+
+<!-- ==================== LE CHAUDRON DESSINÉ ==================== -->
+<!-- Modèle copié dans chaque [data-chaudron]. Les couleurs viennent de theme.css -->
+<template id="modele-chaudron">
+  <svg class="chaudron" viewBox="0 0 260 210" aria-hidden="true">
+    <defs>
+      <radialGradient id="g-corps" cx="35%" cy="35%" r="75%"><stop offset="0" class="c-reflet"/><stop offset="1" class="c-corps"/></radialGradient>
+      <radialGradient id="g-potion" cx="50%" cy="50%" r="60%"><stop offset="0" class="c-potion-clair"/><stop offset="1" class="c-potion"/></radialGradient>
+      <clipPath id="clip-potion"><ellipse cx="130" cy="58" rx="100" ry="15"/></clipPath>
+    </defs>
+    <g class="feu">
+      <path class="flamme f1" d="M70 205 C62 180 80 172 78 150 C94 168 96 182 90 205 Z"/>
+      <path class="flamme f2" d="M100 205 C92 172 116 160 112 130 C134 158 132 182 124 205 Z"/>
+      <path class="flamme f3" d="M134 205 C128 176 148 166 150 138 C166 166 166 186 156 205 Z"/>
+      <path class="flamme f4" d="M164 205 C160 184 176 176 180 156 C192 176 190 192 184 205 Z"/>
+      <rect class="buche" x="56" y="198" width="148" height="10" rx="5"/>
+    </g>
+    <path class="pied" d="M60 168 L48 196 L62 196 L76 172 Z"/>
+    <path class="pied" d="M200 168 L212 196 L198 196 L184 172 Z"/>
+    <path d="M22 62 C14 140 70 182 130 182 C190 182 246 140 238 62 Z" fill="url(#g-corps)" class="corps"/>
+    <path class="anse" d="M24 72 C4 72 4 100 22 100" fill="none"/>
+    <path class="anse" d="M236 72 C256 72 256 100 238 100" fill="none"/>
+    <path class="reflet" d="M48 84 C46 124 70 152 96 164 C72 140 62 118 64 86 Z"/>
+    <ellipse class="bord" cx="130" cy="58" rx="112" ry="22"/>
+    <ellipse class="potion" cx="130" cy="58" rx="100" ry="15" fill="url(#g-potion)"/>
+    <g clip-path="url(#clip-potion)" class="bulles">
+      <circle cx="90" cy="64" r="5"/><circle cx="130" cy="66" r="7"/><circle cx="168" cy="63" r="4"/>
+      <circle cx="110" cy="66" r="3"/><circle cx="150" cy="64" r="5"/><circle cx="70" cy="62" r="3"/>
+    </g>
+  </svg>
+</template>
+
+<script src="contenu.js"></script>
+<script src="moteur.js"></script>
+</body>
+</html>

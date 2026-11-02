@@ -1,0 +1,4 @@
+Dépose ici tes illustrations d'ingrédients :
+CHAUDRON-01.png, CHAUDRON-02.png ... CHAUDRON-24.png
+(format carré conseillé, 512 x 512 px, fond transparent)
+Tant qu'une image manque, l'app affiche l'icône de la famille.
