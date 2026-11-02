@@ -9,9 +9,17 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '2.3.0', date: '2026-11-02' };
+const VERSION = { numero: '2.3.2', date: '2026-11-02' };
 
 const HISTORIQUE = [
+  { numero: '2.3.2', date: '2026-11-02', nouveautes: [
+    "Correction du bouton « Mettre à jour » : il retélécharge maintenant chaque fichier depuis GitHub au lieu de reprendre ceux gardés en mémoire par le téléphone.",
+    "Si la nouvelle version n'est pas encore arrivée sur le téléphone, le bandeau le dit au lieu de reproposer la même mise à jour.",
+  ]},
+  { numero: '2.3.1', date: '2026-11-02', nouveautes: [
+    "2 secondes de silence entre deux phrases du chaudron (réglable avec pauseEntrePhrases dans contenu.js).",
+    "Les phrases ne se coupent plus entre elles : elles passent toujours l'une après l'autre.",
+  ]},
   { numero: '2.3.0', date: '2026-11-02', nouveautes: [
     "Musique de fond : tes morceaux du dossier musique/, ou une musique mystérieuse composée par l'app s'il n'y en a pas.",
     "Bouton 🎵 pendant la partie et option Musique sur l'écran de préparation.",

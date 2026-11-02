@@ -6,7 +6,14 @@
 <meta name="theme-color" content="#120d1c">
 <title>Le Chaudron</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="theme.css">
+<script>
+  /* Chaque fichier est chargé avec le numéro de version dans son adresse (theme.css?v=2.3.2) :
+     une nouvelle version = de nouvelles adresses, le téléphone ne peut pas reprendre les anciens fichiers. */
+  var V = new URLSearchParams(location.search).get('v');
+  try { V = V || localStorage.getItem('chaudron-version') || ''; } catch (e) { V = V || ''; }
+  var Q = V ? '?v=' + encodeURIComponent(V) : '';
+  document.write('<link rel="stylesheet" href="theme.css' + Q + '">');
+</script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </head>
 <body>
@@ -178,8 +185,10 @@
   </svg>
 </template>
 
-<script src="version.js"></script>
-<script src="contenu.js"></script>
-<script src="moteur.js"></script>
+<script>
+  document.write('<script src="version.js' + Q + '"><\/script>');
+  document.write('<script src="contenu.js' + Q + '"><\/script>');
+  document.write('<script src="moteur.js' + Q + '"><\/script>');
+</script>
 </body>
 </html>

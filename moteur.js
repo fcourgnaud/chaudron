@@ -325,10 +325,10 @@ function finPartie(gagne) {
   }
   fenetre(html + `<div class="actions"><button class="rond grand-rond" id="f-accueil" aria-label="Accueil">⌂</button><button class="bouton-or" id="f-rejouer">Rejouer</button></div>`);
   $('#f-accueil').onclick = () => { fermerFenetre(); quitter(); };
-  $('#f-rejouer').onclick = () => { fermerFenetre(); Camera.arreter(); demarrerPartie(); };
+  $('#f-rejouer').onclick = () => { fermerFenetre(); Camera.arreter(); viderParole(); demarrerPartie(); };
 }
 
-function quitter() { Camera.arreter(); Ambiance.arreter(); Voix.arreter(); montrer('ecran-titre'); }
+function quitter() { Camera.arreter(); Ambiance.arreter(); viderParole(); montrer('ecran-titre'); }
 $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre le feu ?</h2><p>La partie en cours sera perdue.</p>')) quitter(); };
 
 /* ---------- 6. POUVOIRS ---------- */
@@ -757,14 +757,30 @@ function parler(cle, vars = {}, discret = false) {
   return dire(texte, discret, fichier);
 }
 
-async function dire(texte, discret = false, fichier = null) {
-  const p = $('#parole');
-  if (!discret) { p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); }
-  if (!S.voix) return attendre(900 + texte.length * 30);
-  Voix.arreter();
-  Musique.baisser(true);
-  try { await parlerVraiment(texte, fichier); } finally { Musique.baisser(false); }
+// Les phrases passent l'une après l'autre (jamais en même temps),
+// avec CONFIG.pauseEntrePhrases de silence entre deux phrases.
+const Parole = { file: Promise.resolve(), finDerniere: 0, generation: 0 };
+
+function dire(texte, discret = false, fichier = null) {
+  const gen = Parole.generation;
+  const tour = Parole.file.then(async () => {
+    if (gen !== Parole.generation) return;               // partie quittée entre-temps
+    const attente = Parole.finDerniere + CONFIG.pauseEntrePhrases - Date.now();
+    if (attente > 0) await attendre(attente);
+    if (gen !== Parole.generation) return;
+    const p = $('#parole');
+    if (!discret) { p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); }
+    if (!S.voix) await attendre(900 + texte.length * 30);
+    else {
+      Musique.baisser(true);
+      try { await parlerVraiment(texte, fichier); } finally { Musique.baisser(false); }
+    }
+    Parole.finDerniere = Date.now();
+  });
+  Parole.file = tour.catch(() => {});
+  return tour;
 }
+function viderParole() { Parole.generation++; Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
 
 async function parlerVraiment(texte, fichier) {
   if (fichier && await Voix.jouer(fichier)) return;
@@ -868,21 +884,48 @@ $('#btn-version').onclick = () => {
   $('#f-fermer').onclick = fermerFenetre;
 };
 
-// Va lire version.js sur le serveur : si le numéro a changé, on propose de recharger.
+// Va lire version.js sur le serveur : si le numéro a changé, on propose de mettre à jour.
+async function versionEnLigne() {
+  const r = await fetch('version.js?t=' + Date.now(), { cache: 'no-store' });
+  if (!r.ok) return null;
+  const m = (await r.text()).match(/numero:\s*'([^']+)'/);
+  return m ? m[1] : null;
+}
 async function verifierMiseAJour() {
   try {
-    const r = await fetch('version.js?t=' + Date.now(), { cache: 'no-store' });
-    if (!r.ok) return;
-    const m = (await r.text()).match(/numero:\s*'([^']+)'/);
-    if (!m || m[1] === VERSION.numero) return;
-    $('#maj-texte').textContent = `Nouvelle version ${m[1]} disponible`;
+    const enLigne = await versionEnLigne();
+    let attendue = null; try { attendue = sessionStorage.getItem('chaudron-maj'); } catch (e) {}
+    if (attendue && attendue === VERSION.numero) { try { sessionStorage.removeItem('chaudron-maj'); } catch (e) {} }
+    if (!enLigne || enLigne === VERSION.numero) { $('#bandeau-maj').hidden = true; return; }
+    $('#maj-texte').textContent = attendue === enLigne
+      ? `La version ${enLigne} n'est pas encore arrivée sur ce téléphone. Réessaie dans une minute.`
+      : `Nouvelle version ${enLigne} disponible`;
     $('#bandeau-maj').hidden = false;
   } catch (e) {}
 }
-$('#btn-recharger').onclick = async () => {
-  try { const regs = await navigator.serviceWorker?.getRegistrations(); await Promise.all((regs || []).map(r => r.update())); } catch (e) {}
-  location.reload();
-};
+
+// Les fichiers de l'app à retélécharger lors d'une mise à jour
+function fichiersDeLApp() {
+  return ['./', 'index.html', 'version.js', 'contenu.js', 'moteur.js', 'theme.css', 'manifest.json', 'sw.js',
+    ...Object.keys(FAMILLES).map(imgFamille), ...ORDRE_REP.map(imgReponse)];
+}
+
+// Mise à jour forcée : on retélécharge chaque fichier depuis GitHub (sans passer par la mémoire
+// du téléphone), on vide les copies hors ligne, puis on recharge l'app.
+async function mettreAJour() {
+  const b = $('#btn-recharger'); b.disabled = true; b.textContent = 'Mise à jour…';
+  let cible = null;
+  try { cible = await versionEnLigne(); } catch (e) {}
+  try { if (cible) { sessionStorage.setItem('chaudron-maj', cible); localStorage.setItem('chaudron-version', cible); } } catch (e) {}
+  try {
+    const regs = await navigator.serviceWorker?.getRegistrations();
+    await Promise.all((regs || []).map(r => r.unregister()));
+  } catch (e) {}
+  try { const noms = await caches.keys(); await Promise.all(noms.filter(n => n.startsWith('chaudron')).map(n => caches.delete(n))); } catch (e) {}
+  await Promise.all(fichiersDeLApp().map(f => fetch(f, { cache: 'reload' }).catch(() => {})));
+  location.replace(location.pathname + '?v=' + encodeURIComponent((cible || 'maj') + '-' + Date.now()));
+}
+$('#btn-recharger').onclick = mettreAJour;
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') verifierMiseAJour(); });
 
 /* ---------- 14. LANCEMENT ---------- */
@@ -892,5 +935,7 @@ majSaisieSorcieres();
 Voix.charger();
 Musique.charger();
 afficherVersion();
+try { localStorage.setItem('chaudron-version', VERSION.numero); } catch (e) {}
 verifierMiseAJour();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+if (location.search.includes('v=')) history.replaceState(null, '', location.pathname);   // on nettoie l'adresse après une mise à jour
