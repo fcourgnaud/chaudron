@@ -9,9 +9,20 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '3.0.0', date: '2026-11-02' };
+const VERSION = { numero: '3.2.0', date: '2026-11-02' };
 
 const HISTORIQUE = [
+  { numero: '3.2.0', date: '2026-11-02', nouveautes: [
+    "Ingrédient secret : en début de manche, l'app appelle chaque sorcière à tour de rôle et lui montre en secret un ingrédient de la recette.",
+    "L'annonce se fait avant de brasser, ou juste après avoir entendu sa réponse (bouton « J'annonce maintenant »). Une seule annonce par tour.",
+    "Rappel « Le marché se refait » après chaque tour de table.",
+  ]},
+  { numero: '3.1.0', date: '2026-11-02', nouveautes: [
+    "Nouvelle façon de gagner, comme au Cluedo : pendant ton tour, au lieu de brasser, tu peux annoncer la recette en secret (bouton « J'annonce la recette »), sans avoir besoin des cartes.",
+    "Annonce juste : tu gagnes la manche. Annonce fausse : tu es chassée jusqu'à la fin de la manche (tu peux encore échanger). S'il ne reste qu'une sorcière, elle gagne.",
+    "En solo, une annonce fausse compte 3 brassages de plus ; en Pleine Lune, elle coûte 2 essais.",
+    "Retour aux brassages complets : la potion qui mijote, les points et l'impatience de la version 3.0.0 sont retirés.",
+  ]},
   { numero: '3.0.0', date: '2026-11-02', nouveautes: [
     "Nouvelle règle « La potion mijote » : un ingrédient à la bonne place reste dans la potion (on pose la carte au centre), et les brassages suivants ne remplissent que les places libres.",
     "Points : chaque ingrédient posé dans la potion rapporte 1 point. Quand la potion est complète, la plus forte en points gagne la manche ; en cas d'égalité, celle qui a terminé la potion.",

@@ -84,7 +84,7 @@ function demarrerPartie() {
     mode: R.mode,
     expert: $('#opt-expert').checked,
     voix: $('#opt-voix').checked,
-    joueurs: (R.mode === 'concours' ? noms : ['Le cercle']).map(nom => ({ nom, victoires: 0, pouvoirs: [], utilises: new Set(), passe: false, essais: 0 })),
+    joueurs: (R.mode === 'concours' ? noms : ['Le cercle']).map(nom => ({ nom, victoires: 0, pouvoirs: [], utilises: new Set(), passe: false, essais: 0, eliminee: false })),
     courant: 0,
     manche: 0,
     pouvoirsDispo: melanger(POUVOIRS.map(p => p.id)),
@@ -106,15 +106,11 @@ async function nouvelleManche(premiere) {
   // 2 ingrédients instables, hors recette, de familles différentes
   const reste = tirage.slice(taille);
   S.instables = [reste[0], reste.find(n => ING(n).fam !== ING(reste[0]).fam)];
-  // la potion qui mijote : une place par ingrédient, remplie quand on y jette le bon
-  S.potion = Array(taille).fill(null); S.potionPar = Array(taille).fill(null);
-  S.points = S.joueurs.map(() => 0);
-  S.entendus = new Set();            // ingrédients de la recette déjà entendus (bulle ou sifflement)
-  S.sansProgres = 0; S.progresCeTour = false; S.poseesCeTour = [];
+  S.max = Math.max(CONFIG.maxBrassage, taille);
   S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {};
   S.essais = 0; S.phase = 'attente'; S.derniere = null;
   S.secret = false; S.question = false; S.sablier = false;
-  S.joueurs.forEach(j => { j.passe = false; j.utilises = new Set(); });
+  S.joueurs.forEach(j => { j.passe = false; j.eliminee = false; j.utilises = new Set(); });
   colorerPotion(null);
   majTitre(); majSorcieres(); majPlateau(); majJournal(); majPouvoirs(); majActions('brassage');
 
@@ -122,62 +118,39 @@ async function nouvelleManche(premiere) {
     await rideau(`<div class="icone">🌕</div><div class="petit-titre">Mode coopératif</div><div class="grand-titre">La Pleine Lune</div><div class="sous-titre">${taille} ingrédients · ${CONFIG.essaisPleineLune} essais</div>`, CONFIG.dureeRideau + 600);
     await parler('luneDebut', { n: taille, essais: CONFIG.essaisPleineLune });
     S.phase = 'brassage'; majPlateau();
-    majConsigne();
+    $('#consigne').innerHTML = 'Jetez vos cartes une par une, <b>dans l\'ordre</b>';
     return;
   }
   const m = MANCHES[S.manche];
   await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${taille} ingrédients · l'ordre compte</div>`, CONFIG.dureeRideau + 600);
   if (premiere) await parler('accueil');
   await parler('manche', { manche: m.nom, n: taille });
+  S.toursDepuisMarche = 0;
+  if (S.joueurs.length > 1) await distribuerSecrets();
   await debutTour(false);
-}
-
-// places de la potion encore vides
-const libres = () => S.potion.map((n, p) => n ? null : p).filter(p => p !== null);
-const minJete = () => Math.min(CONFIG.minBrassage, libres().length);
-const restantes = () => S.recette.filter(n => !S.potion.includes(n));
-
-function majConsigne() {
-  const nb = libres().length, mini = minJete();
-  const combien = mini === nb ? `${nb}` : `${mini} à ${nb}`;
-  const qui = S.mode === 'concours' ? `<b>${S.joueurs[S.courant].nom}</b> : cueille une carte, puis jette` : 'Jetez';
-  $('#consigne').innerHTML = `${qui} ${combien} carte${nb > 1 ? 's' : ''} pour ${nb > 1 ? 'les places libres' : 'la dernière place'}, dans l'ordre`;
 }
 
 async function debutTour(avecRideau = true) {
   const j = S.joueurs[S.courant];
-  S.brassage = []; S.phase = 'brassage'; S.poseesCeTour = [];
+  S.annonceCeTour = false;
+  S.brassage = []; S.phase = 'brassage';
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
-  majConsigne();
+  $('#consigne').innerHTML = `<b>${j.nom}</b> : cueille une carte, puis jette-en 3 ou ${S.max} dans l'ordre`;
   if (S.joueurs.length > 1) {
     if (avecRideau) await rideau(`<div class="icone">🧙‍♀️</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>`, CONFIG.dureeRideau);
     parler('tour', { joueur: j.nom });
   }
 }
 
-// Le chaudron s'impatiente : toute la recette a été entendue,
-// mais un tour de table complet passe sans qu'aucun ingrédient n'entre dans la potion.
-async function verifierImpatience() {
-  if (S.mode !== 'concours' || S.joueurs.length < 2) return;
-  if (S.progresCeTour) { S.sansProgres = 0; S.progresCeTour = false; return; }
-  if (!restantes().every(n => S.entendus.has(n))) return;
-  S.sansProgres++;
-  if (S.sansProgres < S.joueurs.length) return;
-  S.sansProgres = 0;
-  $('#scene').classList.add('secoue'); setTimeout(() => $('#scene').classList.remove('secoue'), 700);
-  Sons.jouer('sifflement'); Fumee.bouffee(varCSS('--fumee-explosion'), 60);
-  const fin = rideau(`<div class="icone">😤</div><div class="petit-titre">Le chaudron</div><div class="grand-titre">s'impatiente !</div>
-    <div class="sous-titre">Chaque sorcière tend sa main face cachée à sa voisine de gauche,<br>qui y pioche une carte au hasard.</div>`, CONFIG.dureeRideau * 3);
-  await parler('impatience');
-  await fin;
-  ajouterJournal({ qui: '😤', impatience: true });
-}
-
 async function tourSuivant() {
-  await verifierImpatience();
+  // après un tour de table complet, le marché se refait
+  S.toursDepuisMarche = (S.toursDepuisMarche || 0) + 1;
+  const enJeu = S.joueurs.filter(j => !j.eliminee).length;
+  if (S.toursDepuisMarche >= enJeu) { S.toursDepuisMarche = 0; await rappelMarche(); }
   for (let k = 0; k < S.joueurs.length; k++) {
     S.courant = (S.courant + 1) % S.joueurs.length;
     const j = S.joueurs[S.courant];
+    if (j.eliminee) continue;                       // chassée après une annonce fausse
     if (j.passe && S.joueurs.length > 1) { j.passe = false; majSorcieres(); await parler('passe', { joueur: j.nom }); continue; }
     j.passe = false; break;
   }
@@ -191,32 +164,29 @@ function ajouterIngredient(n) {
   if (!ING(n)) return;
   if (S.question) return Pouvoirs.repondreSerpent(n);
   if (S.phase !== 'brassage') return;
-  if (S.potion.includes(n)) { parler('dansPotion'); return; }
   if (S.brassage.includes(n)) { parler('doublon'); return; }
-  if (S.brassage.length >= libres().length) return;
+  if (S.brassage.length >= S.max) return;
   S.brassage.push(n);
   Sons.jouer('scan');
-  montrerEnGrand(ING(n), libres()[S.brassage.length - 1] + 1);
+  montrerEnGrand(ING(n), S.brassage.length);
   Fumee.bouffee(varCSS('--fumee-repos'), 12);
   majPlateau(); majEtagere();
-  if (S.brassage.length === libres().length) { fermerTiroirs(); brasser(); }
+  if (S.brassage.length === S.max) { fermerTiroirs(); brasser(); }
 }
 $('#btn-retirer-main').onclick = () => $('#btn-retirer').onclick();
 $('#btn-brasser-main').onclick = () => { fermerTiroirs(); brasser(); };
 $('#btn-retirer').onclick = () => { if (S.phase === 'brassage') { S.brassage.pop(); majPlateau(); majEtagere(); } };
 $('#btn-brasser').onclick = () => { fermerTiroirs(); brasser(); };
 
-// la règle : bulle = bonne place, sifflement = mauvaise place, pschitt = absent.
-// Les cartes vont dans les places libres de la potion, dans l'ordre.
-function calculerReponses(ids, places) {
-  const reste = restantes();
-  return ids.map((n, i) => S.recette[places[i]] === n ? 'bulle' : reste.includes(n) ? 'sifflement' : 'pschitt');
+// la règle : bulle = bonne place, sifflement = mauvaise place, pschitt = absent
+function calculerReponses(brassage, recette) {
+  return brassage.map((n, i) => recette[i] === n ? 'bulle' : recette.includes(n) ? 'sifflement' : 'pschitt');
 }
 
-// fumée : une famille des ingrédients qui manquent encore, absente du brassage ; dorée si toutes y sont
+// fumée : une famille de la recette absente du brassage ; dorée si toutes y sont
 function fumeeDe(ids, gagne) {
   if (gagne) return { couleur: varCSS('--fumee-victoire'), texte: TEXTES_FUMEE.victoire };
-  const famRecette = [...new Set(restantes().map(n => ING(n).fam))];
+  const famRecette = [...new Set(S.recette.map(n => ING(n).fam))];
   const famJetees = new Set(ids.map(n => ING(n).fam));
   const manquantes = famRecette.filter(f => !famJetees.has(f));
   if (!manquantes.length) return { couleur: varCSS('--fumee-complete'), texte: TEXTES_FUMEE.complete };
@@ -225,16 +195,15 @@ function fumeeDe(ids, gagne) {
 }
 
 async function brasser() {
-  if (S.phase !== 'brassage' || S.brassage.length < minJete()) return;
+  if (S.phase !== 'brassage' || S.brassage.length < Math.min(CONFIG.minBrassage, S.recette.length)) return;
   S.phase = 'reponse'; majActions('aucune');
   const j = S.joueurs[S.courant];
   const ids = [...S.brassage];
-  const places = libres().slice(0, ids.length);
   j.essais++; S.essais++;
   $('#scene').classList.add('agite');
 
   if (S.secret) {
-    await fenetreBouton(`<h2>🦉 Œil de chouette</h2><p>Colle le téléphone à ton oreille, puis touche le bouton.</p><p><small>En secret, rien ne reste dans la potion ce tour-ci.</small></p>`, "J'écoute", true);
+    await fenetreBouton(`<h2>🦉 Œil de chouette</h2><p>Colle le téléphone à ton oreille, puis touche le bouton.</p>`, "J'écoute", true);
     $('#fenetre-boite').innerHTML = '<p style="font-size:3rem">🦉</p>';
   }
 
@@ -256,61 +225,47 @@ async function brasser() {
   }
 
   // --- réponses ---
-  const res = calculerReponses(ids, places);
+  const res = calculerReponses(ids, S.recette);
+  const gagne = ids.length === S.recette.length && res.every(r => r === 'bulle');
   const secret = S.secret;
-  const bonnes = res.filter(r => r === 'bulle').length;
-  const complete = !secret && bonnes === libres().length;
 
-  if (!secret && !complete) {
-    const bete = ids.find((n, i) => S.absents.has(n) || (S.malPlaces[n] && S.malPlaces[n].has(places[i])));
+  if (!secret && !gagne) {
+    const bete = ids.find((n, i) => S.absents.has(n) || (S.malPlaces[n] && S.malPlaces[n].has(i)));
     if (bete) await parler('moquerie', { ingredient: ING(bete).nom });
   }
   if (!secret) ids.forEach((n, i) => {
     if (res[i] === 'pschitt') S.absents.add(n);
-    if (res[i] === 'sifflement') { (S.malPlaces[n] ||= new Set()).add(places[i]); S.entendus.add(n); }
-    if (res[i] === 'bulle') S.entendus.add(n);
+    if (res[i] === 'sifflement') (S.malPlaces[n] ||= new Set()).add(i);
   });
 
-  const { couleur, texte: texteFumee } = fumeeDe(ids, complete);
-  S.derniere = { res, secret, places };
+  const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
+  S.derniere = { res, secret };
   colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);
-  await jouerReponses(res, secret, places);
+  await jouerReponses(res, secret);
 
-  ajouterJournal(secret ? { qui: j.nom, secret: true } : { qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais}`, ids, res, places, couleur, texteFumee });
-
-  // les bonnes places restent dans la potion (sauf écoute secrète)
-  if (!secret) ids.forEach((n, i) => {
-    if (res[i] !== 'bulle') return;
-    S.potion[places[i]] = n; S.potionPar[places[i]] = S.courant;
-    S.points[S.courant]++; S.progresCeTour = true; S.poseesCeTour.push(n);
-  });
-  majSorcieres();
+  ajouterJournal(secret ? { qui: j.nom, secret: true } : { qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais}`, ids, res, couleur, texteFumee });
 
   if (secret) { S.secret = false; colorerPotion(null); fermerFenetre(); majPlateau(); }
-  if (complete) return victoireManche();
-  if (S.poseesCeTour.length) await parler('potion');
-  else await parler(secret ? 'secret' : libres().length - bonnes <= 1 && bonnes ? 'presque' : 'rate');
+  if (gagne) return victoireManche();
+  const bulles = res.filter(r => r === 'bulle').length;
+  await parler(secret ? 'secret' : bulles >= S.recette.length - 1 ? 'presque' : 'rate');
   finDuBrassage();
 }
 
-async function jouerReponses(res, secret, places) {
-  // en mode expert, les bonnes places se voient (elles restent dans la potion), les autres réponses sont mélangées
-  const autres = res.map((r, i) => i).filter(i => res[i] !== 'bulle');
-  const melangees = S.expert ? melanger(autres.map(i => res[i])).sort((a, b) => ORDRE_REP.indexOf(a) - ORDRE_REP.indexOf(b)) : null;
+async function jouerReponses(res, secret) {
+  const ordre = S.expert ? melanger(res).sort((a, b) => ORDRE_REP.indexOf(a) - ORDRE_REP.indexOf(b)) : res;
   $('#reponses-expert').innerHTML = '';
-  let k = 0;
-  for (let i = 0; i < res.length; i++) {
-    const r = S.expert && res[i] !== 'bulle' ? melangees[k++] : res[i];
+  for (let i = 0; i < ordre.length; i++) {
     if (!secret) {
-      if (S.expert && res[i] !== 'bulle') $('#reponses-expert').insertAdjacentHTML('beforeend', `<figure><img src="${imgReponse(r)}" alt=""><figcaption>${LIBELLES_REPONSES[r]}</figcaption></figure>`);
+      if (S.expert) $('#reponses-expert').insertAdjacentHTML('beforeend', `<figure><img src="${imgReponse(ordre[i])}" alt=""><figcaption>${LIBELLES_REPONSES[ordre[i]]}</figcaption></figure>`);
       else {
-        const el = $('#rep-' + places[i]), lib = $('#lib-' + places[i]);
-        if (el) { el.src = imgReponse(r); el.classList.add('visible'); }
-        if (lib) { lib.textContent = LIBELLES_REPONSES[r]; lib.className = 'libelle visible ' + r; }
+        const el = $('#rep-' + i), lib = $('#lib-' + i);
+        if (el) { el.src = imgReponse(ordre[i]); el.classList.add('visible'); }
+        if (lib) { lib.textContent = LIBELLES_REPONSES[ordre[i]]; lib.className = 'libelle visible ' + ordre[i]; }
       }
     }
-    Sons.jouer(r);
-    if (r === 'bulle') Fumee.bouffee(Fumee.couleur, 30);
+    Sons.jouer(ordre[i]);
+    if (ordre[i] === 'bulle') Fumee.bouffee(Fumee.couleur, 30);
     await attendre(CONFIG.pauseEntreSons);
   }
 }
@@ -323,53 +278,34 @@ async function finDuBrassage() {
     if (reste <= 0) { await parler('lunePerdu', { recette: S.recette.map(n => ING(n).nom).join(', ') }); return finPartie(false); }
     await (reste === 1 ? parler('luneDerniere') : parler('lune', { n: reste }));
     await attendre(600);
-    S.brassage = []; S.phase = 'brassage'; colorerPotion(null); majPlateau(); majActions('brassage'); majConsigne();
-    if (S.poseesCeTour.length) $('#consigne').innerHTML = `🧪 Posez au centre <b>${S.poseesCeTour.map(n => ING(n).nom).join(', ')}</b>. ` + $('#consigne').innerHTML;
-    S.poseesCeTour = [];
+    S.brassage = []; S.phase = 'brassage'; S.annonceCeTour = false; colorerPotion(null); majPlateau(); majActions('brassage');
     return;
   }
   const j = S.joueurs[S.courant];
   if (S.sablier) {
-    S.sablier = false; S.brassage = []; S.phase = 'brassage'; S.poseesCeTour = [];
+    S.sablier = false; S.brassage = []; S.phase = 'brassage';
     majPlateau(); majActions('brassage'); majPouvoirs();
     $('#consigne').innerHTML = `⏳ <b>${j.nom}</b> rejoue tout de suite !`;
     return;
   }
   S.phase = 'suite';
   majActions('suite'); majPouvoirs();
-  $('#consigne').innerHTML = (S.poseesCeTour.length
-    ? `🧪 Pose au centre <b>${S.poseesCeTour.map(n => ING(n).nom).join(', ')}</b> : ${S.poseesCeTour.length > 1 ? 'ces cartes restent' : 'cette carte reste'} dans la potion. `
-    : '') + (S.joueurs.length > 1 ? 'Notez la réponse dans vos grimoires…' : 'Note la réponse dans ton grimoire…');
+  $('#consigne').innerHTML = S.joueurs.length > 1 ? 'Notez la réponse dans vos grimoires…' : 'Note la réponse dans ton grimoire…';
 }
 
 /* ---------- 5. VICTOIRES ET FIN DE PARTIE ---------- */
 const recetteHTML = () => `<div class="recette-revelee">${S.recette.map(n => `<span style="--c:${couleurFamille(ING(n).fam)}">${ING(n).nom}</span>`).join('')}</div>`;
 
-// Fin de manche : la plus forte en points gagne ; en cas d'égalité, celle qui a terminé la potion,
-// sinon le chaudron choisit au hasard parmi les ex æquo.
-function gagnanteDeLaManche() {
-  const fin = S.courant, max = Math.max(...S.points);
-  const tete = S.points.map((p, k) => p === max ? k : null).filter(k => k !== null);
-  if (tete.length === 1) return { k: tete[0], cas: 'points' };
-  if (tete.includes(fin)) return { k: fin, cas: 'egalite' };
-  return { k: hasard(tete), cas: 'hasard' };
-}
-
-async function victoireManche() {
+async function victoireManche(k = S.courant, cle = 'victoire') {
   $('#scene').classList.remove('agite');
   Sons.jouer('victoire');
   Fumee.bouffee(varCSS('--fumee-victoire'), 160);
-  majPlateau();
-  if (S.mode === 'lune') { await parler('luneGagne'); return finPartie(true); }
-  await parler('potionPrete');
-  const { k, cas } = gagnanteDeLaManche();
+  colorerPotion(varCSS('--fumee-victoire'), TEXTES_FUMEE.victoire);
   const j = S.joueurs[k];
+  if (S.mode === 'lune') { await parler('luneGagne'); return finPartie(true); }
   j.victoires++; majSorcieres();
-  if (cas === 'egalite') await parler('egalite', { joueur: j.nom });
-  else if (cas === 'hasard') await parler('egaliteHasard', { joueur: j.nom });
-  else await parler('victoire', { joueur: j.nom });
+  await parler(cle, { joueur: j.nom });
 
-  const scores = S.joueurs.length > 1 ? `<div class="scores-manche">${S.joueurs.map((s, x) => `<span class="${x === k ? 'gagnante' : ''}">${s.nom} <b>${S.points[x]}</b> 🧪</span>`).join('')}</div>` : '';
   const solo = S.joueurs.length === 1;
   const derniere = S.manche === MANCHES.length - 1;
   if (derniere || (!solo && j.victoires >= 2)) {
@@ -378,7 +314,7 @@ async function victoireManche() {
   }
   // choisir un pouvoir parmi 3
   const choixP = S.pouvoirsDispo.slice(0, 3).map(id => POUVOIRS.find(p => p.id === id));
-  fenetre(`<h2>${j.nom} remporte la manche ${MANCHES[S.manche].nom} !</h2>${scores}${recetteHTML()}
+  fenetre(`<h2>${j.nom} remporte la manche ${MANCHES[S.manche].nom} !</h2>${recetteHTML()}
     <p>Choisis un pouvoir et prends la carte :</p>
     <div class="cartes-pouvoirs">${choixP.map(p => `<button class="carte-pouvoir" data-p="${p.id}"><span class="emoji">${p.emoji}</span><span><b>${p.nom}</b><small>${p.texte}</small></span></button>`).join('')}</div>`);
   $$('#fenetre-boite [data-p]').forEach(b => b.onclick = () => {
@@ -389,6 +325,110 @@ async function victoireManche() {
     S.courant = (S.courant + 1) % S.joueurs.length;
     nouvelleManche(false);
   });
+}
+
+/* ---------- INGRÉDIENT SECRET ----------
+   En début de manche, chaque sorcière reçoit en secret un ingrédient de la recette
+   (différent pour chacune tant que la recette est assez longue). */
+async function distribuerSecrets() {
+  const pioche = melanger(S.recette);
+  for (let k = 0; k < S.joueurs.length; k++) {
+    const j = S.joueurs[k], n = pioche[k % pioche.length];
+    j.secret = n;
+    await fenetreBouton(`<p style="font-size:2.6rem;margin:0">🤫</p><h2>Le secret de ${j.nom}</h2>
+      <p>Donne le téléphone à <b>${j.nom}</b>. Les autres sorcières détournent les yeux.</p>`, `Je suis ${j.nom}`, true);
+    const ing = ING(n);
+    await fenetreBouton(`<p class="secret-titre">Un ingrédient de la recette est…</p>
+      <div class="apercu-boite secret-carte" style="--c:${couleurFamille(ing.fam)}">${imgIngredient(ing, 'vignette')}<b>${ing.nom}</b><small>${FAMILLES[ing.fam].nom}</small></div>
+      <p><small>Retiens-le (ou note-le en secret dans ton grimoire). Tu ne connais pas sa place.</small></p>`, "C'est noté", true);
+  }
+  fermerFenetre();
+  await parler('secrets');
+}
+
+/* ---------- LE MARCHÉ SE REFAIT après chaque tour de table ---------- */
+async function rappelMarche() {
+  const fin = rideau(`<div class="icone">🧺</div><div class="petit-titre">Fin du tour de table</div><div class="grand-titre">Le marché se refait</div>
+    <div class="sous-titre">Remettez les cartes du marché sous la pioche,<br>puis retournez 4 nouvelles cartes.</div>`, CONFIG.dureeRideau * 2.5);
+  await parler('marche');
+  await fin;
+}
+
+/* ---------- ANNONCE : gagner en annonçant la recette (comme au Cluedo) ----------
+   Pendant son tour, au lieu de brasser, une sorcière peut annoncer la recette complète,
+   en secret, sans avoir besoin des cartes. Juste : elle gagne la manche.
+   Fausse : elle est chassée jusqu'à la fin de la manche (en solo et en Pleine Lune : pénalité). */
+let annonceEnCours = [];
+$('#btn-annonce').onclick = async () => {
+  if (S.annonceCeTour) return;
+  if (!(S.phase === 'brassage' && !S.brassage.length) && S.phase !== 'suite') return;
+  S.phaseAvantAnnonce = S.phase;
+  S.phase = 'annonce'; majActions('aucune');
+  await parler('annonce');
+  annonceEnCours = [];
+  ouvrirAnnonce();
+};
+
+function ouvrirAnnonce() {
+  const L = S.recette.length;
+  const places = Array.from({ length: L }, (_, p) => {
+    const n = annonceEnCours[p];
+    return n ? `<span class="place-annonce pleine" style="--c:${couleurFamille(ING(n).fam)}"><small>${p + 1}</small>${ING(n).nom}</span>` : `<span class="place-annonce"><small>${p + 1}</small></span>`;
+  }).join('');
+  fenetre(`<h2>📜 Annonce secrète</h2>
+    <p><small>Les autres sorcières détournent les yeux. Touche les ingrédients de la recette, dans l'ordre.</small></p>
+    <div class="places-annonce">${places}</div>
+    <div class="etagere" id="etagere-annonce"></div>
+    <div class="actions">
+      <button class="rond grand-rond" id="a-annuler" aria-label="Renoncer">✕</button>
+      <button class="rond grand-rond" id="a-retirer" aria-label="Retirer">↩</button>
+      <button class="bouton-or" id="a-valider" ${annonceEnCours.length === L ? '' : 'disabled'}>J'annonce !</button>
+    </div>`, true);
+  const box = $('#etagere-annonce');
+  remplirEtagere(box);
+  box.querySelectorAll('button').forEach(b => {
+    const n = +b.dataset.n;
+    if (annonceEnCours.includes(n)) b.classList.add('dedans');
+    b.onclick = () => { if (annonceEnCours.length < L && !annonceEnCours.includes(n)) { annonceEnCours.push(n); Sons.jouer('scan'); ouvrirAnnonce(); } };
+  });
+  $('#a-retirer').onclick = () => { annonceEnCours.pop(); ouvrirAnnonce(); };
+  $('#a-annuler').onclick = () => { fermerFenetre(); S.phase = S.phaseAvantAnnonce; majActions(S.phase); majPouvoirs(); };
+  $('#a-valider').onclick = () => verifierAnnonce([...annonceEnCours]);
+}
+
+async function verifierAnnonce(proposition) {
+  fermerFenetre();
+  S.annonceCeTour = true;
+  const j = S.joueurs[S.courant];
+  $('#scene').classList.add('agite');
+  await rideau(`<div class="icone">📜</div><div class="petit-titre">${S.mode === 'concours' ? j.nom : 'Le cercle'} annonce…</div><div class="grand-titre">…</div>`, 1600);
+  $('#scene').classList.remove('agite');
+  const juste = proposition.every((n, i) => n === S.recette[i]);
+  if (juste) {
+    ajouterJournal({ qui: j.nom, annonce: 'juste' });
+    if (S.mode === 'lune') return victoireManche();
+    return victoireManche(S.courant, 'annonceJuste');
+  }
+  // annonce fausse
+  Sons.jouer('explosion');
+  $('#scene').classList.add('secoue'); setTimeout(() => $('#scene').classList.remove('secoue'), 700);
+  colorerPotion(varCSS('--fumee-explosion'), 'Annonce fausse');
+  ajouterJournal({ qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais + 1}`, annonce: 'fausse' });
+  if (S.mode === 'lune') {
+    S.essais += CONFIG.penaliteAnnonceLune;
+    await parler('annonceFausseLune');
+    return finDuBrassage();
+  }
+  if (S.joueurs.length === 1) {
+    j.essais += CONFIG.penaliteAnnonceSolo;
+    await parler('annonceFausseSolo');
+    return finDuBrassage();
+  }
+  j.eliminee = true; majSorcieres();
+  await parler('annonceFausse', { joueur: j.nom });
+  const enLice = S.joueurs.map((s, k) => s.eliminee ? null : k).filter(k => k !== null);
+  if (enLice.length === 1) return victoireManche(enLice[0], 'derniereEnLice');
+  finDuBrassage();
 }
 
 const meilleure = () => S.joueurs.reduce((a, b) => b.victoires > a.victoires ? b : a);
@@ -465,8 +505,7 @@ function majSorcieres() {
   if (S.mode !== 'concours') return;
   $('#sorcieres').innerHTML = S.joueurs.map((j, k) => {
     const pv = j.pouvoirs.map(id => POUVOIRS.find(p => p.id === id).emoji).join('');
-    const pts = S.points ? `<span class="points" title="ingrédients posés dans la potion">🧪${S.points[k]}</span>` : '';
-    return `<div class="sorciere ${k === S.courant ? 'active' : ''} ${j.passe ? 'suie' : ''}"><span class="chapeau">🧙‍♀️</span>${j.nom}${pts}<span class="trophees">${'★'.repeat(j.victoires)}</span>${pv}</div>`;
+    return `<div class="sorciere ${k === S.courant ? 'active' : ''} ${j.passe ? 'suie' : ''} ${j.eliminee ? 'eliminee' : ''}"><span class="chapeau">${j.eliminee ? '✖' : '🧙‍♀️'}</span>${j.nom}<span class="trophees">${'★'.repeat(j.victoires)}</span>${pv}</div>`;
   }).join('');
 }
 
@@ -484,29 +523,20 @@ function montrerEnGrand(ing, rang) {
 
 function majPlateau() {
   const box = $('#plateau'); box.innerHTML = '';
-  const L = S.recette.length, lib = libres();
-  box.style.setProperty('--nb', L);
-  for (let p = 0; p < L; p++) {
-    const fixe = S.potion[p];
-    if (fixe) {   // ingrédient déjà dans la potion
-      const ing = ING(fixe), qui = S.mode === 'concours' && S.joueurs.length > 1 ? S.joueurs[S.potionPar[p]].nom : '';
-      box.insertAdjacentHTML('beforeend', `<div class="emplacement plein dans-potion" style="--c:${couleurFamille(ing.fam)}">
-        <span class="rang">${p + 1}</span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
-        <span class="cachet">🧪 ${qui || 'dans la potion'}</span></div>`);
-      continue;
-    }
-    const n = S.brassage[lib.indexOf(p)];
+  box.style.setProperty('--nb', S.max);
+  for (let i = 0; i < S.max; i++) {
+    const n = S.brassage[i];
     if (n) {
       const ing = ING(n);
       box.insertAdjacentHTML('beforeend', `<div class="emplacement plein" style="--c:${couleurFamille(ing.fam)}">
-        <span class="rang">${p + 1}</span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
-        <img class="reponse" id="rep-${p}" alt=""><span class="libelle" id="lib-${p}"></span></div>`);
+        <span class="rang">${i + 1}</span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
+        <img class="reponse" id="rep-${i}" alt=""><span class="libelle" id="lib-${i}"></span></div>`);
     } else {
-      box.insertAdjacentHTML('beforeend', `<div class="emplacement">${p + 1}</div>`);
+      box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}${i >= CONFIG.minBrassage ? '<span class="facultatif">facultatif</span>' : ''}</div>`);
     }
   }
   $('#reponses-expert').innerHTML = '';
-  $('#btn-brasser').disabled = S.phase !== 'brassage' || S.brassage.length < minJete();
+  $('#btn-brasser').disabled = S.phase !== 'brassage' || S.brassage.length < Math.min(CONFIG.minBrassage, S.recette.length);
   $('#btn-retirer').disabled = S.phase !== 'brassage' || !S.brassage.length;
   $('#btn-brasser-main').disabled = $('#btn-brasser').disabled;
   $('#btn-retirer-main').disabled = $('#btn-retirer').disabled;
@@ -515,6 +545,8 @@ function majPlateau() {
 
 function majActions(quoi) {
   $('#actions-brassage').hidden = quoi !== 'brassage';
+  $('#actions-annonce').hidden = !(quoi === 'brassage' || quoi === 'suite') || S.annonceCeTour;
+  $('#btn-annonce').textContent = quoi === 'suite' ? "📜 J'annonce maintenant" : "📜 J'annonce la recette";
   $('#actions-suite').hidden = quoi !== 'suite';
   if (quoi !== 'brassage') $('#actions-pouvoirs').innerHTML = '';
 }
@@ -546,10 +578,10 @@ function majJournal() {
     if (e.explosion) corps = `💥 Explosion ! (${e.explosion})`;
     else if (e.secret) corps = '🦉 a écouté en secret';
     else if (e.serpent) corps = '🐍 a interrogé le chaudron';
-    else if (e.impatience) corps = "Le chaudron s'est impatienté : chacune a donné une carte à sa voisine de gauche";
+    else if (e.annonce) corps = e.annonce === 'juste' ? '📜 a annoncé la bonne recette !' : '📜 a fait une annonce fausse';
     else if (S.expert) corps = e.ids.map(n => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}">${ING(n).nom}</span>`).join(' ') +
       ` <span class="expert">${[...e.res].sort((a, b) => ORDRE_REP.indexOf(a) - ORDRE_REP.indexOf(b)).map(r => `<img src="${imgReponse(r)}" alt="">`).join('')}</span>`;
-    else corps = e.ids.map((n, i) => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}"><img class="r" src="${imgReponse(e.res[i])}" alt="">${e.places ? `<small>${e.places[i] + 1}.</small> ` : ''}${ING(n).nom}</span>`).join(' ');
+    else corps = e.ids.map((n, i) => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}"><img class="r" src="${imgReponse(e.res[i])}" alt="">${ING(n).nom}</span>`).join(' ');
     const fumee = e.couleur ? `<span class="fumee-journal" style="--c:${e.couleur}">${e.texteFumee || ''}</span>` : '';
     return `<div class="ligne-journal"><span class="qui">${e.qui}</span>${corps} ${fumee}</div>`;
   }).join('');

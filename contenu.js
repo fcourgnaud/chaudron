@@ -7,8 +7,11 @@
 
 const CONFIG = {
   prefixeQR: 'CHAUDRON-',     // texte des QR codes : CHAUDRON-01 ... CHAUDRON-24
-  minBrassage: 3,             // cartes minimum jetées (moins s'il reste moins de places libres dans la potion)
+  minBrassage: 3,             // cartes minimum jetées dans le chaudron
+  maxBrassage: 4,             // maximum (passe à 5 pour la manche Archimage)
   essaisPleineLune: 8,
+  penaliteAnnonceSolo: 3,     // en solo, une annonce fausse compte comme 3 brassages de plus
+  penaliteAnnonceLune: 2,     // en Pleine Lune, une annonce fausse coûte 2 essais
   pauseEntreSons: 900,        // millisecondes entre deux réponses
   voixVitesse: 0.9,           // 0.5 à 2
   voixHauteur: 0.55,          // 0 (grave) à 2 (aigu)
@@ -95,7 +98,7 @@ const INGREDIENTS = [
 
 // app: true = l'app gère le pouvoir (bouton pendant ton tour)
 const POUVOIRS = [
-  { id: 'chouette', nom: 'Œil de chouette',   emoji: '🦉', app: true,  texte: "Écoute ta réponse en secret, téléphone collé à l'oreille. Rien ne reste dans la potion ce tour-ci." },
+  { id: 'chouette', nom: 'Œil de chouette',   emoji: '🦉', app: true,  texte: "Écoute ta réponse en secret, téléphone collé à l'oreille." },
   { id: 'serpent',  nom: 'Langue de serpent', emoji: '🐍', app: true,  texte: "Montre une carte : le chaudron te chuchote si elle est dans la recette." },
   { id: 'amulette', nom: 'Amulette de suie',  emoji: '🧿', app: true,  texte: "Te protège d'une explosion (automatique)." },
   { id: 'sablier',  nom: 'Sablier',           emoji: '⏳', app: true,  texte: "Rejoue un brassage juste après le tien." },
@@ -118,13 +121,15 @@ const PHRASES = {
   protege:   ["L'amulette de {joueur} a avalé la suie."],
   passe:     ['{joueur} est encore couverte de suie : elle passe son tour.'],
   doublon:   ['Celui-là est déjà dans mon ventre.'],
-  victoire:  ['{joueur} a mis le plus d\'ingrédients dans ma potion. Elle remporte la manche !', 'Délicieux ! {joueur} remporte la manche !'],
-  potion:    ['Celui-là reste dans ma potion.', 'Mmm… celui-là, je le garde.', 'Excellent. Il mijote déjà.'],
-  dansPotion:['Celui-là mijote déjà dans ma potion.'],
-  potionPrete: ['La potion est prête !', 'Ma potion est complète. Enfin !'],
-  egalite:   ['Égalité ! {joueur} a terminé la potion : elle l\'emporte.'],
-  egaliteHasard: ['Égalité… Je choisis {joueur}.'],
-  impatience: ['Assez ! Je m\'impatiente ! Chacune tend sa main à sa voisine de gauche, qui y pioche une carte au hasard.', 'Vous me faites attendre ! Une carte au hasard pour votre voisine de gauche. Tout de suite !'],
+  victoire:  ['Parfait. Absolument parfait. {joueur} a trouvé la potion !', 'Délicieux ! {joueur} remporte la manche !'],
+  annonce:   ['Une annonce ? Voyons ça… Les autres, détournez les yeux.', 'Tu crois connaître ma recette ? Montre-moi.'],
+  secrets:   ['Chacune connaît maintenant un de mes secrets. Gardez-le bien.', 'Mes secrets sont distribués. Que le meilleur nez gagne.'],
+  marche:    ['Le marché se refait ! Remettez les cartes sous la pioche et retournez-en quatre nouvelles.', 'Nouveau tour, nouveau marché. Quatre ingrédients frais !'],
+  annonceJuste: ['Exact. C\'est bien ma recette. {joueur} remporte la manche !', 'Incroyable… {joueur} a percé mon secret !'],
+  annonceFausse: ['Faux ! {joueur} est chassée du concours jusqu\'à la fin de la manche.', 'Raté ! {joueur} quitte la manche. Elle peut encore échanger, mais plus brasser.'],
+  annonceFausseSolo: ['Faux. Ça te coûtera cher.'],
+  annonceFausseLune: ['Faux ! La lune monte plus vite…'],
+  derniereEnLice: ['Il ne reste que {joueur}. Elle remporte la manche !'],
   grande:    ['Inclinez-vous devant {joueur}, Grande Sorcière !'],
   lune:      ['Plus que {n} essais avant que la lune se lève.'],
   luneDerniere: ['Dernier essai. La lune est là…'],
@@ -159,12 +164,14 @@ const VOIX = {
   passe:              ['passe-1'],
   doublon:            ['doublon-1'],
   victoire:           ['victoire-1', 'victoire-2'],
-  potion:             ['potion-1', 'potion-2', 'potion-3'],
-  dansPotion:         ['dans-potion-1'],
-  potionPrete:        ['potion-prete-1', 'potion-prete-2'],
-  egalite:            ['egalite-1'],
-  egaliteHasard:      ['egalite-hasard-1'],
-  impatience:         ['impatience-1', 'impatience-2'],
+  annonce:            ['annonce-1', 'annonce-2'],
+  secrets:            ['secrets-1', 'secrets-2'],
+  marche:             ['marche-1', 'marche-2'],
+  annonceJuste:       ['annonce-juste-1', 'annonce-juste-2'],
+  annonceFausse:      ['annonce-fausse-1', 'annonce-fausse-2'],
+  annonceFausseSolo:  ['annonce-fausse-solo-1'],
+  annonceFausseLune:  ['annonce-fausse-lune-1'],
+  derniereEnLice:     ['derniere-en-lice-1'],
   grande:             ['grande-1'],
   'lune-debut-3':     ['lune-debut-3'],
   'lune-debut-4':     ['lune-debut-4'],

@@ -380,15 +380,20 @@ button:disabled { opacity: .35; cursor: default; }
   display: grid; place-items: center; font-family: var(--police-titre); font-size: 1.1rem; box-shadow: var(--ombre); }
 
 /* =========================================================
-   LA POTION QUI MIJOTE : ingrédients déjà dans la potion, points
+   ANNONCE DE LA RECETTE
    ========================================================= */
-.emplacement.dans-potion { box-shadow: 0 0 0 3px var(--or), 0 0 16px var(--or), var(--ombre);
-  background: radial-gradient(ellipse at 50% 30%, #fff8dc, #f3e1a8 70%, #d9b964); }
-.emplacement.dans-potion .rang { background: var(--or-fonce); }
-.emplacement .cachet { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); white-space: nowrap; max-width: 140%;
-  overflow: hidden; text-overflow: ellipsis; padding: 2px 8px; border-radius: 999px; background: var(--violet); color: var(--or-clair);
-  font-size: .68rem; box-shadow: var(--ombre); }
-.sorciere .points { font-size: .82rem; color: var(--or-clair); }
-.scores-manche { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-.scores-manche span { background: rgba(255,255,255,.55); border-radius: 999px; padding: 4px 12px; }
-.scores-manche span.gagnante { background: var(--or); }
+#actions-annonce { margin-top: 6px; }
+.bouton-annonce { border-radius: 999px; padding: 9px 18px; border: 1px solid var(--or); background: rgba(74, 47, 99, .75);
+  color: var(--or-clair); font-family: var(--police-titre); font-size: .95rem; box-shadow: 0 0 12px rgba(226, 181, 82, .25); }
+.places-annonce { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.place-annonce { position: relative; min-width: 62px; min-height: 44px; padding: 14px 6px 6px; border-radius: 10px; border: 2px dashed #5a4d6b;
+  font-family: var(--police-magie); font-size: .8rem; line-height: 1.05; display: flex; align-items: center; justify-content: center; }
+.place-annonce small { position: absolute; top: 2px; left: 6px; font-family: var(--police-texte); color: var(--texte-nuit-doux); }
+.place-annonce.pleine { border: 2px solid var(--c); background: rgba(255, 255, 255, .08); }
+.fenetre.noire .etagere button { background: #1e1630; color: var(--texte-nuit); }
+.fenetre.noire .etagere h4 { color: var(--or); }
+.sorciere.eliminee { opacity: .45; text-decoration: line-through; }
+
+/* ingrédient secret */
+.secret-titre { font-family: var(--police-magie); font-style: italic; color: var(--or-clair); font-size: 1.15rem; }
+.secret-carte { margin: 6px auto; width: min(52vw, 210px); }
