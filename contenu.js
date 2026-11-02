@@ -7,8 +7,7 @@
 
 const CONFIG = {
   prefixeQR: 'CHAUDRON-',     // texte des QR codes : CHAUDRON-01 ... CHAUDRON-24
-  minBrassage: 3,             // cartes minimum jetées dans le chaudron
-  maxBrassage: 4,             // maximum (passe à 5 pour la manche Archimage)
+  minBrassage: 3,             // cartes minimum jetées (moins s'il reste moins de places libres dans la potion)
   essaisPleineLune: 8,
   pauseEntreSons: 900,        // millisecondes entre deux réponses
   voixVitesse: 0.9,           // 0.5 à 2
@@ -96,7 +95,7 @@ const INGREDIENTS = [
 
 // app: true = l'app gère le pouvoir (bouton pendant ton tour)
 const POUVOIRS = [
-  { id: 'chouette', nom: 'Œil de chouette',   emoji: '🦉', app: true,  texte: "Écoute ta réponse en secret, téléphone collé à l'oreille." },
+  { id: 'chouette', nom: 'Œil de chouette',   emoji: '🦉', app: true,  texte: "Écoute ta réponse en secret, téléphone collé à l'oreille. Rien ne reste dans la potion ce tour-ci." },
   { id: 'serpent',  nom: 'Langue de serpent', emoji: '🐍', app: true,  texte: "Montre une carte : le chaudron te chuchote si elle est dans la recette." },
   { id: 'amulette', nom: 'Amulette de suie',  emoji: '🧿', app: true,  texte: "Te protège d'une explosion (automatique)." },
   { id: 'sablier',  nom: 'Sablier',           emoji: '⏳', app: true,  texte: "Rejoue un brassage juste après le tien." },
@@ -119,7 +118,13 @@ const PHRASES = {
   protege:   ["L'amulette de {joueur} a avalé la suie."],
   passe:     ['{joueur} est encore couverte de suie : elle passe son tour.'],
   doublon:   ['Celui-là est déjà dans mon ventre.'],
-  victoire:  ['Parfait. Absolument parfait. {joueur} a trouvé la potion !', 'Délicieux ! {joueur} remporte la manche !'],
+  victoire:  ['{joueur} a mis le plus d\'ingrédients dans ma potion. Elle remporte la manche !', 'Délicieux ! {joueur} remporte la manche !'],
+  potion:    ['Celui-là reste dans ma potion.', 'Mmm… celui-là, je le garde.', 'Excellent. Il mijote déjà.'],
+  dansPotion:['Celui-là mijote déjà dans ma potion.'],
+  potionPrete: ['La potion est prête !', 'Ma potion est complète. Enfin !'],
+  egalite:   ['Égalité ! {joueur} a terminé la potion : elle l\'emporte.'],
+  egaliteHasard: ['Égalité… Je choisis {joueur}.'],
+  impatience: ['Assez ! Je m\'impatiente ! Chacune tend sa main à sa voisine de gauche, qui y pioche une carte au hasard.', 'Vous me faites attendre ! Une carte au hasard pour votre voisine de gauche. Tout de suite !'],
   grande:    ['Inclinez-vous devant {joueur}, Grande Sorcière !'],
   lune:      ['Plus que {n} essais avant que la lune se lève.'],
   luneDerniere: ['Dernier essai. La lune est là…'],
@@ -154,6 +159,12 @@ const VOIX = {
   passe:              ['passe-1'],
   doublon:            ['doublon-1'],
   victoire:           ['victoire-1', 'victoire-2'],
+  potion:             ['potion-1', 'potion-2', 'potion-3'],
+  dansPotion:         ['dans-potion-1'],
+  potionPrete:        ['potion-prete-1', 'potion-prete-2'],
+  egalite:            ['egalite-1'],
+  egaliteHasard:      ['egalite-hasard-1'],
+  impatience:         ['impatience-1', 'impatience-2'],
   grande:             ['grande-1'],
   'lune-debut-3':     ['lune-debut-3'],
   'lune-debut-4':     ['lune-debut-4'],

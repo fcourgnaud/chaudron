@@ -378,3 +378,17 @@ button:disabled { opacity: .35; cursor: default; }
 .apercu-boite small { color: var(--encre-douce); text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; }
 .apercu-boite .rang { position: absolute; top: -14px; left: -14px; width: 38px; height: 38px; border-radius: 50%; background: var(--violet); color: var(--or-clair);
   display: grid; place-items: center; font-family: var(--police-titre); font-size: 1.1rem; box-shadow: var(--ombre); }
+
+/* =========================================================
+   LA POTION QUI MIJOTE : ingrédients déjà dans la potion, points
+   ========================================================= */
+.emplacement.dans-potion { box-shadow: 0 0 0 3px var(--or), 0 0 16px var(--or), var(--ombre);
+  background: radial-gradient(ellipse at 50% 30%, #fff8dc, #f3e1a8 70%, #d9b964); }
+.emplacement.dans-potion .rang { background: var(--or-fonce); }
+.emplacement .cachet { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); white-space: nowrap; max-width: 140%;
+  overflow: hidden; text-overflow: ellipsis; padding: 2px 8px; border-radius: 999px; background: var(--violet); color: var(--or-clair);
+  font-size: .68rem; box-shadow: var(--ombre); }
+.sorciere .points { font-size: .82rem; color: var(--or-clair); }
+.scores-manche { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.scores-manche span { background: rgba(255,255,255,.55); border-radius: 999px; padding: 4px 12px; }
+.scores-manche span.gagnante { background: var(--or); }

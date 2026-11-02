@@ -9,9 +9,16 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '2.5.0', date: '2026-11-02' };
+const VERSION = { numero: '3.0.0', date: '2026-11-02' };
 
 const HISTORIQUE = [
+  { numero: '3.0.0', date: '2026-11-02', nouveautes: [
+    "Nouvelle règle « La potion mijote » : un ingrédient à la bonne place reste dans la potion (on pose la carte au centre), et les brassages suivants ne remplissent que les places libres.",
+    "Points : chaque ingrédient posé dans la potion rapporte 1 point. Quand la potion est complète, la plus forte en points gagne la manche ; en cas d'égalité, celle qui a terminé la potion.",
+    "« Le chaudron s'impatiente » : si toute la recette a été entendue et qu'un tour de table passe sans nouvel ingrédient, chacune donne une carte au hasard à sa voisine de gauche.",
+    "Avec l'Œil de chouette, rien ne reste dans la potion ce tour-ci (pour garder le secret).",
+    "En mode expert, les bonnes places se voient (elles restent dans la potion) ; les autres réponses restent mélangées.",
+  ]},
   { numero: '2.5.0', date: '2026-11-02', nouveautes: [
     "Chaudron plus petit et cartes jetées beaucoup plus grandes (illustration et nom plus lisibles).",
     "Les cartes jetées prennent toute la largeur disponible : plus grandes à 3 ou 4 cartes, un peu moins à 5.",
