@@ -17,7 +17,8 @@
     10. Voix du chaudron
     11. Fumée animée
     12. Caméra et QR codes
-    13. Lancement
+    13. Version et mises à jour
+    14. Lancement
    ========================================================= */
 
 /* ---------- 1. OUTILS ---------- */
@@ -740,9 +741,42 @@ const Camera = {
 async function garderEcranAllume() { try { await navigator.wakeLock.request('screen'); } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#ecran-jeu').classList.contains('actif')) garderEcranAllume(); });
 
-/* ---------- 13. LANCEMENT ---------- */
+/* ---------- 13. VERSION ET MISES À JOUR ---------- */
+const dateFr = d => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+function afficherVersion() {
+  $('#btn-version').textContent = `Version ${VERSION.numero} · ${dateFr(VERSION.date)}`;
+}
+$('#btn-version').onclick = () => {
+  fenetre(`<h2>Historique des versions</h2><div class="historique">${HISTORIQUE.map(v => `
+    <div class="${v.numero === VERSION.numero ? 'actuelle' : ''}"><h4>Version ${v.numero} <small>· ${dateFr(v.date)}</small></h4>
+    <ul>${v.nouveautes.map(n => `<li>${n}</li>`).join('')}</ul></div>`).join('')}</div>
+    <div class="actions"><button class="bouton-or" id="f-fermer">Fermer</button></div>`);
+  $('#f-fermer').onclick = fermerFenetre;
+};
+
+// Va lire version.js sur le serveur : si le numéro a changé, on propose de recharger.
+async function verifierMiseAJour() {
+  try {
+    const r = await fetch('version.js?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const m = (await r.text()).match(/numero:\s*'([^']+)'/);
+    if (!m || m[1] === VERSION.numero) return;
+    $('#maj-texte').textContent = `Nouvelle version ${m[1]} disponible`;
+    $('#bandeau-maj').hidden = false;
+  } catch (e) {}
+}
+$('#btn-recharger').onclick = async () => {
+  try { const regs = await navigator.serviceWorker?.getRegistrations(); await Promise.all((regs || []).map(r => r.update())); } catch (e) {}
+  location.reload();
+};
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') verifierMiseAJour(); });
+
+/* ---------- 14. LANCEMENT ---------- */
 // copie le dessin du chaudron partout où il y a [data-chaudron] (avec des id uniques)
 $$('[data-chaudron]').forEach((el, k) => { el.innerHTML = $('#modele-chaudron').innerHTML.replace(/(g-corps|g-potion|clip-potion)/g, `$1-${k}`); });
 majSaisieSorcieres();
 Voix.charger();
+afficherVersion();
+verifierMiseAJour();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

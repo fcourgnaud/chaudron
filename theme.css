@@ -315,3 +315,18 @@ button:disabled { opacity: .35; cursor: default; }
 .carte-pouvoir small { color: var(--encre-douce); }
 .recette-revelee { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .recette-revelee span { background: rgba(255,255,255,.55); border-radius: 8px; padding: 4px 8px; border-bottom: 3px solid var(--c); font-family: var(--police-magie); }
+
+/* =========================================================
+   VERSION ET MISE À JOUR
+   ========================================================= */
+.version { margin-top: 26px; background: none; border: none; color: var(--texte-nuit-doux); font-size: .8rem; text-decoration: underline dotted; opacity: .75; }
+.historique { text-align: left; display: flex; flex-direction: column; gap: 12px; }
+.historique h4 { margin: 0 0 4px; font-family: var(--police-titre); color: var(--violet); font-size: .95rem; }
+.historique h4 small { font-family: var(--police-texte); color: var(--encre-douce); font-weight: normal; }
+.historique ul { margin: 0; padding-left: 18px; font-size: .9rem; }
+.historique .actuelle h4::after { content: ' · installée'; font-family: var(--police-texte); font-size: .75rem; color: #2f6b34; }
+.bandeau-maj { position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 40;
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-radius: var(--rayon);
+  background: rgba(30, 20, 45, .96); border: 1px solid var(--or-fonce); box-shadow: var(--ombre); animation: monte .4s ease; }
+.bandeau-maj span { flex: 1; font-size: .9rem; }
+.bandeau-maj .bouton-or { padding: 9px 16px; font-size: .9rem; }

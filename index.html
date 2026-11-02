@@ -34,6 +34,7 @@
       <span class="b-titre">La Pleine Lune</span><span class="b-sous">coopératif · 8 essais</span>
     </button>
   </div>
+  <button class="version" id="btn-version"></button>
 </section>
 
 <!-- ==================== 2. PRÉPARATION ==================== -->
@@ -137,6 +138,10 @@
 </div>
 
 <!-- ==================== FENÊTRES ==================== -->
+<div class="bandeau-maj" id="bandeau-maj" hidden>
+  <span id="maj-texte"></span>
+  <button class="bouton-or" id="btn-recharger">Mettre à jour</button>
+</div>
 <div class="rideau" id="rideau"><div class="rideau-contenu" id="rideau-contenu"></div></div>
 <div class="fenetre" id="fenetre"><div class="fenetre-boite parchemin" id="fenetre-boite"></div></div>
 
@@ -171,6 +176,7 @@
   </svg>
 </template>
 
+<script src="version.js"></script>
 <script src="contenu.js"></script>
 <script src="moteur.js"></script>
 </body>
