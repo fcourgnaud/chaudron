@@ -695,3 +695,21 @@ button:focus-visible { outline: 2px solid var(--flamme); outline-offset: 4px; }
 .perso { left: calc(var(--largeur-perso) * -.16 - 20px); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 14px); }
 #actions-annonce { margin-top: 46px; }
 #ecran-jeu::before { background: linear-gradient(180deg, #330b14 0%, #330b14 11%, rgba(51, 11, 20, 0) 23%, rgba(51, 11, 20, 0) 88%, #330b14 94%, #330b14 100%); }
+
+/* --- 4.1.4 : cartes fixes, fumée entre le perso et le bord droit, boutons -5 %, police du titre --- */
+/* place réservée au-dessus des cartes : les boutons apparaissent sans faire bouger les cartes */
+.sorcieres, .lunes { min-height: 44px; align-items: center; }
+.rangee-action { height: 58px; align-items: center; }
+#actions-pouvoirs, #actions-pouvoirs:empty { display: flex; height: 32px; margin: 0; flex-wrap: nowrap; overflow-x: auto; justify-content: center; }
+#actions-pouvoirs .bouton-pouvoir { padding: 5px 12px; white-space: nowrap; }
+/* boutons du jeu 5 % plus petits */
+#ecran-jeu .bouton-or, #ecran-jeu .bouton-annonce, #ecran-jeu .rangee-action .rond { zoom: .95; }
+/* même police que le menu de l'accueil */
+.titre-manche { font-family: var(--police-titre); font-weight: 700; font-size: 2.1rem; }
+.titre-manche small { font-weight: 500; }
+.sorciere.active { font-family: var(--police-titre); font-weight: 700; font-size: 1.5rem; letter-spacing: .03em; text-transform: none; }
+/* la fumée : entre le personnage et le bord droit, 10 px de chaque côté
+   --bord-perso = jusqu'où va le personnage (en part de sa largeur) */
+:root { --bord-perso: .78; }
+.zone-fumee { justify-content: flex-end; margin-right: -4px; }      /* 14 px de marge de l'écran - 4 = 10 px du bord */
+.zone-fumee .etiquette-fumee { width: calc(100vw - var(--largeur-perso) * (var(--bord-perso) - .16) + 20px - 10px - 10px - 10px); }

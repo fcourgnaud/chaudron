@@ -9,9 +9,14 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '4.1.3', date: '2026-11-03' };
+const VERSION = { numero: '4.1.4', date: '2026-11-03' };
 
 const HISTORIQUE = [
+  { numero: '4.1.4', date: '2026-11-03', nouveautes: [
+    "Les cartes ne bougent plus quand les boutons changent : la place est réservée au-dessus.",
+    "La fumée se place entre le personnage et le bord droit de l'écran.",
+    "Boutons du jeu 5 % plus petits ; nom de la manche et de la sorcière dans la police du menu de l'accueil.",
+  ]},
   { numero: '4.1.3', date: '2026-11-03', nouveautes: [
     "Personnage un peu plus grand, plus à gauche et plus haut ; boîte de dialogue remontée ; dégradés réduits.",
     "Les pictos des familles et des réponses sont en PNG (fam-….png, rep-….png). S'il en manque un, l'app reprend le .svg.",
