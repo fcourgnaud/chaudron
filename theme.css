@@ -5,17 +5,35 @@
    dans images/ que tu peux remplacer par tes dessins.
    ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=Spectral:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;700&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&display=swap');
 
 :root {
   /* ---------- Polices ---------- */
-  --police-titre: 'Cinzel Decorative', Georgia, serif;
-  --police-magie: 'IM Fell English', Georgia, serif;      /* phrases du chaudron */
-  --police-texte: 'Spectral', Georgia, serif;
+  --police-titre: 'Grenze Gotisch', 'Cormorant Garamond', Georgia, serif;   /* grands titres */
+  --police-ui: 'Cinzel', Georgia, serif;                                     /* boutons, étiquettes */
+  --police-magie: 'Cormorant Garamond', Georgia, serif;                      /* phrases du chaudron, cartes */
+  --police-texte: 'Cormorant Garamond', Georgia, serif;
+
+  /* ---------- Palette RPG « Cauldrons » (d'après le logo) ---------- */
+  --nuit: #16050b;        /* fond */
+  --bordeaux: #3a0d1c;
+  --vin: #6b1d33;
+  --vin-clair: #8c2c48;
+  --braise: #f08a2c;
+  --flamme: #ffd48a;
+  --ambre: #f6b65a;
+  --brume: #ecc9d2;       /* texte doux */
+  --creme: #fbeedd;       /* texte */
+  --cristal: linear-gradient(165deg, #fff4d6 0%, var(--flamme) 30%, var(--braise) 58%, #ffe2a8 74%, #c4561e 100%);
+  --ambre-bouton: linear-gradient(180deg, #f3c47a 0%, #e09a48 55%, #b8692c 100%);
+  --forme-bouton: polygon(12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0 50%);
+
+  /* ---------- Le fond animé ---------- */
+  --desaturation-potion: .6;   /* 0.6 = l'image perd 60 % de ses couleurs quand la potion arrive */
 
   /* ---------- Nuit ---------- */
-  --nuit-haut: #0b0814;
-  --nuit-bas:  #2a1838;
+  --nuit-haut: #16050b;
+  --nuit-bas:  #16050b;
   --etoiles: rgba(255, 245, 220, .7);
   --lune: #f6ecc9;
 
@@ -28,9 +46,9 @@
   --or: #e2b552;
   --or-clair: #f6d98a;
   --or-fonce: #9a7428;
-  --violet: #4a2f63;
-  --texte-nuit: #efe6d2;
-  --texte-nuit-doux: #a99cb8;
+  --violet: #6b1d33;
+  --texte-nuit: #fbeedd;
+  --texte-nuit-doux: #ecc9d2;
 
   /* ---------- 6 familles (= couleurs de la fumée) ---------- */
   --fam-plantes:   #63c46a;
@@ -41,7 +59,7 @@
   --fam-etoiles:   #b26bf0;
 
   /* ---------- Fumées spéciales ---------- */
-  --fumee-repos:     #7a6f86;
+  --fumee-repos:     #f08a2c;
   --fumee-complete:  #f5d061;
   --fumee-explosion: #ff4b2b;
   --fumee-victoire:  #ffffff;
@@ -397,3 +415,167 @@ button:disabled { opacity: .35; cursor: default; }
 /* ingrédient secret */
 .secret-titre { font-family: var(--police-magie); font-style: italic; color: var(--or-clair); font-size: 1.15rem; }
 .secret-carte { margin: 6px auto; width: min(52vw, 210px); }
+
+
+/* =========================================================
+   STYLE RPG « CAULDRONS » (version 4)
+   Tout ce qui suit habille l'app façon jeu de rôle.
+   Les cartes (fond parchemin) et les icônes restent les mêmes.
+   ========================================================= */
+body { background: var(--nuit); font-size: 18px; }
+.ciel { display: none; }
+
+/* --- le fond : chaudron vu de haut --- */
+#fond-magique, #bulles-magiques { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+#fond-magique { background: var(--nuit) url(images/fond.jpg) center / cover; }   /* image fixe si l'animation n'est pas possible */
+.voile { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 42%, transparent 35%, rgba(22, 5, 11, .5) 75%, rgba(22, 5, 11, .88)); }
+.ecran { position: relative; z-index: 2; max-width: 540px; margin: 0 auto; width: 100%; }
+
+/* --- cadre orné --- */
+.cadre, #ecran-preparation .parchemin, .tiroir-boite, .fenetre-boite.parchemin {
+  position: relative; border-radius: 4px; color: var(--creme);
+  background: linear-gradient(180deg, rgba(107, 29, 51, .93), rgba(42, 9, 20, .95));
+  box-shadow: 0 0 0 1.5px #c4561e, 0 0 0 4px rgba(255, 212, 138, .55), 0 0 0 5.5px #7a2a12, 0 0 22px rgba(240, 138, 44, .25), 0 14px 30px rgba(0,0,0,.6);
+  /* dans ces cadres sombres, les textes « encre » deviennent clairs */
+  --encre: var(--creme); --encre-douce: var(--brume); --violet: var(--flamme); }
+.cadre::before, .cadre::after, #ecran-preparation .parchemin::before, #ecran-preparation .parchemin::after {
+  content: '✦'; position: absolute; top: -12px; color: var(--flamme); font-size: 1.1rem; text-shadow: 0 0 10px var(--braise); }
+.cadre::before, #ecran-preparation .parchemin::before { left: -6px; }
+.cadre::after, #ecran-preparation .parchemin::after { right: -6px; }
+.titre-cadre, #ecran-preparation .parchemin > h3 {
+  position: absolute; top: -15px; left: 50%; transform: translateX(-50%); white-space: nowrap; margin: 0; padding: 3px 18px;
+  font-family: var(--police-ui); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: #3a0d0a;
+  background: var(--ambre-bouton); clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%); }
+/* les cartes gardent leur encre sombre, même dans un cadre sombre */
+.emplacement.plein, .apercu-boite { --encre: #2b1d12; --encre-douce: #6a5640; --violet: #6b1d33; }
+
+/* --- boutons --- */
+.bouton-or, .bouton-annonce {
+  border: none; border-radius: 0; box-shadow: none; padding: 14px 30px; color: #3a0d0a;
+  background: var(--ambre-bouton); clip-path: var(--forme-bouton); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .55));
+  font-family: var(--police-ui); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 1rem; }
+.bouton-or.grand { font-size: 1.05rem; padding: 16px 34px; margin: 14px auto 0; }
+.bouton-annonce { position: relative; isolation: isolate; color: var(--flamme); background: linear-gradient(180deg, var(--vin-clair), var(--bordeaux)); font-size: .9rem; padding: 12px 26px; }
+.bouton-annonce::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--cristal);
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0 50%, 2.5px 50%, 13px calc(100% - 2.5px), calc(100% - 13px) calc(100% - 2.5px), calc(100% - 2.5px) 50%, calc(100% - 13px) 2.5px, 13px 2.5px, 2.5px 50%); }
+.rond { border: none; border-radius: 0; color: var(--flamme); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: linear-gradient(160deg, var(--vin-clair), var(--nuit)); width: 44px; height: 44px; }
+.rond.grand-rond { width: 56px; height: 56px; }
+.tiroir .rond { background: linear-gradient(160deg, var(--vin-clair), var(--nuit)); }
+.bouton-pouvoir { border-radius: 3px; border: 1px solid var(--ambre); background: rgba(42, 9, 20, .85); color: var(--flamme); font-family: var(--police-ui); font-size: .8rem; letter-spacing: .04em; }
+.bouton-pouvoir.on { background: var(--ambre-bouton); color: #3a0d0a; }
+button:focus-visible { outline: 2px solid var(--flamme); outline-offset: 4px; }
+
+/* --- 1. écran titre --- */
+#ecran-titre { gap: 12px; padding-top: 24px; }
+.titre-logo { margin: 0; line-height: 0; }
+.logo { width: min(100%, 460px); filter: drop-shadow(0 0 24px rgba(240, 138, 44, .45)) drop-shadow(0 14px 24px rgba(0,0,0,.55)); animation: flotte 7s ease-in-out infinite; }
+@keyframes flotte { 50% { transform: translateY(-8px) scale(1.01); } }
+.appuie { margin: 0; font-family: var(--police-ui); font-size: .85rem; letter-spacing: .22em; text-transform: uppercase; color: var(--flamme); text-shadow: 0 0 12px var(--braise); animation: clignote 1.8s ease-in-out infinite; }
+@keyframes clignote { 50% { opacity: .35; } }
+.menu-rpg { width: min(100%, 330px); margin-top: 14px; padding: 22px 10px 12px; display: flex; flex-direction: column; }
+.menu-rpg button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: none; border: none; border-radius: 3px;
+  color: var(--creme); font-family: var(--police-titre); font-size: 1.5rem; text-align: left; }
+.menu-rpg .b-titre { font-size: inherit; }
+.menu-rpg .b-sous { margin-left: auto; font-family: var(--police-texte); font-style: italic; font-size: .9rem; color: var(--brume); opacity: 1; }
+.menu-rpg .curseur { width: 14px; color: transparent; transition: color .2s; }
+.menu-rpg button:hover, .menu-rpg button:focus-visible, .menu-rpg button.choisi { background: linear-gradient(90deg, rgba(240, 138, 44, .28), transparent); outline: none; }
+.menu-rpg button:hover .curseur, .menu-rpg button:focus-visible .curseur, .menu-rpg button.choisi .curseur { color: var(--flamme); text-shadow: 0 0 8px var(--braise); animation: curseur .8s ease-in-out infinite alternate; }
+@keyframes curseur { to { transform: translateX(3px); } }
+.version { margin-top: 18px; font-family: var(--police-ui); letter-spacing: .1em; color: var(--brume); font-size: .72rem; }
+
+/* --- 2. préparation --- */
+#ecran-preparation { gap: 30px; }
+.entete-ecran h2 { font-family: var(--police-titre); font-size: 2.3rem; line-height: 1; flex: 1; text-align: center; margin-right: 44px;
+  background: var(--cristal); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(70, 10, 20, .9)) drop-shadow(0 0 14px rgba(240, 138, 44, .45)); }
+#ecran-preparation .parchemin { padding: 22px 16px 14px; }
+.parchemin .aide { color: var(--brume); }
+.choix button { border-radius: 0; border: none; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+  background: rgba(22, 5, 11, .7); color: var(--ambre); font-family: var(--police-titre); font-size: 1.4rem; padding: 6px; }
+.choix button.on { background: var(--ambre-bouton); color: #3a0d0a; }
+.sorciere-saisie { background: none; border: none; border-radius: 0; padding: 4px 0; gap: 10px; }
+.sorciere-saisie .chapeau { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 1.4rem;
+  background: radial-gradient(circle at 40% 35%, var(--vin-clair), var(--bordeaux) 70%);
+  box-shadow: 0 0 0 2px #c4561e, 0 0 0 4px rgba(255, 212, 138, .6), 0 0 14px rgba(240, 138, 44, .4); }
+.sorciere-saisie input { font-family: var(--police-titre); font-size: 1.25rem; color: var(--creme); border-bottom: 1px solid rgba(255, 212, 138, .4); padding: 2px 0; }
+.interrupteur { border-bottom: 1px solid rgba(255, 212, 138, .16); justify-content: space-between; }
+.interrupteur span { order: -1; }
+.interrupteur b { font-family: var(--police-ui); font-size: .85rem; letter-spacing: .06em; }
+.interrupteur small { color: var(--brume); font-style: italic; font-size: .95rem; }
+.interrupteur input { appearance: none; -webkit-appearance: none; flex: none; width: 50px; height: 26px; margin: 0; border-radius: 99px; position: relative;
+  background: var(--nuit); box-shadow: inset 0 0 0 2px #7a2a12; }
+.interrupteur input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #6b4a52; transition: left .25s, background .25s, box-shadow .25s; }
+.interrupteur input:checked::after { left: 27px; background: var(--cristal); box-shadow: 0 0 10px var(--braise); }
+
+/* --- 3. jeu --- */
+.titre-manche { text-align: center; font-family: var(--police-titre); font-size: 1.7rem; line-height: 1;
+  background: var(--cristal); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 0 rgba(70, 10, 20, .9)); }
+.titre-manche small { font-family: var(--police-ui); font-size: .58rem; letter-spacing: .06em; text-transform: uppercase; margin-top: 3px;
+  -webkit-text-fill-color: var(--brume); color: var(--brume); }
+.sorcieres { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.sorciere { border-radius: 4px; border: none; padding: 5px 8px 5px 5px; gap: 7px; background: rgba(42, 9, 20, .82); box-shadow: 0 0 0 1px rgba(196, 86, 30, .6); opacity: .85;
+  font-family: var(--police-titre); font-size: 1.05rem; }
+.sorciere .chapeau { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: .95rem;
+  background: radial-gradient(circle at 40% 35%, var(--vin-clair), var(--bordeaux) 70%); box-shadow: 0 0 0 1.5px #c4561e; }
+.sorciere .trophees { color: var(--ambre); font-size: .8rem; margin-left: auto; }
+.sorciere.active { transform: none; opacity: 1; color: var(--creme); background: linear-gradient(180deg, rgba(140, 44, 72, .95), rgba(58, 13, 28, .95));
+  box-shadow: 0 0 0 1.5px var(--ambre), 0 0 16px rgba(240, 138, 44, .55); }
+.sorciere.active .chapeau { box-shadow: 0 0 0 2px var(--flamme), 0 0 12px var(--braise); }
+.lunes span { border-radius: 0; transform: rotate(45deg); width: 16px; height: 16px; margin: 3px; background: var(--nuit); border: none; box-shadow: 0 0 0 1.5px var(--ambre); }
+.lunes span.levee { background: var(--cristal); box-shadow: 0 0 8px var(--braise); }
+
+/* le chaudron, c'est maintenant le fond : on ne garde que l'étiquette de fumée */
+.scene { height: 96px; display: grid; place-items: center; }
+.scene::before, #fumee, .grand-chaudron { display: none; }
+.etiquette-fumee { position: static; transform: none; max-width: 100%; border: none; border-radius: 3px; padding: 9px 18px 9px 14px; gap: 10px;
+  background: rgba(22, 5, 11, .78); box-shadow: 0 0 0 1px var(--c), 0 0 24px var(--c); font-size: 1.05rem; }
+.etiquette-fumee .pastille-fumee { border-radius: 0; transform: rotate(45deg); width: 13px; height: 13px; box-shadow: 0 0 10px var(--c); }
+@keyframes monte-fumee { from { opacity: 0; transform: translateY(10px); } }
+
+/* la boîte de dialogue du chaudron */
+.dialogue { padding: 22px 16px 14px; margin-top: 6px; }
+.dialogue .qui { position: absolute; top: -14px; left: 14px; padding: 3px 14px; font-family: var(--police-ui); font-size: .75rem; letter-spacing: .14em; text-transform: uppercase;
+  color: #3a0d0a; background: var(--ambre-bouton); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%); }
+.dialogue::before, .dialogue::after { display: none; }
+.bulle-parole { max-width: none; min-height: 2.6em; text-align: left; padding: 0; color: var(--creme); text-shadow: none; font-size: 1.25rem; }
+.consigne { color: var(--brume); font-style: italic; }
+.consigne b { color: var(--flamme); font-style: normal; }
+
+/* les cartes jetées : même parchemin, rang en losange */
+.emplacement { border: 1.5px solid rgba(196, 86, 30, .5); background: rgba(22, 5, 11, .55); color: var(--ambre); font-family: var(--police-titre); font-size: 1.5rem; }
+.emplacement .facultatif { font-family: var(--police-ui); font-size: .55rem; letter-spacing: .06em; color: var(--brume); }
+.emplacement .rang, .apercu-boite .rang { border-radius: 0; transform: rotate(45deg); background: var(--ambre-bouton); color: #3a0d0a; box-shadow: 0 2px 4px #0008; font-family: var(--police-ui); font-weight: 700; }
+.emplacement .rang { top: -9px; left: -5px; }
+.emplacement .rang span, .apercu-boite .rang span { transform: rotate(-45deg); }
+.emplacement .nom { font-family: var(--police-magie); }
+.emplacement .libelle { font-family: var(--police-ui); font-size: .6rem; letter-spacing: .05em; text-transform: uppercase; }
+.reponses-expert figcaption { font-family: var(--police-ui); font-size: .58rem; letter-spacing: .05em; text-transform: uppercase; }
+
+/* --- tiroirs et fenêtres --- */
+.tiroir { background: rgba(10, 2, 6, .65); }
+.tiroir-boite { border-radius: 4px 4px 0 0; }
+.tiroir-tete h3, .fenetre-boite h2 { font-family: var(--police-titre); font-size: 1.7rem; color: var(--flamme); }
+.etagere h4 { font-family: var(--police-ui); color: var(--ambre); letter-spacing: .06em; }
+.etagere button { background: rgba(251, 238, 221, .08); color: var(--creme); font-family: var(--police-magie); font-weight: 700; font-size: .85rem; border-radius: 4px; }
+.tiroir-pied { background: linear-gradient(transparent, rgba(42, 9, 20, .98) 25%); }
+.ligne-journal .ing, .recette-revelee span, .carte-pouvoir { background: rgba(251, 238, 221, .08); color: var(--creme); }
+.carte-pouvoir { box-shadow: 0 0 0 1px rgba(255, 212, 138, .35); border-radius: 4px; }
+.carte-pouvoir b { font-family: var(--police-ui); color: var(--flamme); }
+.fenetre { background: rgba(10, 2, 6, .82); }
+.fenetre-boite.parchemin { padding: 20px 16px; }
+.fenetre.noire .fenetre-boite { background: #0b0306; box-shadow: 0 0 0 1px #3a0d1c; }
+.historique .actuelle h4::after { color: #9fe39f; }
+.rideau { background: radial-gradient(ellipse at 50% 45%, rgba(107, 29, 51, .94), rgba(16, 3, 8, .98) 70%); }
+.rideau .grand-titre { font-family: var(--police-titre); background: var(--cristal); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(70, 10, 20, .9)) drop-shadow(0 0 14px rgba(240, 138, 44, .45)); }
+.rideau .petit-titre { color: var(--brume); }
+.bandeau-maj { border-radius: 4px; background: rgba(42, 9, 20, .97); border: none; box-shadow: 0 0 0 1.5px #c4561e, 0 0 0 4px rgba(255, 212, 138, .45); }
+.place-annonce { border-color: rgba(196, 86, 30, .6); }
+
+/* --- la caméra lit les QR codes sans montrer son image --- */
+.oeil { position: fixed; top: 0; left: 0; right: auto; width: 2px; height: 2px; opacity: .01; border: none; box-shadow: none; pointer-events: none; overflow: hidden; }
+.oeil span { display: none; }
+
+@media (prefers-reduced-motion: reduce) { .logo, .appuie, .menu-rpg .curseur { animation: none !important; } }

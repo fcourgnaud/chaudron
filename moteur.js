@@ -50,7 +50,9 @@ let R = { mode: 'concours', nb: 2, taille: 4 };   // réglages choisis
 let S = {};                                         // état de la partie
 
 /* ---------- 2. NAVIGATION ET PRÉPARATION ---------- */
-function montrer(id) { $$('.ecran').forEach(e => e.classList.toggle('actif', e.id === id)); window.scrollTo(0, 0); }
+function montrer(id) { $$('.ecran').forEach(e => e.classList.toggle('actif', e.id === id)); window.scrollTo(0, 0); if (window.FondMagique) FondMagique.ecran(id); }
+// menu de l'écran titre : le curseur ▸ suit le doigt / la souris
+$$('.menu-rpg button').forEach(b => b.onmouseenter = b.onfocus = () => $$('.menu-rpg button').forEach(x => x.classList.toggle('choisi', x === b)));
 
 $$('#ecran-titre [data-mode]').forEach(b => b.onclick = () => {
   debloquerAudio();
@@ -522,7 +524,7 @@ function montrerEnGrand(ing, rang) {
   const a = $('#apercu-carte');
   a.style.setProperty('--c', couleurFamille(ing.fam));
   a.style.setProperty('--duree-apercu', CONFIG.dureeApercuCarte + 'ms');
-  a.innerHTML = `<div class="apercu-boite"><span class="rang">${rang}</span>${imgIngredient(ing, 'vignette')}<b>${ing.nom}</b><small>${FAMILLES[ing.fam].nom}</small></div>`;
+  a.innerHTML = `<div class="apercu-boite"><span class="rang"><span>${rang}</span></span>${imgIngredient(ing, 'vignette')}<b>${ing.nom}</b><small>${FAMILLES[ing.fam].nom}</small></div>`;
   a.classList.remove('visible'); void a.offsetWidth; a.classList.add('visible');
   clearTimeout(minuteurApercu);
   minuteurApercu = setTimeout(() => a.classList.remove('visible'), CONFIG.dureeApercuCarte);
@@ -536,7 +538,7 @@ function majPlateau() {
     if (n) {
       const ing = ING(n);
       box.insertAdjacentHTML('beforeend', `<div class="emplacement plein" style="--c:${couleurFamille(ing.fam)}">
-        <span class="rang">${i + 1}</span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
+        <span class="rang"><span>${i + 1}</span></span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
         <img class="reponse" id="rep-${i}" alt=""><span class="libelle" id="lib-${i}"></span></div>`);
     } else {
       box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}${i >= CONFIG.minBrassage ? '<span class="facultatif">facultatif</span>' : ''}</div>`);
@@ -568,12 +570,13 @@ function colorerPotion(couleur, texte = '') {
   }
   if (!couleur) {
     c.style.removeProperty('--potion'); c.style.removeProperty('--potion-clair');
-    scene.style.setProperty('--lueur', 'transparent'); Fumee.couleur = varCSS('--fumee-repos'); return;
+    scene.style.setProperty('--lueur', 'transparent'); Fumee.couleur = varCSS('--fumee-repos'); FondMagique.repos(); return;
   }
   c.style.setProperty('--potion', `color-mix(in srgb, ${couleur} 70%, black)`);
   c.style.setProperty('--potion-clair', couleur);
   scene.style.setProperty('--lueur', couleur);
   Fumee.couleur = couleur;
+  FondMagique.couleur(couleur);
 }
 
 function ajouterJournal(e) { S.journal.unshift(e); majJournal(); }
@@ -961,7 +964,7 @@ const Fumee = (() => {
     parts.push({ x: w / 2 + (Math.random() - .5) * w * largeurBouche, y: h * origineY, r: (10 + Math.random() * 16) * d,
       vx: (Math.random() - .5) * .7 * d * force, vy: -(.6 + Math.random() * 1.1) * d * force, vie: 1, c });
   }
-  obj.bouffee = (c, n) => { for (let i = 0; i < n; i++) particule(c, 1.9); };
+  obj.bouffee = (c, n) => { if (window.FondMagique) FondMagique.bouillon(n); if (!cv.offsetParent) return; for (let i = 0; i < n; i++) particule(c, 1.9); };
   (function boucle() {
     if (cv.offsetParent) {
       if (!cv.width || cv.width !== Math.round(cv.getBoundingClientRect().width * devicePixelRatio)) ajuster();
@@ -982,6 +985,163 @@ const Fumee = (() => {
   })();
   return obj;
 })();
+
+
+/* ---------- 11 bis. LE FOND MAGIQUE : le chaudron vu de haut ----------
+   Le tourbillon (images/fond.jpg) tourne lentement sous une surface liquide, avec des bulles.
+   Écran titre et préparation : couleurs de l'image.
+   En jeu, quand la fumée a une couleur : une brume de cette couleur part du centre,
+   et l'image perd 60 % de ses couleurs (--desaturation-potion dans theme.css). */
+const FondMagique = (() => {
+  const obj = { couleur() {}, repos() {}, ecran() {}, bouillon() {} };
+  const cv = $('#fond-magique'), bc = $('#bulles-magiques');
+  if (!cv || !bc) return obj;
+  const gl = cv.getContext('webgl', { alpha: false, antialias: false, powerPreference: 'low-power' });
+  const bx = bc.getContext('2d');
+  const hex = h => { const m = /^#?([0-9a-f]{6})$/i.exec((h || '').trim()); if (!m) return [.94, .54, .17];
+    return [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16) / 255); };
+  let A = hex('#f08a2c'), B = A, front = 2, potion = 0, cible = 0, sat = 1, cibleSat = 1, vague = 0, enJeu = false;
+  const desat = () => { const d = parseFloat(varCSS('--desaturation-potion')); return isNaN(d) ? .6 : d; };
+
+  obj.couleur = c => { A = potion > .5 ? B : hex(c); B = hex(c); front = 0; vague = 1; cible = 1; cibleSat = 1 - desat(); };
+  obj.repos = () => { cible = 0; cibleSat = 1; };
+  obj.ecran = id => { enJeu = id === 'ecran-jeu'; if (!enJeu) obj.repos(); };
+  obj.bouillon = n => { for (let i = 0; i < Math.min(12, n / 10); i++) nouvelleBulle(); };
+
+  /* ----- dessin du tourbillon (WebGL) ----- */
+  let pret = false, U = {};
+  if (gl) {
+    const VS = 'attribute vec2 p; varying vec2 uv; void main(){ uv = p * .5 + .5; gl_Position = vec4(p, 0., 1.); }';
+    const FS = `precision mediump float; varying vec2 uv;
+uniform sampler2D img; uniform float t, angle, aspect, front, potion, sat, vague; uniform vec3 coulA, coulB;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+  return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); }
+float fbm(vec2 p){ float s = 0., a = .5; for (int k = 0; k < 5; k++){ s += a * n(p); p = p * 2.02 + 2.7; a *= .5; } return s; }
+vec2 rot(vec2 p, float a){ float c = cos(a), s = sin(a); return vec2(c*p.x - s*p.y, s*p.x + c*p.y); }
+void main(){
+  vec2 p = uv - .5; p.x *= aspect; float r = length(p);
+  vec2 w = rot(p, t * .04) * 7.;
+  float ph1 = w.x * 1.3 + t * 1.1, ph2 = w.y * 1.7 - t * .9, ph3 = (w.x - w.y) * .8 + t * 1.3;
+  float vagues = sin(ph1) * .5 + sin(ph2) * .35 + sin(ph3) * .3;
+  vec2 pente = vec2(cos(ph1) * .65 + cos(ph3) * .24, cos(ph2) * .6 - cos(ph3) * .24);
+  float tour = angle + .35 * sin(t * .12) * exp(-r * 2.5);
+  vec2 q = rot(p, tour) * .82 + pente * .005;
+  q += (vec2(fbm(q * 3. + t * .05), fbm(q * 3. - t * .05)) - .5) * .02;
+  vec3 col = texture2D(img, clamp(vec2(-q.x, q.y) + .5, 0., 1.)).rgb * .85;
+  vec3 nrm = normalize(vec3(-pente * .9, 1.));
+  float reflet = pow(max(dot(reflect(vec3(0., 0., -1.), nrm), normalize(vec3(-.35, .45, .82))), 0.), 18.);
+  float caustique = (vagues * .5 + .5) * .05;
+  float l = dot(col, vec3(.299, .587, .114));
+  col = mix(vec3(l), col, sat);
+  float bruit = (fbm(p * 4. + t * .15) - .5) * .18;
+  float dedans = smoothstep(front, front - .3, r + bruit);
+  vec3 c = mix(coulA, coulB, dedans);
+  col = mix(col, mix(col, c * (l * 1.7 + .08), .65), potion);
+  vec2 m = rot(p, t * .08) * 1.6;
+  float nuage = smoothstep(.12, .48, fbm(m * 1.8 + vec2(t * .05, t * .03)) * fbm(m * 3.1 - vec2(t * .07, 0.)));
+  float onde = exp(-pow((r + bruit - front) * 4.5, 2.)) * vague;
+  float densite = nuage * (potion * .28 + onde * .95);
+  col = mix(col, mix(vec3(.96, .9, .92), c, .55), clamp(densite, 0., .85));
+  vec2 f = rot(p, t * .18 + r * 3.2);
+  float v = smoothstep(.2, .52, fbm(f * 2.6 + vec2(t * .06, -t * .09)) * fbm(f * 1.4 - t * .04));
+  col = mix(col, mix(vec3(.93, .82, .86), c, potion * .6), v * (.28 + .22 * potion));
+  col += vec3(1., .95, .9) * reflet * .22 + col * caustique;
+  gl_FragColor = vec4(col, 1.);
+}`;
+    const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); return x; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+    if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const lp = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 0, 0);
+      ['img', 't', 'angle', 'aspect', 'front', 'potion', 'sat', 'vague', 'coulA', 'coulB'].forEach(k => U[k] = gl.getUniformLocation(prog, k));
+      const image = new Image();
+      image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        pret = true; cv.style.background = 'none';
+      };
+      image.src = 'images/fond.jpg';
+    }
+  }
+  function taille() {
+    const d = Math.min(1.5, devicePixelRatio || 1);
+    cv.width = innerWidth * d; cv.height = innerHeight * d; if (gl) gl.viewport(0, 0, cv.width, cv.height);
+    const d2 = Math.min(2, devicePixelRatio || 1); BW = innerWidth; BH = innerHeight;
+    bc.width = BW * d2; bc.height = BH * d2; bx.setTransform(d2, 0, 0, d2, 0, 0);
+  }
+
+  /* ----- bulles de surface (elles naissent, gonflent, suivent le tourbillon et éclatent) ----- */
+  let BW = 0, BH = 0, bulles = [], eclats = [];
+  function nouvelleBulle() {
+    const a = Math.random() * Math.PI * 2, dist = Math.sqrt(Math.random()) * Math.max(BW, BH) * .6;
+    bulles.push({ x: BW / 2 + Math.cos(a) * dist, y: BH / 2 + Math.sin(a) * dist, r: 0, max: 6 + Math.random() ** 2 * 24,
+      vie: 0, duree: 3 + Math.random() * 5, ph: Math.random() * 6 });
+  }
+  function dessinerBulles(dt, coul) {
+    bx.clearRect(0, 0, BW, BH);
+    const teinte = coul.map(v => Math.round(v * 255)).join(',');
+    if (Math.random() < (2.2 + potion * 3 + vague * 14) * dt) nouvelleBulle();
+    for (const b of bulles) {
+      b.vie += dt / b.duree;
+      b.r = b.max * Math.min(1, b.vie * 3.5) * (1 + .05 * Math.sin(b.ph + b.vie * 20));
+      const dx = b.x - BW / 2, dy = b.y - BH / 2, d = Math.hypot(dx, dy) + 1, vit = (14 + 40 * Math.exp(-d / 160)) * dt;
+      b.x += (-dy / d) * vit + Math.sin(b.ph + b.vie * 6) * .2; b.y += (dx / d) * vit;
+      const x = b.x, y = b.y, r = b.r, a = Math.min(1, (1 - b.vie) * 4) * .9;
+      if (r < .5) continue;
+      const g = bx.createRadialGradient(x - r * .3, y - r * .35, r * .1, x, y, r);
+      g.addColorStop(0, `rgba(255,255,255,${.18 * a})`); g.addColorStop(.7, `rgba(${teinte},${.16 * a})`); g.addColorStop(1, `rgba(255,240,230,${.7 * a})`);
+      bx.fillStyle = g; bx.beginPath(); bx.arc(x, y, r, 0, 7); bx.fill();
+      bx.strokeStyle = `rgba(255,245,235,${.8 * a})`; bx.lineWidth = Math.max(1, r * .08); bx.stroke();
+      bx.fillStyle = `rgba(255,255,255,${.85 * a})`; bx.beginPath(); bx.ellipse(x - r * .38, y - r * .42, r * .2, r * .12, -.6, 0, 7); bx.fill();
+      if (b.vie >= 1) eclats.push({ x, y, r, vie: 1 });
+    }
+    bulles = bulles.filter(b => b.vie < 1);
+    for (const e of eclats) {
+      e.vie -= dt * 2.4; const k = 1 - e.vie;
+      bx.strokeStyle = `rgba(255,240,230,${.6 * e.vie})`; bx.lineWidth = 1.2;
+      bx.beginPath(); bx.ellipse(e.x, e.y, e.r * (1 + k * 1.6), e.r * (1 + k * 1.6) * .8, 0, 0, 7); bx.stroke();
+      bx.fillStyle = `rgba(255,245,235,${.7 * e.vie})`;
+      for (let i = 0; i < 6; i++) { const an = i / 6 * Math.PI * 2; bx.beginPath(); bx.arc(e.x + Math.cos(an) * e.r * (1 + k * 2.2), e.y + Math.sin(an) * e.r * (1 + k * 2.2), 1.2, 0, 7); bx.fill(); }
+    }
+    eclats = eclats.filter(e => e.vie > 0);
+    if (bulles.length > 70) bulles.splice(0, bulles.length - 70);
+  }
+
+  addEventListener('resize', taille); taille();
+  for (let i = 0; i < 18; i++) { nouvelleBulle(); bulles[bulles.length - 1].vie = Math.random() * .8; }
+  const t0 = performance.now(); let avant = t0;
+  const calme = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  (function boucle(now) {
+    now = now || performance.now();
+    const dt = Math.min(50, now - avant) / 1000; avant = now;
+    if (!document.hidden) {
+      front = Math.min(2, front + dt * .42);
+      const cp = enJeu ? cible : 0, cs = enJeu ? cibleSat : 1;
+      potion += (cp - potion) * Math.min(1, dt * 1.6);
+      sat += (cs - sat) * Math.min(1, dt * 1.6);
+      vague = Math.max(0, vague - dt * .35);
+      if (pret) {
+        const sec = calme ? 0 : (now - t0) / 1000;
+        gl.uniform1i(U.img, 0); gl.uniform1f(U.t, sec % 1256.637); gl.uniform1f(U.angle, (sec * .05) % 6.283185);
+        gl.uniform1f(U.aspect, cv.width / cv.height);
+        gl.uniform1f(U.front, front); gl.uniform1f(U.potion, potion); gl.uniform1f(U.sat, sat); gl.uniform1f(U.vague, vague);
+        gl.uniform3fv(U.coulA, A); gl.uniform3fv(U.coulB, B);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+      if (!calme) dessinerBulles(dt, potion > .1 ? B : [1, .85, .8]);
+    }
+    requestAnimationFrame(boucle);
+  })();
+  return obj;
+})();
+window.FondMagique = FondMagique;
 
 /* ---------- 12. CAMÉRA ET QR CODES ---------- */
 const Camera = {

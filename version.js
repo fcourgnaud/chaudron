@@ -9,9 +9,15 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '3.2.1', date: '2026-11-02' };
+const VERSION = { numero: '4.0.0', date: '2026-11-03' };
 
 const HISTORIQUE = [
+  { numero: '4.0.0', date: '2026-11-03', nouveautes: [
+    "Nouveau style « Cauldrons », façon jeu de rôle : logo, menu avec curseur, cadres dorés, boîte de dialogue du chaudron.",
+    "Le fond est le chaudron vu de haut : un tourbillon animé avec une surface liquide et des bulles. Quand la fumée prend une couleur, une brume de cette couleur traverse l'écran et le fond perd ses couleurs pour la faire ressortir.",
+    "L'image de la caméra n'est plus affichée : elle lit toujours les QR codes, en silence.",
+    "Nouvelle icône pour installer l'app sur l'écran d'accueil.",
+  ]},
   { numero: '3.2.1', date: '2026-11-02', nouveautes: [
     "Correction : l'app ne se fige plus si index.html n'est pas à jour (le bouton d'annonce est ajouté tout seul).",
     "En cas d'erreur, un message s'affiche à l'écran avec le numéro de version, au lieu d'une app figée.",
