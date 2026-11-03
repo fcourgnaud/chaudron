@@ -116,17 +116,18 @@
     <div class="plateau" id="plateau"></div>
     <div class="reponses-expert" id="reponses-expert"></div>
   </div>
+  <!-- la couleur de la fumée, sous les cartes -->
+  <div class="zone-fumee"><div class="etiquette-fumee" id="etiquette-fumee" hidden></div></div>
 
   <!-- en bas : l'annonce, le personnage du chaudron et sa boîte de dialogue -->
   <div class="bas-jeu">
-    <div class="actions" id="actions-annonce">
-      <button class="bouton-annonce" id="btn-annonce">J'annonce la recette</button>
-    </div>
     <div class="cadre dialogue">
       <span class="qui">Le Chaudron</span>
       <div class="bulle-parole" id="parole"></div>
-      <div class="etiquette-fumee" id="etiquette-fumee" hidden></div>
-      <div class="consigne" id="consigne"></div>
+      <div class="consigne" id="consigne" hidden></div>
+    </div>
+    <div class="actions" id="actions-annonce">
+      <button class="bouton-annonce" id="btn-annonce">J'annonce la recette</button>
     </div>
     <!-- Le personnage : un fichier par posture dans images/chaudron/ (voir POSTURES dans contenu.js) -->
     <div class="perso" id="perso" aria-hidden="true"><img id="perso-img" src="images/chaudron/repos.png" alt=""></div>
@@ -149,9 +150,9 @@
       <button class="bouton-pouvoir" id="btn-ambiance">🔊 Ambiance</button>
     </div>
     <div class="legende-sons">
-      <span><img src="images/rep-bulle.svg" alt=""> bonne place</span>
-      <span><img src="images/rep-sifflement.svg" alt=""> mauvaise place</span>
-      <span><img src="images/rep-pschitt.svg" alt=""> absent</span>
+      <span><img src="images/rep-bulle.png" alt=""> bonne place</span>
+      <span><img src="images/rep-sifflement.png" alt=""> mauvaise place</span>
+      <span><img src="images/rep-pschitt.png" alt=""> absent</span>
     </div>
     <div class="legende-fumees" id="legende-fumees"></div>
     <div class="journal" id="journal"></div>

@@ -650,3 +650,48 @@ button:focus-visible { outline: 2px solid var(--flamme); outline-offset: 4px; }
 /* musique et ambiance : dans le grimoire */
 .reglages-jeu { display: flex; gap: 8px; margin-bottom: 10px; }
 @media (prefers-reduced-motion: reduce) { .perso-titre, .perso.glisse img { animation: none !important; } }
+
+
+/* =========================================================
+   MAQUETTE 4.1.1 : proportions de la maquette téléphone
+   ========================================================= */
+.scene { flex: none; }
+.plateau { padding-bottom: 40px; }
+/* sous chaque carte : la réponse dans une petite pastille */
+.emplacement .libelle { top: calc(100% + 16px); left: 0; right: 0; height: 21px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(233, 184, 102, .85); border-radius: 7px; background: rgba(42, 9, 20, .55);
+  font-family: var(--police-jeu); font-weight: 800; font-size: .56rem; letter-spacing: .04em; color: var(--creme); }
+.emplacement .libelle.pschitt { color: var(--creme); }
+/* la fumée : pastille sous les cartes */
+.zone-fumee { display: flex; justify-content: center; min-height: 43px; }
+.zone-fumee .etiquette-fumee { position: static; transform: none; width: min(58vw, 225px); max-width: none; min-height: 43px; padding: 6px 14px 6px 12px; gap: 10px;
+  border-radius: 10px; background: rgba(42, 9, 20, .72); box-shadow: 0 0 0 1.5px #d9a35a, 0 6px 14px rgba(0,0,0,.4);
+  font-family: var(--police-texte); font-size: .95rem; line-height: 1.1; color: var(--creme); }
+.zone-fumee .etiquette-fumee .pastille-fumee { width: 14px; height: 14px; box-shadow: 0 0 8px var(--c); }
+/* en bas : boîte de dialogue sur toute la largeur, annonce dessous */
+.bas-jeu { margin: auto -14px 0; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+.dialogue { min-height: 145px; border-radius: 0; padding: 30px 20px 16px 55%;
+  background: linear-gradient(180deg, #5c1a2e, #3e0f1f);
+  box-shadow: inset 0 2px 0 #d9a35a, inset 0 -2px 0 #d9a35a, 0 -1px 0 #3a0d0a, 0 1px 0 #3a0d0a; }
+.dialogue .qui { left: 73%; }
+.dialogue .bulle-parole { font-family: var(--police-jeu); font-style: italic; font-weight: 500; font-size: .98rem; line-height: 1.3; color: #f2ae68; }
+#consigne { display: none !important; }
+#actions-annonce { justify-content: center; margin: 26px 0 0; position: relative; z-index: 4; }
+.bouton-annonce { min-width: 250px; padding: 12px 30px; font-size: .82rem; }
+.perso { left: 0; bottom: calc(max(14px, env(safe-area-inset-bottom)) - 6px); width: var(--largeur-perso); }
+:root { --largeur-perso: min(60vw, 245px); }
+.rangee-action { margin-top: 8px; }
+.scene { margin-top: 10px; }
+
+/* --- 4.1.2 : personnage plus grand (rogné à gauche) et dégradés bordeaux en haut et en bas --- */
+:root { --largeur-perso: min(79vw, 310px); }
+.perso { left: calc(var(--largeur-perso) * -.16); }
+#ecran-jeu::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, #330b14 0%, #330b14 16%, rgba(51, 11, 20, 0) 31%, rgba(51, 11, 20, 0) 84%, #330b14 91%, #330b14 100%); }
+
+
+/* --- 4.1.3 : personnage +2 %, 20 px à gauche et 20 px plus haut ; boîte de dialogue 20 px plus haut ; dégradés réduits --- */
+:root { --largeur-perso: min(80.6vw, 316px); }
+.perso { left: calc(var(--largeur-perso) * -.16 - 20px); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 14px); }
+#actions-annonce { margin-top: 46px; }
+#ecran-jeu::before { background: linear-gradient(180deg, #330b14 0%, #330b14 11%, rgba(51, 11, 20, 0) 23%, rgba(51, 11, 20, 0) 88%, #330b14 94%, #330b14 100%); }

@@ -42,8 +42,20 @@ const varCSS = nom => getComputedStyle(document.documentElement).getPropertyValu
 const couleurFamille = f => varCSS('--fam-' + f);
 const phrase = (cle, vars = {}) => hasard(PHRASES[cle]).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
 const ORDRE_REP = ['bulle', 'sifflement', 'pschitt'];
-const imgReponse = r => `images/rep-${r}.svg`;
-const imgFamille = f => `images/fam-${f}.svg`;
+const imgReponse = r => `images/rep-${r}.${FORMAT_PICTOS}`;
+const imgFamille = f => `images/fam-${f}.${FORMAT_PICTOS}`;
+// si un picto .png manque, on prend le .svg du même nom
+addEventListener('error', e => {
+  const im = e.target;
+  if (im.tagName !== 'IMG') return;
+  const m = /^(.*images\/(?:fam|rep)-[a-z]+)\.png(\?.*)?$/.exec(im.getAttribute('src') || '');
+  if (m) im.src = m[1] + '.svg';
+}, true);
+// les images déjà en erreur avant le chargement de ce fichier (légende du grimoire)
+document.querySelectorAll('img').forEach(im => {
+  const m = /^(.*images\/(?:fam|rep)-[a-z]+)\.png(\?.*)?$/.exec(im.getAttribute('src') || '');
+  if (m && im.complete && !im.naturalWidth) im.src = m[1] + '.svg';
+});
 // illustration de l'ingrédient si elle existe, sinon l'icône de sa famille
 const imgIngredient = (i, classe = '') =>
   `<img class="${classe}" src="images/ingredients/${codeQR(i.n)}.${FORMAT_ILLUSTRATIONS}" alt="" onerror="this.onerror=null;this.src='${imgFamille(i.fam)}'">`;

@@ -9,9 +9,21 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '4.1.0', date: '2026-11-03' };
+const VERSION = { numero: '4.1.3', date: '2026-11-03' };
 
 const HISTORIQUE = [
+  { numero: '4.1.3', date: '2026-11-03', nouveautes: [
+    "Personnage un peu plus grand, plus à gauche et plus haut ; boîte de dialogue remontée ; dégradés réduits.",
+    "Les pictos des familles et des réponses sont en PNG (fam-….png, rep-….png). S'il en manque un, l'app reprend le .svg.",
+  ]},
+  { numero: '4.1.2', date: '2026-11-03', nouveautes: [
+    "Personnage plus grand, rogné sur la gauche comme sur la maquette.",
+    "Dégradé bordeaux en haut et en bas de l'écran de jeu.",
+  ]},
+  { numero: '4.1.1', date: '2026-11-03', nouveautes: [
+    "Écran de jeu ajusté sur la nouvelle maquette : réponses dans une pastille sous chaque carte, fumée sous les cartes, boîte de dialogue sur toute la largeur, « J'annonce la recette » dessous, personnage plus grand.",
+    "La boîte de dialogue n'affiche plus que les phrases du chaudron (plus de consignes).",
+  ]},
   { numero: '4.1.0', date: '2026-11-03', nouveautes: [
     "Nouvel écran de jeu d'après la maquette : la sorcière du tour, Brasser, les cases des cartes, l'annonce et la boîte de dialogue en bas.",
     "Le personnage du chaudron apparaît à côté de la boîte de dialogue : 10 postures, une par phrase (colonne « Posture » du Google Sheet), avec un petit glissement à chaque phrase.",

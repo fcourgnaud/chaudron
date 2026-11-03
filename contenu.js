@@ -45,7 +45,7 @@ const MANCHES = [
   { nom: 'Archimage', taille: 5 },
 ];
 
-// Les icônes sont dans le dossier images/ (fam-plantes.svg, etc.)
+// Les icônes sont dans le dossier images/ (fam-plantes.png, etc. ; à défaut l'app prend le .svg du même nom)
 const FAMILLES = {
   plantes:   { nom: 'Plantes',   fumee: 'verte'     },
   bestioles: { nom: 'Bestioles', fumee: 'orange'    },
@@ -69,6 +69,7 @@ const TEXTES_FUMEE = {
 // n = numéro de la carte = son QR code. Pour mettre ton illustration,
 // dépose images/ingredients/CHAUDRON-01.png (ou .jpg, voir FORMAT_ILLUSTRATIONS).
 const FORMAT_ILLUSTRATIONS = 'png';
+const FORMAT_PICTOS = 'png';        // pictos des familles (fam-…) et des réponses (rep-…) ; si le fichier manque, l'app prend le .svg
 const INGREDIENTS = [
   { n:  1, fam: 'plantes', nom: "Mandragore", texte: "Elle hurle quand on l'arrache. Bouchez-vous les oreilles." },
   { n:  2, fam: 'plantes', nom: "Ortie de minuit", texte: "Ne pique qu'à minuit pile. Les autres heures, elle boude." },
