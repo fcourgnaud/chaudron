@@ -100,7 +100,7 @@ function demarrerPartie() {
     manche: 0,
     pouvoirsDispo: melanger(POUVOIRS.map(p => p.id)),
   };
-  montrer('ecran-jeu');
+  montrer('ecran-jeu'); Perso.repos();
   remplirEtagere(); remplirLegendeFumees();
   if ($('#opt-ambiance').checked) Ambiance.demarrer(); majBoutonAmbiance();
   if ($('#opt-musique').checked) Musique.demarrer(); else Musique.arreter();
@@ -187,6 +187,8 @@ function ajouterIngredient(n) {
 $('#btn-retirer-main').onclick = () => $('#btn-retirer').onclick();
 $('#btn-brasser-main').onclick = () => { fermerTiroirs(); brasser(); };
 $('#btn-retirer').onclick = () => { if (S.phase === 'brassage') { S.brassage.pop(); majPlateau(); majEtagere(); } };
+// toucher la dernière carte jetée la retire (comme le bouton ↩)
+$('#plateau').onclick = e => { if (e.target.closest('.emplacement.retirable')) $('#btn-retirer').onclick(); };
 $('#btn-brasser').onclick = () => { fermerTiroirs(); brasser(); };
 
 // la règle : bulle = bonne place, sifflement = mauvaise place, pschitt = absent
@@ -515,7 +517,7 @@ function majTitre() {
     $('#lunes').innerHTML = Array.from({ length: CONFIG.essaisPleineLune }, (_, i) => `<span class="${i < S.essais ? 'levee' : ''}"></span>`).join('');
   } else {
     $('#lunes').hidden = true; $('#sorcieres').hidden = false;
-    $('#titre-manche').innerHTML = `${MANCHES[S.manche].nom}<small>Manche ${S.manche + 1} sur ${MANCHES.length} · ${S.recette.length} ingrédients</small>`;
+    $('#titre-manche').innerHTML = `${MANCHES[S.manche].nom}<small>Manche ${S.manche + 1} sur ${MANCHES.length} - ${S.recette.length} ingrédients</small>`;
   }
 }
 
@@ -546,7 +548,7 @@ function majPlateau() {
     const n = S.brassage[i];
     if (n) {
       const ing = ING(n);
-      box.insertAdjacentHTML('beforeend', `<div class="emplacement plein" style="--c:${couleurFamille(ing.fam)}">
+      box.insertAdjacentHTML('beforeend', `<div class="emplacement plein${i === S.brassage.length - 1 && S.phase === 'brassage' ? ' retirable' : ''}" style="--c:${couleurFamille(ing.fam)}">
         <span class="rang"><span>${i + 1}</span></span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
         <img class="reponse" id="rep-${i}" alt=""><span class="libelle" id="lib-${i}"></span></div>`);
     } else {
@@ -564,9 +566,10 @@ function majPlateau() {
 function majActions(quoi) {
   $('#actions-brassage').hidden = quoi !== 'brassage';
   $('#actions-annonce').hidden = !(quoi === 'brassage' || quoi === 'suite') || S.annonceCeTour;
-  $('#btn-annonce').textContent = quoi === 'suite' ? "📜 J'annonce maintenant" : "📜 J'annonce la recette";
+  $('#btn-annonce').textContent = quoi === 'suite' ? "J'annonce maintenant" : "J'annonce la recette";
   $('#actions-suite').hidden = quoi !== 'suite';
   if (quoi !== 'brassage') $('#actions-pouvoirs').innerHTML = '';
+  if (quoi !== 'brassage') $$('#plateau .retirable').forEach(e => e.classList.remove('retirable'));
 }
 
 function colorerPotion(couleur, texte = '') {
@@ -923,14 +926,15 @@ function parler(cle, vars = {}, discret = false) {
   if (dispo.length) { fichier = hasard(dispo); i = liste.indexOf(fichier) % textes.length; }
   else i = Math.floor(Math.random() * textes.length);
   const texte = textes[i].replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
-  return dire(texte, discret, fichier);
+  const posture = POSTURES[fichier || liste[i % Math.max(1, liste.length)]] || POSTURE_PAR_DEFAUT;
+  return dire(texte, discret, fichier, posture);
 }
 
 // Les phrases passent l'une après l'autre (jamais en même temps),
 // avec CONFIG.pauseEntrePhrases de silence entre deux phrases.
 const Parole = { file: Promise.resolve(), finDerniere: 0, generation: 0 };
 
-function dire(texte, discret = false, fichier = null) {
+function dire(texte, discret = false, fichier = null, posture = null) {
   const gen = Parole.generation;
   const tour = Parole.file.then(async () => {
     if (gen !== Parole.generation) return;               // partie quittée entre-temps
@@ -938,7 +942,7 @@ function dire(texte, discret = false, fichier = null) {
     if (attente > 0) await attendre(attente);
     if (gen !== Parole.generation) return;
     const p = $('#parole');
-    if (!discret) { p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); }
+    if (!discret) { p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); Perso.montrer(posture); }
     if (!S.voix) await attendre(900 + texte.length * 30);
     else {
       Musique.baisser(true);
@@ -949,6 +953,26 @@ function dire(texte, discret = false, fichier = null) {
   Parole.file = tour.catch(() => {});
   return tour;
 }
+/* Le personnage du chaudron : une image par posture (images/chaudron/<posture>.png).
+   Quand une phrase commence, la posture prévue arrive avec un petit glissement de gauche à droite. */
+const Perso = {
+  src: nom => `images/chaudron/${nom}.png`,
+  pret: new Set(),
+  charger() {
+    const noms = new Set([POSTURE_REPOS, POSTURE_PAR_DEFAUT, ...Object.values(POSTURES)]);
+    noms.forEach(nom => { const im = new Image(); im.onload = () => this.pret.add(nom); im.src = this.src(nom); });
+  },
+  montrer(nom) {
+    if (!nom) return;
+    const box = $('#perso'), img = $('#perso-img');
+    if (!box || !img) return;
+    if (!this.pret.has(nom) && this.pret.has(POSTURE_PAR_DEFAUT)) nom = POSTURE_PAR_DEFAUT;   // image pas encore livrée
+    img.src = this.src(nom);
+    box.dataset.posture = nom;
+    box.classList.remove('glisse'); void box.offsetWidth; box.classList.add('glisse');
+  },
+  repos() { const img = $('#perso-img'); if (!img) return; img.src = this.src(this.pret.has(POSTURE_REPOS) ? POSTURE_REPOS : POSTURE_PAR_DEFAUT); $('#perso').classList.remove('glisse'); },
+};
 function viderParole() { Parole.generation++; Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
 
 async function parlerVraiment(texte, fichier) {
@@ -1265,6 +1289,15 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // copie le dessin du chaudron partout où il y a [data-chaudron] (avec des id uniques)
 $$('[data-chaudron]').forEach((el, k) => { el.innerHTML = $('#modele-chaudron').innerHTML.replace(/(g-corps|g-potion|clip-potion)/g, `$1-${k}`); });
 majSaisieSorcieres();
+Perso.charger();
+// image de secours si un fichier n'est pas (encore) livré, par ex. repos.png
+function secours(im, src) {
+  const mettre = () => { im.onerror = null; im.src = src; };
+  im.onerror = mettre;
+  if (im.complete && !im.naturalWidth) mettre();       // l'erreur a pu arriver avant ce code
+}
+$$('img[data-secours]').forEach(im => secours(im, im.dataset.secours));
+secours($('#perso-img'), Perso.src(POSTURE_PAR_DEFAUT));
 Voix.charger();
 Musique.charger();
 afficherVersion();

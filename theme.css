@@ -5,12 +5,15 @@
    dans images/ que tu peux remplacer par tes dessins.
    ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;700&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;700&family=Alegreya:wght@500;800&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&display=swap');
 
 :root {
   /* ---------- Polices ---------- */
   --police-titre: 'Grenze Gotisch', 'Cormorant Garamond', Georgia, serif;   /* grands titres */
-  --police-ui: 'Cinzel', Georgia, serif;                                     /* boutons, étiquettes */
+  --police-ui: 'Cinzel', Georgia, serif;
+  --police-jeu: 'Alegreya', 'Cormorant Garamond', Georgia, serif;     /* nom de la manche, sorcière, cases */
+  --or-maquette: #e9b866;
+  --largeur-perso: min(58vw, 245px);   /* taille du personnage en jeu */                                     /* boutons, étiquettes */
   --police-magie: 'Cormorant Garamond', Georgia, serif;                      /* phrases du chaudron, cartes */
   --police-texte: 'Cormorant Garamond', Georgia, serif;
 
@@ -579,3 +582,71 @@ button:focus-visible { outline: 2px solid var(--flamme); outline-offset: 4px; }
 .oeil span { display: none; }
 
 @media (prefers-reduced-motion: reduce) { .logo, .appuie, .menu-rpg .curseur { animation: none !important; } }
+
+
+/* =========================================================
+   MAQUETTE 4.1 : écran de jeu et écran titre avec le personnage
+   ========================================================= */
+.eteint { opacity: .45; }
+
+/* --- écran titre : le personnage derrière le logo --- */
+.titre-scene { position: relative; width: min(100%, 470px); display: flex; flex-direction: column; align-items: center; }
+.perso-titre { width: 74%; margin-bottom: -50%; filter: drop-shadow(0 0 26px rgba(240, 138, 44, .45)) drop-shadow(0 12px 20px rgba(0,0,0,.5)); animation: respire 5s ease-in-out infinite; }
+@keyframes respire { 50% { transform: translateY(-5px) scale(1.01); } }
+.titre-scene .titre-logo { position: relative; z-index: 1; width: 100%; }
+#ecran-titre .appuie { margin-top: -10px; position: relative; z-index: 2; }
+
+/* --- écran de jeu --- */
+#ecran-jeu { gap: 12px; padding-bottom: 0; min-height: 100dvh; }
+.barre-jeu { display: grid; grid-template-columns: 44px 1fr 44px; align-items: start; }
+.titre-manche { font-family: var(--police-jeu); font-weight: 800; font-size: 1.9rem; line-height: 1;
+  background: none; -webkit-text-fill-color: var(--or-maquette); color: var(--or-maquette); filter: drop-shadow(0 2px 2px rgba(0,0,0,.55)); }
+.titre-manche small { font-family: var(--police-texte); font-style: italic; font-weight: 500; font-size: .82rem; letter-spacing: .04em; text-transform: uppercase;
+  -webkit-text-fill-color: var(--creme); color: var(--creme); margin-top: 4px; }
+
+/* la sorcière dont c'est le tour */
+.sorcieres { display: flex; justify-content: center; }
+.sorciere { display: none; }
+.sorciere.active { display: flex; justify-content: center; align-items: center; gap: 8px; min-width: min(60vw, 200px); padding: 7px 26px; border-radius: 10px;
+  background: linear-gradient(180deg, #651d32, #3a0d1c); box-shadow: 0 0 0 1.5px #3a0d0a, 0 0 0 3px #d9a35a, 0 6px 14px rgba(0,0,0,.5);
+  font-family: var(--police-jeu); font-weight: 800; font-size: 1.35rem; letter-spacing: .04em; text-transform: uppercase; color: var(--or-maquette); }
+.sorciere.active .chapeau { display: none; }
+.sorciere .trophees { margin: 0; font-size: .85rem; }
+
+/* Brasser + main */
+.rangee-action { display: flex; justify-content: center; }
+.rangee-action .actions { margin: 0; }
+#actions-brassage { gap: 16px; }
+#btn-retirer { display: none; }                       /* on retire en touchant la dernière carte */
+#btn-brasser { min-width: 150px; }
+#btn-brasser:disabled { opacity: 1; background: rgba(245, 226, 206, .32); color: rgba(107, 29, 51, .75); filter: none; }
+#actions-pouvoirs:empty { display: none; }
+
+/* les cases des cartes */
+.scene { height: auto; max-width: none; flex: 1; display: flex; flex-direction: column; justify-content: center; margin: 0; }
+.plateau { --lc: min(112px, calc((100vw - 32px - (var(--nb, 3) - 1) * 9px) / var(--nb, 3))); gap: 9px; margin: 0; }
+.emplacement { border: 1.5px solid rgba(233, 184, 102, .85); border-radius: 10px; background: rgba(30, 8, 14, .28);
+  color: var(--or-maquette); font-family: var(--police-jeu); font-weight: 500; font-size: 1.8rem; }
+.emplacement.retirable { cursor: pointer; }
+.emplacement.retirable::after { content: '↩'; position: absolute; top: 4px; right: 6px; font-size: .8rem; color: var(--vin); opacity: .6; }
+
+/* en bas : annonce, boîte de dialogue, personnage */
+.bas-jeu { position: relative; margin-top: auto; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+#actions-annonce { justify-content: flex-end; margin: 0 0 14px; }
+.bouton-annonce { font-size: .8rem; padding: 11px 24px; color: var(--creme); }
+.dialogue { min-height: 150px; margin: 0; padding: 24px 14px 14px calc(var(--largeur-perso) * .8); border-radius: 10px;
+  background: linear-gradient(180deg, #6a1f35, #4a1425); box-shadow: 0 0 0 1.5px #3a0d0a, 0 0 0 3px #d9a35a, 0 12px 26px rgba(0,0,0,.55); }
+.dialogue .qui { left: 72%; transform: translateX(-50%); top: -13px; padding: 3px 18px; white-space: nowrap; }
+.dialogue .bulle-parole { font-size: 1.18rem; line-height: 1.25; min-height: 0; }
+.dialogue .etiquette-fumee { margin-top: 10px; padding: 6px 10px; font-size: .85rem; width: auto; display: inline-flex; }
+.dialogue .etiquette-fumee[hidden] { display: none; }
+.dialogue .consigne { margin-top: 8px; text-align: left; font-size: .88rem; }
+.dialogue .consigne:empty { display: none; }
+.perso { position: absolute; left: -10px; bottom: -2px; width: var(--largeur-perso); z-index: 3; pointer-events: none; }
+.perso img { display: block; width: 100%; filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
+.perso.glisse img { animation: glisse .45s cubic-bezier(.2, .9, .3, 1.15); }
+@keyframes glisse { from { transform: translateX(-34px); opacity: 0; } }
+
+/* musique et ambiance : dans le grimoire */
+.reglages-jeu { display: flex; gap: 8px; margin-bottom: 10px; }
+@media (prefers-reduced-motion: reduce) { .perso-titre, .perso.glisse img { animation: none !important; } }

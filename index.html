@@ -35,7 +35,10 @@
 
 <!-- ==================== 1. ÉCRAN TITRE ==================== -->
 <section id="ecran-titre" class="ecran actif">
-  <h1 class="titre-logo"><img class="logo" src="images/titre.png" alt="Cauldrons"></h1>
+  <div class="titre-scene">
+    <img class="perso-titre" src="images/chaudron/repos.png" alt="" data-secours="images/chaudron/fier.png">
+    <h1 class="titre-logo"><img class="logo" src="images/titre.png" alt="Cauldrons"></h1>
+  </div>
   <p class="appuie">✦ Choisis ta quête ✦</p>
   <nav class="cadre menu-rpg" aria-label="Menu principal">
     <span class="titre-cadre">Menu</span>
@@ -82,43 +85,51 @@
 
 <!-- ==================== 3. JEU ==================== -->
 <section id="ecran-jeu" class="ecran">
+  <!-- en haut : quitter, la manche, le grimoire -->
   <header class="barre-jeu">
     <button class="rond" id="btn-quitter" aria-label="Quitter">✕</button>
     <div class="titre-manche" id="titre-manche"></div>
-    <button class="rond" id="btn-musique" aria-label="Musique">🎵</button>
-    <button class="rond" id="btn-ambiance" aria-label="Ambiance">🔊</button>
     <button class="rond" id="btn-grimoire" aria-label="Grimoire">📖</button>
   </header>
 
+  <!-- la sorcière dont c'est le tour (ou les lunes en Pleine Lune) -->
   <div class="sorcieres" id="sorcieres"></div>
   <div class="lunes" id="lunes" hidden></div>
 
+  <!-- Brasser + choisir à la main ; « Au suivant » prend la même place -->
+  <div class="rangee-action">
+    <div class="actions" id="actions-brassage">
+      <button class="rond grand-rond" id="btn-retirer" aria-label="Retirer la dernière carte">↩</button>
+      <button class="bouton-or" id="btn-brasser" disabled>Brasser !</button>
+      <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
+    </div>
+    <div class="actions" id="actions-suite" hidden>
+      <button class="bouton-or" id="btn-suivant">Au suivant ➜</button>
+    </div>
+  </div>
+  <div class="actions" id="actions-pouvoirs"></div>
+
+  <!-- les cartes jetées -->
   <div class="scene" id="scene">
     <canvas id="fumee"></canvas>
     <div class="grand-chaudron" data-chaudron></div>
-    <div class="etiquette-fumee" id="etiquette-fumee" hidden></div>
+    <div class="plateau" id="plateau"></div>
+    <div class="reponses-expert" id="reponses-expert"></div>
   </div>
 
-  <div class="cadre dialogue">
-    <span class="qui">Le Chaudron</span>
-    <div class="bulle-parole" id="parole"></div>
-  </div>
-
-  <div class="consigne" id="consigne"></div>
-  <div class="plateau" id="plateau"></div>
-  <div class="reponses-expert" id="reponses-expert"></div>
-
-  <div class="actions" id="actions-brassage">
-    <button class="rond grand-rond" id="btn-retirer" aria-label="Retirer la dernière carte">↩</button>
-    <button class="bouton-or" id="btn-brasser" disabled>Brasser !</button>
-    <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
-  </div>
-  <div class="actions" id="actions-annonce">
-    <button class="bouton-annonce" id="btn-annonce">📜 J'annonce la recette</button>
-  </div>
-  <div class="actions" id="actions-pouvoirs"></div>
-  <div class="actions" id="actions-suite" hidden>
-    <button class="bouton-or" id="btn-suivant">Au suivant ➜</button>
+  <!-- en bas : l'annonce, le personnage du chaudron et sa boîte de dialogue -->
+  <div class="bas-jeu">
+    <div class="actions" id="actions-annonce">
+      <button class="bouton-annonce" id="btn-annonce">J'annonce la recette</button>
+    </div>
+    <div class="cadre dialogue">
+      <span class="qui">Le Chaudron</span>
+      <div class="bulle-parole" id="parole"></div>
+      <div class="etiquette-fumee" id="etiquette-fumee" hidden></div>
+      <div class="consigne" id="consigne"></div>
+    </div>
+    <!-- Le personnage : un fichier par posture dans images/chaudron/ (voir POSTURES dans contenu.js) -->
+    <div class="perso" id="perso" aria-hidden="true"><img id="perso-img" src="images/chaudron/repos.png" alt=""></div>
   </div>
 
   <!-- La caméra reste allumée pour lire les QR codes, mais son image n'est plus affichée -->
@@ -133,6 +144,10 @@
 <div class="tiroir" id="tiroir-grimoire">
   <div class="tiroir-boite">
     <div class="tiroir-tete"><h3>Grimoire</h3><button class="rond" data-fermer>✕</button></div>
+    <div class="reglages-jeu">
+      <button class="bouton-pouvoir" id="btn-musique">🎵 Musique</button>
+      <button class="bouton-pouvoir" id="btn-ambiance">🔊 Ambiance</button>
+    </div>
     <div class="legende-sons">
       <span><img src="images/rep-bulle.svg" alt=""> bonne place</span>
       <span><img src="images/rep-sifflement.svg" alt=""> mauvaise place</span>

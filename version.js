@@ -9,9 +9,15 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '4.0.1', date: '2026-11-03' };
+const VERSION = { numero: '4.1.0', date: '2026-11-03' };
 
 const HISTORIQUE = [
+  { numero: '4.1.0', date: '2026-11-03', nouveautes: [
+    "Nouvel écran de jeu d'après la maquette : la sorcière du tour, Brasser, les cases des cartes, l'annonce et la boîte de dialogue en bas.",
+    "Le personnage du chaudron apparaît à côté de la boîte de dialogue : 10 postures, une par phrase (colonne « Posture » du Google Sheet), avec un petit glissement à chaque phrase.",
+    "Écran titre : le personnage derrière le logo.",
+    "Pour retirer la dernière carte jetée, on la touche. Musique et ambiance se règlent dans le grimoire.",
+  ]},
   { numero: '4.0.1', date: '2026-11-03', nouveautes: [
     "Il n'y a plus que les emplacements des cartes de la manche (3, 4 ou 5) : la case « facultatif » disparaît.",
     "Quand on quitte la partie, tout s'arrête aussitôt : voix, sons, musique, ambiance, caméra et annonces en attente.",

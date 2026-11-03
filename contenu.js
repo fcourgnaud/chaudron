@@ -147,6 +147,34 @@ const PHRASES = {
 };
 
 // =========================================================
+// POSTURES DU PERSONNAGE
+// Chaque voix a sa posture (colonne « Posture » de l'onglet « Voix à enregistrer »).
+// Les images sont dans images/chaudron/, au nom de la posture : fier.png, surpris.png…
+// POSTURE_REPOS : l'image affichée en attendant (écran titre, début de partie).
+// Si repos.png n'existe pas encore, l'app prend POSTURE_PAR_DEFAUT.
+// =========================================================
+const POSTURE_REPOS = 'repos';
+const POSTURE_PAR_DEFAUT = 'fier';
+const POSTURES = {
+  'accueil-1': 'fier', 'accueil-2': 'malin', 'accueil-3': 'explique',
+  'manche-apprentie': 'explique', 'manche-sorciere': 'explique', 'manche-archimage': 'malin',
+  'tour-1': 'explique', 'tour-2': 'fier', 'tour-3': 'malin', 'tour-4': 'ravi',
+  'moquerie-1': 'blase', 'moquerie-2': 'decu', 'moquerie-3': 'colere', 'moquerie-4': 'blase',
+  'rate-1': 'blase', 'rate-2': 'decu', 'rate-3': 'decu', 'rate-4': 'reflexion', 'rate-5': 'decu', 'rate-6': 'blase',
+  'presque-1': 'surpris', 'presque-2': 'ravi', 'presque-3': 'reflexion',
+  'explosion-1': 'colere', 'explosion-2': 'colere',
+  'protege-1': 'decu', 'passe-1': 'malin', 'doublon-1': 'blase',
+  'victoire-1': 'ravi', 'victoire-2': 'joie', 'grande-1': 'joie',
+  'lune-debut-3': 'explique', 'lune-debut-4': 'explique', 'lune-debut-5': 'explique',
+  'lune-reste-7': 'reflexion', 'lune-reste-6': 'reflexion', 'lune-reste-5': 'malin', 'lune-reste-4': 'malin', 'lune-reste-3': 'malin', 'lune-reste-2': 'surpris',
+  'lune-derniere-1': 'malin', 'lune-gagne-1': 'joie', 'lune-perdu-1': 'malin',
+  'serpent-oui-1': 'malin', 'serpent-non-1': 'blase', 'chouette-1': 'explique', 'secret-1': 'malin',
+  'annonce-1': 'surpris', 'annonce-2': 'reflexion', 'annonce-juste-1': 'surpris', 'annonce-juste-2': 'ravi',
+  'annonce-fausse-1': 'malin', 'annonce-fausse-2': 'blase', 'annonce-fausse-solo-1': 'colere', 'annonce-fausse-lune-1': 'colere',
+  'derniere-en-lice-1': 'fier', 'secrets-1': 'malin', 'secrets-2': 'malin', 'marche-1': 'explique', 'marche-2': 'explique',
+};
+
+// =========================================================
 // VOIX ENREGISTRÉES
 // Pour chaque moment, la liste des fichiers du dossier voix/
 // (sans le ".mp3"). Ce sont les noms de l'onglet
