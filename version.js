@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '4.2.0', date: '2026-11-03' };
+const VERSION = { numero: '4.2.1', date: '2026-11-03' };
 
 const HISTORIQUE = [
+  { numero: '4.2.1', date: '2026-11-03', nouveautes: [
+    "Haut de l'écran de jeu d'après la maquette : la sorcière du tour et, collé à droite, le bouton Brasser ou Au suivant. Les cartes sont juste dessous et ne bougent plus.",
+  ]},
   { numero: '4.2.0', date: '2026-11-03', nouveautes: [
     "Une musique par manche : manche 1, manche 2, manche 3, et une pour la Pleine Lune (dossier musique/). Elle change en fondu au début de chaque manche.",
     "L'écran d'accueil tient dans l'écran, sans défiler.",

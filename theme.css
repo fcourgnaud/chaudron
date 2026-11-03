@@ -739,3 +739,26 @@ button:focus-visible { outline: 2px solid var(--flamme); outline-offset: 4px; }
 #ecran-titre .menu-rpg { margin-top: 10px; }
 #ecran-titre .menu-rpg button { padding: 9px 14px; }
 #ecran-titre .version { margin-top: 8px; }
+
+/* --- 4.2.1 : la sorcière et le bouton du moment sur une seule ligne, cartes juste dessous --- */
+.titre-manche { font-family: var(--police-jeu); font-weight: 800; font-size: 1.95rem; }
+.titre-manche small { font-weight: 500; }
+.ligne-tour { display: flex; justify-content: center; align-items: center; height: 40px; margin-top: 10px; }
+.tour-gauche { position: relative; z-index: 2; width: 173px; flex: none; }
+.tour-gauche .sorcieres, .tour-gauche .lunes { min-height: 0; }
+.sorciere.active { box-sizing: border-box; width: 173px; min-width: 0; height: 38px; padding: 0 12px; border-radius: 10px;
+  font-family: var(--police-jeu); font-weight: 800; font-size: 1.25rem; letter-spacing: .03em; text-transform: uppercase; }
+.tour-gauche .lunes { box-sizing: border-box; width: 173px; height: 38px; border-radius: 10px; gap: 4px;
+  background: linear-gradient(180deg, #651d32, #3a0d1c); box-shadow: 0 0 0 1.5px #3a0d0a, 0 0 0 3px #d9a35a, 0 6px 14px rgba(0,0,0,.5); }
+.tour-gauche .lunes span { width: 11px; height: 11px; margin: 2px; }
+/* le bouton glisse sous la pastille : bord gauche droit, pointe à droite */
+.rangee-action { position: relative; z-index: 1; height: 40px; margin: 0 0 0 -14px; }
+.rangee-action .actions { position: relative; gap: 0; }
+#ecran-jeu .rangee-action .bouton-or { zoom: 1; }
+#btn-brasser, #btn-suivant { box-sizing: border-box; width: 128px; min-width: 0; height: 34px; padding: 0 14px 0 24px; justify-content: center;
+  font-size: .78rem; letter-spacing: .05em; white-space: nowrap;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); }
+/* ✋ juste à droite, sans décaler la ligne */
+#btn-main { position: absolute; left: calc(100% + 6px); top: 50%; transform: translateY(-50%); width: 38px; height: 38px; font-size: 1rem; }
+/* les cartes juste dessous */
+.scene { margin-top: 16px; }
