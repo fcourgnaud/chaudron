@@ -108,38 +108,42 @@ const POUVOIRS = [
 
 const NOMS_PAR_DEFAUT = ['Morgane', 'Baba', 'Hécate', 'Circé'];
 
-// Phrases du chaudron : une est tirée au hasard.
-// {joueur} {ingredient} {a} {b} {n} {manche} {recette} sont remplacés automatiquement.
+// Phrases du chaudron : ce sont les phrases de l'onglet « Voix à enregistrer » du Google Sheet.
+// Elles sont rangées DANS LE MÊME ORDRE que les fichiers de la liste VOIX plus bas :
+// quand l'app joue accueil-2.mp3, elle affiche la 2e phrase de « accueil ».
+// Sans fichier mp3, le téléphone lit la phrase lui-même.
+// {nMot} {essaisMot} (nombres en lettres) {n} {joueur} {ingredient} {a} {b} {recette} sont remplacés automatiquement.
 const PHRASES = {
-  accueil:   ['Ah… de nouvelles apprenties. Montrez-moi ce que vous valez.', "J'ai faim. Nourrissez-moi, sorcières.", 'Le feu est allumé. Que le concours commence.'],
-  manche:    ['Manche {manche}. Ma recette compte {n} ingrédients.', "Manche {manche}. {n} ingrédients, et l'ordre compte."],
-  tour:      ['À toi, {joueur}.', '{joueur}, approche.', 'Voyons ce que {joueur} me prépare.', "{joueur}, je t'écoute."],
-  moquerie:  ['Encore {ingredient} ? Vraiment ?', "{ingredient}… je l'ai déjà recraché, celui-là.", "Tu n'écoutes rien. {ingredient}, toujours pas.", 'Ah, {ingredient}. Encore. Quelle imagination.'],
-  rate:      ['Hmm.', 'Pas encore…', 'Je reste sur ma faim.', 'Intéressant. Mais non.', 'Ça mijote…', 'Beurk. Au suivant.'],
-  presque:   ['Oh… tu brûles.', "Presque. J'en salive.", 'Ça sent bon… mais pas assez.'],
-  explosion: ['BOUM ! {a} et {b} ne se supportent pas !', 'Pas {a} avec {b}, malheureuse ! BOUM !'],
-  protege:   ["L'amulette de {joueur} a avalé la suie."],
-  passe:     ['{joueur} est encore couverte de suie : elle passe son tour.'],
-  doublon:   ['Celui-là est déjà dans mon ventre.'],
-  victoire:  ['Parfait. Absolument parfait. {joueur} a trouvé la potion !', 'Délicieux ! {joueur} remporte la manche !'],
+  accueil:   ['Ah… encore des apprenties. Montrez-moi, un peu, ce que vous valez !', "J'ai faim. Il serait bon de me nourrir sur-le-champ !", 'Le feu est allumé… Que le concours commence.'],
+  manche:    ["Ma recette compte {nMot} ingrédients, et l'ordre compte !"],
+  tour:      ['À toi… donne-moi à manger !', 'Approche, et donne-moi à manger !', 'Voyons ce que tu me prépares !', 'Je sens déjà les ingrédients !'],
+  moquerie:  ['Encore ça ? Vraiment ?', "Celui-là, je l'ai déjà recraché !", "Tu n'écoutes rien ! Toujours pas !", 'Encore le même ingrédient ! Quelle imagination.'],
+  rate:      ['Mouais !… Ben non !', "Ben c'est raté ! Encore !", 'Je reste de nouveau sur ma faim !', 'Intéressant. Mais non !', 'Ça mijote pas !', 'Beurk !… Au suivant !'],
+  presque:   ['Presque !… Allez, au suivant !', "Presque !… J'en salive déjà !", 'Ça sent bon… mais pas assez !'],
+  explosion: ['BOUM ! Et voilà !… Ces deux-là ne se supportent pas !', 'Au nom de Saint Chaudron, pas ces deux-là ensemble ! Voilà, BOUM !'],
+  protege:   ['Ok ! Ton amulette a avalé la suie !'],
+  passe:     ['Ahah ! Encore couverte de suie ? Tu passes ton tour !'],
+  doublon:   ['Alors… Celui-là est déjà dans mon ventre !'],
+  victoire:  ['Parfait. Absolument parfait. Tu as trouvé la potion !', 'Délicieux ! Tu remportes la manche !'],
   annonce:   ['Une annonce ? Voyons ça… Les autres, détournez les yeux.', 'Tu crois connaître ma recette ? Montre-moi.'],
   secrets:   ['Chacune connaît maintenant un de mes secrets. Gardez-le bien.', 'Mes secrets sont distribués. Que le meilleur nez gagne.'],
   marche:    ['Le marché se refait ! Remettez les cartes sous la pioche et retournez-en quatre nouvelles.', 'Nouveau tour, nouveau marché. Quatre ingrédients frais !'],
-  annonceJuste: ['Exact. C\'est bien ma recette. {joueur} remporte la manche !', 'Incroyable… {joueur} a percé mon secret !'],
-  annonceFausse: ['Faux ! {joueur} est chassée du concours jusqu\'à la fin de la manche.', 'Raté ! {joueur} quitte la manche. Elle peut encore échanger, mais plus brasser.'],
+  annonceJuste: ["Exact. C'est bien ma recette. Tu remportes la manche !", "C'est parfait !… Tu t'es très bien débrouillée !"],
+  annonceFausse: ["Faux ! Tu es chassée du concours jusqu'à la fin de la manche.", 'Raté ! Tu quittes la manche. Tu peux encore échanger, mais plus brasser.'],
   annonceFausseSolo: ['Faux. Ça te coûtera cher.'],
-  annonceFausseLune: ['Faux ! La lune monte plus vite…'],
-  derniereEnLice: ['Il ne reste que {joueur}. Elle remporte la manche !'],
-  grande:    ['Inclinez-vous devant {joueur}, Grande Sorcière !'],
-  lune:      ['Plus que {n} essais avant que la lune se lève.'],
+  annonceFausseLune: ['Faux ! La lune arrive plus vite…'],
+  derniereEnLice: ['Il ne reste que toi. Tu remportes la manche !'],
+  grande:    ['Si je le pouvais, je me serais incliné devant toi !'],
+  luneDebut: ['La Pleine Lune. Ma recette compte {nMot} ingrédients. Vous avez {essaisMot} essais.'],
+  lune:      ['Plus que {nMot} essais avant que la lune se lève…'],
+  luneDeux:  ['Attention ! Plus que deux essais avant que la lune se lève…'],
   luneDerniere: ['Dernier essai. La lune est là…'],
-  luneGagne: ['La potion est prête avant la lune. Bravo, le cercle !'],
-  lunePerdu: ['La lune est levée. Trop tard. Ma recette était : {recette}.'],
-  serpentOui:['Oui… il est dans ma recette.'],
-  serpentNon:['Non. Jamais de la vie.'],
-  luneDebut: ['La Pleine Lune. Ma recette compte {n} ingrédients. Vous avez {essais} essais.'],
-  chouette:  ['Colle-moi à ton oreille…'],
-  secret:    ["Chut… c'est notre secret."],
+  luneGagne: ['La potion est prête avant la lune !… Bravo, jeune apprenti !'],
+  lunePerdu: ["La lune est levée. Trop tard. Regardez ce qu'il fallait !"],
+  serpentOui:['Oui… il est dans ma recette !'],
+  serpentNon:['Non. Jamais de la vie !'],
+  chouette:  ['Colle-moi à ton oreille !'],
+  secret:    ["Chut… c'est notre secret !"],
 };
 
 // =========================================================

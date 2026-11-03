@@ -33,7 +33,9 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const hasard = arr => arr[Math.floor(Math.random() * arr.length)];
 const melanger = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const attendre = ms => new Promise(r => setTimeout(r, ms));
+// Partie.numero change quand on quitte : tout ce qui attendait (sons, phrases, rideaux) s'arrête net.
+const Partie = { numero: 0 };
+const attendre = ms => { const n = Partie.numero; return new Promise(r => setTimeout(() => { if (n === Partie.numero) r(); }, ms)); };
 const ING = n => INGREDIENTS.find(i => i.n === n);
 const codeQR = n => CONFIG.prefixeQR + String(n).padStart(2, '0');
 const varCSS = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim() || '#888';
@@ -115,7 +117,7 @@ async function nouvelleManche(premiere) {
   // 2 ingrédients instables, hors recette, de familles différentes
   const reste = tirage.slice(taille);
   S.instables = [reste[0], reste.find(n => ING(n).fam !== ING(reste[0]).fam)];
-  S.max = Math.max(CONFIG.maxBrassage, taille);
+  S.max = taille;                       // autant d'emplacements que d'ingrédients dans la recette
   S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {};
   S.essais = 0; S.phase = 'attente'; S.derniere = null;
   S.secret = false; S.question = false; S.sablier = false;
@@ -144,7 +146,7 @@ async function debutTour(avecRideau = true) {
   S.annonceCeTour = false;
   S.brassage = []; S.phase = 'brassage';
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
-  $('#consigne').innerHTML = `<b>${j.nom}</b> : cueille une carte, puis jette-en 3 ou ${S.max} dans l'ordre`;
+  $('#consigne').innerHTML = `<b>${j.nom}</b> : cueille une carte, puis jette-en ${S.max > CONFIG.minBrassage ? CONFIG.minBrassage + ' à ' + S.max : S.max} dans l'ordre`;
   if (S.joueurs.length > 1) {
     if (avecRideau) await rideau(`<div class="icone">🧙‍♀️</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>`, CONFIG.dureeRideau);
     parler('tour', { joueur: j.nom });
@@ -454,10 +456,17 @@ function finPartie(gagne) {
   }
   fenetre(html + `<div class="actions"><button class="rond grand-rond" id="f-accueil" aria-label="Accueil">⌂</button><button class="bouton-or" id="f-rejouer">Rejouer</button></div>`);
   $('#f-accueil').onclick = () => { fermerFenetre(); quitter(); };
-  $('#f-rejouer').onclick = () => { fermerFenetre(); Camera.arreter(); viderParole(); demarrerPartie(); };
+  $('#f-rejouer').onclick = () => { toutCouper(); demarrerPartie(); };
 }
 
-function quitter() { Camera.arreter(); Ambiance.arreter(); viderParole(); montrer('ecran-titre'); }
+function toutCouper() {
+  Partie.numero++;                                   // les tours en attente s'arrêtent
+  viderParole();                                     // voix enregistrées + voix du téléphone
+  Camera.arreter(); Ambiance.arreter(); Musique.arreter();
+  $('#rideau').classList.remove('visible'); $('#apercu-carte').classList.remove('visible');
+  fermerFenetre(); fermerTiroirs(); colorerPotion(null);
+}
+function quitter() { toutCouper(); montrer('ecran-titre'); }
 $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre le feu ?</h2><p>La partie en cours sera perdue.</p>')) quitter(); };
 
 /* ---------- 6. POUVOIRS ---------- */
@@ -541,7 +550,7 @@ function majPlateau() {
         <span class="rang"><span>${i + 1}</span></span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
         <img class="reponse" id="rep-${i}" alt=""><span class="libelle" id="lib-${i}"></span></div>`);
     } else {
-      box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}${i >= CONFIG.minBrassage ? '<span class="facultatif">facultatif</span>' : ''}</div>`);
+      box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}</div>`);
     }
   }
   $('#reponses-expert').innerHTML = '';
@@ -615,7 +624,8 @@ function majEtagere() { $$('#etagere button').forEach(b => b.classList.toggle('d
 function rideau(html, duree) {
   return new Promise(r => {
     $('#rideau-contenu').innerHTML = html; $('#rideau').classList.add('visible');
-    const fin = () => { clearTimeout(t); $('#rideau').classList.remove('visible'); $('#rideau').onclick = null; setTimeout(r, 300); };
+    const n = Partie.numero;
+    const fin = () => { clearTimeout(t); $('#rideau').classList.remove('visible'); $('#rideau').onclick = null; setTimeout(() => { if (n === Partie.numero) r(); }, 300); };
     const t = setTimeout(fin, duree); $('#rideau').onclick = fin;
   });
 }
@@ -693,6 +703,7 @@ const Sons = {
     scan() { bloup(AC.currentTime, 520, .3); },
   },
   jouer(nom) {
+    if (!$('#ecran-jeu').classList.contains('actif')) return;   // partie quittée : silence
     const fichiers = CONFIG.fichiersSons[nom];
     if (fichiers && fichiers.length) { new Audio(hasard(fichiers)).play().catch(() => {}); return; }
     if (!AC) return;
@@ -874,8 +885,10 @@ const Voix = {
 
   async jouer(nom) {
     if (!AC) return false;
+    const gen = Parole.generation;
     try {
       const buf = await this.tampon(nom);
+      if (gen !== Parole.generation) return true;
       return await new Promise(r => {
         const src = AC.createBufferSource(), g = AC.createGain();
         g.gain.value = CONFIG.volumeVoix;
@@ -889,16 +902,20 @@ const Voix = {
   arreter() { try { this.enCours?.stop(); } catch (e) {} this.enCours = null; speechSynthesis?.cancel(); },
 };
 
+const enLettres = n => ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix'][n] ?? (n ?? '');
 const sansAccent = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 // le moment qui correspond aux listes de VOIX (les nombres et les manches ont leurs propres fichiers)
 function momentVoix(cle, vars) {
   if (cle === 'manche') return 'manche-' + sansAccent(vars.manche);
+  if (cle === 'luneDeux') return 'lune-reste-2';
   if (cle === 'lune') return 'lune-reste-' + vars.n;
   if (cle === 'luneDebut') return 'lune-debut-' + vars.n;
   return cle;
 }
 
 function parler(cle, vars = {}, discret = false) {
+  if (cle === 'lune' && +vars.n === 2 && PHRASES.luneDeux) cle = 'luneDeux';
+  vars = { ...vars, nMot: enLettres(vars.n), essaisMot: enLettres(vars.essais) };
   const textes = PHRASES[cle];
   const liste = VOIX[momentVoix(cle, vars)] || [];
   const dispo = liste.filter(f => Voix.trouvees.has(f));
@@ -935,7 +952,9 @@ function dire(texte, discret = false, fichier = null) {
 function viderParole() { Parole.generation++; Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
 
 async function parlerVraiment(texte, fichier) {
+  const gen = Parole.generation;
   if (fichier && await Voix.jouer(fichier)) return;
+  if (gen !== Parole.generation) return;
   if (!('speechSynthesis' in window)) return attendre(900 + texte.length * 30);
   return new Promise(r => {
     const u = new SpeechSynthesisUtterance(texte);

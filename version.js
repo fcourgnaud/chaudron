@@ -9,9 +9,14 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '4.0.0', date: '2026-11-03' };
+const VERSION = { numero: '4.0.1', date: '2026-11-03' };
 
 const HISTORIQUE = [
+  { numero: '4.0.1', date: '2026-11-03', nouveautes: [
+    "Il n'y a plus que les emplacements des cartes de la manche (3, 4 ou 5) : la case « facultatif » disparaît.",
+    "Quand on quitte la partie, tout s'arrête aussitôt : voix, sons, musique, ambiance, caméra et annonces en attente.",
+    "Les phrases affichées sont celles du Google Sheet (onglet « Voix à enregistrer ») : le texte correspond maintenant à la voix enregistrée.",
+  ]},
   { numero: '4.0.0', date: '2026-11-03', nouveautes: [
     "Nouveau style « Cauldrons », façon jeu de rôle : logo, menu avec curseur, cadres dorés, boîte de dialogue du chaudron.",
     "Le fond est le chaudron vu de haut : un tourbillon animé avec une surface liquide et des bulles. Quand la fumée prend une couleur, une brume de cette couleur traverse l'écran et le fond perd ses couleurs pour la faire ressortir.",
