@@ -29,6 +29,15 @@ const CONFIG = {
   // et liste-les ici. Plusieurs morceaux = ils s'enchaînent au hasard.
   // Si aucun fichier n'est trouvé, l'app joue une musique qu'elle compose elle-même.
   fichiersMusique: ['musique/theme.mp3'],
+  // une musique par moment de la partie (elle tourne en boucle et change quand le moment change)
+  // accueil : si vide, l'app prend fichiersMusique ci-dessus, ou sa musique composée
+  musiques: {
+    accueil: '',
+    manche1: 'musique/theme-manche1.mp3',
+    manche2: 'musique/theme-manche2.mp3',
+    manche3: 'musique/theme-manche3.mp3',
+    lune:    'musique/theme-lune.mp3',
+  },
   volumeMusique: 0.35,        // 0 à 1
   baisseMusiqueVoix: 0.35,    // pendant que le chaudron parle, la musique descend à 35 % de son volume
   musiqueComposee: true,      // false = pas de musique du tout si aucun fichier n'est trouvé

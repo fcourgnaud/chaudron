@@ -1,4 +1,7 @@
-Dépose ici ta musique de fond en mp3.
-Par défaut, l'app cherche musique/theme.mp3.
-Pour plusieurs morceaux, liste-les dans contenu.js (fichiersMusique) : ils s'enchaîneront au hasard.
-Astuce : un morceau qui boucle bien (même début et même fin) sonne mieux.
+Musiques de l'app (mp3), réglées dans contenu.js (CONFIG.musiques) :
+- theme-manche1.mp3 : manche 1 (Apprentie)
+- theme-manche2.mp3 : manche 2 (Sorcière)
+- theme-manche3.mp3 : manche 3 (Archimage)
+- theme-lune.mp3    : partie Pleine Lune
+- theme.mp3 (facultatif) : écran de préparation. Sans lui, l'app joue sa musique composée.
+Chaque musique tourne en boucle et change en fondu au début de la manche suivante.

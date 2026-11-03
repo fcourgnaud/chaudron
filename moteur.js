@@ -123,6 +123,7 @@ function demarrerPartie() {
 }
 
 async function nouvelleManche(premiere) {
+  Musique.piste(S.mode === 'lune' ? 'lune' : 'manche' + (S.manche + 1));   // la musique de cette manche
   const taille = S.mode === 'lune' ? R.taille : MANCHES[S.manche].taille;
   const tirage = melanger(INGREDIENTS.map(i => i.n));
   S.recette = tirage.slice(0, taille);
@@ -480,7 +481,7 @@ function toutCouper() {
   $('#rideau').classList.remove('visible'); $('#apercu-carte').classList.remove('visible');
   fermerFenetre(); fermerTiroirs(); colorerPotion(null);
 }
-function quitter() { toutCouper(); montrer('ecran-titre'); }
+function quitter() { toutCouper(); Musique.cible = 'accueil'; montrer('ecran-titre'); }
 $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre le feu ?</h2><p>La partie en cours sera perdue.</p>')) quitter(); };
 
 /* ---------- 6. POUVOIRS ---------- */
@@ -577,7 +578,9 @@ function majPlateau() {
 
 function majActions(quoi) {
   $('#actions-brassage').hidden = quoi !== 'brassage';
-  $('#actions-annonce').hidden = !(quoi === 'brassage' || quoi === 'suite') || S.annonceCeTour;
+  // le bouton d'annonce reste toujours à sa place : grisé quand on ne peut pas annoncer
+  $('#actions-annonce').hidden = false;
+  $('#btn-annonce').disabled = !(quoi === 'brassage' || quoi === 'suite') || !!S.annonceCeTour;
   $('#btn-annonce').textContent = quoi === 'suite' ? "J'annonce maintenant" : "J'annonce la recette";
   $('#actions-suite').hidden = quoi !== 'suite';
   if (quoi !== 'brassage') $('#actions-pouvoirs').innerHTML = '';
@@ -668,6 +671,7 @@ function debloquerAudio() {
   if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
   if (AC.state === 'suspended') AC.resume();
   if ('speechSynthesis' in window) speechSynthesis.getVoices();
+  Musique.preparer();
 }
 function bruitBlanc(duree) {
   const buf = AC.createBuffer(1, Math.max(1, AC.sampleRate * duree), AC.sampleRate), d = buf.getChannelData(0);
@@ -757,6 +761,9 @@ const Ambiance = {
 /* Musique de fond : tes fichiers (CONFIG.fichiersMusique) ou une musique composée par l'app */
 const Musique = {
   actif: false, sortie: null, source: null, morceaux: {}, trouves: [], minuteur: null, prete: null,
+  cible: 'accueil',     // quelle musique : accueil, manche1, manche2, manche3, lune
+  lecteurs: {},         // fichier -> { audio, gain } (lus en continu, sans tout charger en mémoire)
+  element: null, compo: 0,
 
   // au lancement : on cherche les fichiers de musique
   charger() {
@@ -782,7 +789,59 @@ const Musique = {
     this.sortie.gain.exponentialRampToValueAtTime(CONFIG.volumeMusique, AC.currentTime + 2.5); // fondu d'entrée
     await this.prete;
     if (!this.actif) return;
+    this.lancer();
+  },
+
+  // change de musique (fondu) : appelé à chaque nouvelle manche
+  piste(cle) {
+    this.cible = cle;
+    if (this.enCours === cle) return;               // c'est déjà cette musique qui joue
+    if (this.actif) this.lancer();
+  },
+  lancer() {
+    this.couperPiste();
+    this.enCours = this.cible;
+    const f = (CONFIG.musiques || {})[this.cible];
+    if (f) this.lireFichier(f);
+    else this.musiqueDeSecours();
+  },
+  musiqueDeSecours() {
     if (this.trouves.length) this.morceauSuivant(); else if (CONFIG.musiqueComposee) this.composer();
+  },
+  // Sur iPhone, un son ne peut démarrer plus tard que s'il a été « réveillé » pendant un toucher :
+  // on prépare donc les lecteurs au premier toucher (debloquerAudio).
+  preparer() {
+    if (!AC) return;
+    Object.values(CONFIG.musiques || {}).filter(Boolean).forEach(f => {
+      if (this.lecteurs[f]) return;
+      const audio = new Audio(f); audio.loop = true; audio.preload = 'none';
+      const gain = AC.createGain(); gain.gain.value = 0;
+      try { AC.createMediaElementSource(audio).connect(gain); } catch (e) {}
+      const essai = audio.play(); if (essai) essai.catch(() => {}); audio.pause();   // réveil pendant le toucher, sans rien jouer
+      this.lecteurs[f] = { audio, gain, panne: false };
+    });
+  },
+  lireFichier(f) {
+    this.preparer();
+    const l = this.lecteurs[f];
+    if (!l || l.panne) return this.musiqueDeSecours();
+    const { audio, gain } = l, t = AC.currentTime;
+    try { gain.disconnect(); } catch (e) {}
+    gain.connect(this.sortie);
+    gain.gain.cancelScheduledValues(t); gain.gain.setValueAtTime(0.0001, t); gain.gain.exponentialRampToValueAtTime(1, t + 2);
+    audio.onerror = () => { l.panne = true; if (this.element === audio) { this.element = null; this.musiqueDeSecours(); } };
+    audio.preload = 'auto'; audio.currentTime = 0;
+    this.element = audio;
+    audio.play().catch(() => {});
+  },
+  couperPiste() {
+    clearTimeout(this.minuteur); this.minuteur = null; this.compo++;
+    if (this.source) { const src = this.source; this.source = null; src.onended = null; try { src.stop(AC.currentTime + .8); } catch (e) {} }
+    if (this.element) {
+      const a = this.element, l = Object.values(this.lecteurs).find(x => x.audio === a); this.element = null;
+      if (l && AC) { const g = l.gain.gain, t = AC.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 1); }
+      setTimeout(() => { if (this.element !== a) a.pause(); }, 1100);
+    }
   },
 
   async morceauSuivant() {
@@ -822,8 +881,9 @@ const Musique = {
       o.connect(g); g.connect(sortie); g.connect(echo); o.start(t); o.stop(t + 1.5);
     };
     const tempsMesure = 4.8, pas = tempsMesure / 8;
+    const id = this.compo;
     const boucle = () => {
-      if (!this.actif) return;
+      if (!this.actif || id !== this.compo) return;
       const t0 = AC.currentTime + .05, accord = accords[Math.floor(mesure / 2) % accords.length];
       if (mesure % 2 === 0) nappe(t0, accord, tempsMesure * 2 + 1);
       const gamme = [...accord, accord[0] + 12, accord[1] + 12];
@@ -836,7 +896,7 @@ const Musique = {
 
   arreter() {
     if (!this.actif) return;
-    this.actif = false; clearTimeout(this.minuteur); majBoutonMusique();
+    this.actif = false; this.couperPiste(); this.enCours = null; majBoutonMusique();
     const s = this.sortie, src = this.source; this.sortie = null; this.source = null;
     if (s && AC) { s.gain.cancelScheduledValues(AC.currentTime); s.gain.setValueAtTime(s.gain.value, AC.currentTime); s.gain.linearRampToValueAtTime(0, AC.currentTime + .8); }
     setTimeout(() => { try { src?.stop(); } catch (e) {} s?.disconnect(); }, 900);

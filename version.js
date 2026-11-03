@@ -9,9 +9,18 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '4.1.4', date: '2026-11-03' };
+const VERSION = { numero: '4.2.0', date: '2026-11-03' };
 
 const HISTORIQUE = [
+  { numero: '4.2.0', date: '2026-11-03', nouveautes: [
+    "Une musique par manche : manche 1, manche 2, manche 3, et une pour la Pleine Lune (dossier musique/). Elle change en fondu au début de chaque manche.",
+    "L'écran d'accueil tient dans l'écran, sans défiler.",
+  ]},
+  { numero: '4.1.5', date: '2026-11-03', nouveautes: [
+    "Plus rien ne bouge quand un bouton apparaît : personnage, boîte de dialogue et annonce restent fixés en bas, la fumée et les cartes gardent leur place.",
+    "Le bouton « J'annonce la recette » reste affiché, grisé quand on ne peut pas annoncer.",
+    "Cartes remontées à 20 px sous le bouton Brasser ; les pouvoirs passent sous la fumée.",
+  ]},
   { numero: '4.1.4', date: '2026-11-03', nouveautes: [
     "Les cartes ne bougent plus quand les boutons changent : la place est réservée au-dessus.",
     "La fumée se place entre le personnage et le bord droit de l'écran.",
