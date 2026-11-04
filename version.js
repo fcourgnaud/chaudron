@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.1.0', date: '2026-11-04' };
+const VERSION = { numero: '5.1.1', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.1.1', date: '2026-11-04', nouveautes: [
+    "L'écran ne pivote plus quand on penche le téléphone : l'app reste toujours en portrait.",
+  ]},
   { numero: '5.1.0', date: '2026-11-04', nouveautes: [
     "Nouvelles cartes d'après la maquette, avec les illustrations du dossier images/ingredients (même dessin que les cartes imprimées).",
     "Écran de jeu dans les polices de l'accueil ; polices incluses dans l'app (dossier polices/).",

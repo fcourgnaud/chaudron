@@ -85,6 +85,32 @@ function carteIngredient(i) {
   </div>`;
 }
 
+/* ---------- ÉCRAN TOUJOURS EN PORTRAIT ----------
+   Quand on penche le téléphone, l'app ne pivote pas : on la tourne dans l'autre sens pour qu'elle reste
+   comme en portrait (le téléphone est souvent posé à plat au milieu de la table). */
+const surTelephone = matchMedia('(pointer: coarse)').matches;
+function ecranPortrait() {
+  const w = innerWidth, h = innerHeight;
+  return surTelephone && w > h ? { w: h, h: w } : { w, h };
+}
+function garderPortrait() {
+  const b = document.body, r = document.documentElement.style, w = innerWidth, h = innerHeight;
+  if (surTelephone && w > h) {
+    const angle = (screen.orientation && screen.orientation.angle) ?? window.orientation ?? 90;
+    const sens = (angle === 90 || angle === -270) ? -90 : 90;
+    Object.assign(b.style, { position: 'fixed', top: '0', left: '0', right: 'auto', bottom: 'auto', width: h + 'px', height: w + 'px', transformOrigin: '0 0',
+      transform: sens === -90 ? `translate(0, ${h}px) rotate(-90deg)` : `translate(${w}px, 0) rotate(90deg)` });
+    r.setProperty('--vw', h / 100 + 'px'); r.setProperty('--vh', w / 100 + 'px');
+  } else {
+    ['position', 'top', 'left', 'right', 'bottom', 'width', 'height', 'transform', 'transformOrigin'].forEach(k => b.style[k] = '');
+    r.removeProperty('--vw'); r.removeProperty('--vh');
+  }
+}
+addEventListener('resize', garderPortrait);
+addEventListener('orientationchange', () => setTimeout(() => { garderPortrait(); dispatchEvent(new Event('resize')); }, 250));
+garderPortrait();
+try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
+
 let R = { mode: 'concours', nb: 2, taille: 4 };   // réglages choisis
 let S = {};                                         // état de la partie
 
@@ -1289,8 +1315,9 @@ void main(){
   }
   function taille() {
     const d = Math.min(1.5, devicePixelRatio || 1);
-    cv.width = innerWidth * d; cv.height = innerHeight * d; if (gl) gl.viewport(0, 0, cv.width, cv.height);
-    const d2 = Math.min(2, devicePixelRatio || 1); BW = innerWidth; BH = innerHeight;
+    const E = ecranPortrait();
+    cv.width = E.w * d; cv.height = E.h * d; if (gl) gl.viewport(0, 0, cv.width, cv.height);
+    const d2 = Math.min(2, devicePixelRatio || 1); BW = E.w; BH = E.h;
     bc.width = BW * d2; bc.height = BH * d2; bx.setTransform(d2, 0, 0, d2, 0, 0);
   }
 
