@@ -901,3 +901,20 @@ html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hid
 /* --- 5.2.4 : personnage de l'accueil plus grand et plus haut --- */
 .perso-titre { width: 108%; max-width: none; margin: -12% 0 -66%; }
 @media (max-height: 720px) { .perso-titre { margin-top: 0; } }
+
+/* --- 5.2.5 : portraits plus grands --- */
+/* jeu : buste plus grand à gauche du nom */
+.ligne-tour { padding-left: 66px; }
+.tour-gauche, .sorciere.active { width: 142px; }
+.sorciere.active { padding-left: 38px; }
+.sorciere.active .chapeau { left: -80px; bottom: -16px; width: 98px; }
+/* écran « Au tour de… » : le grand portrait de la sorcière */
+.portrait-tour { width: min(calc(62 * var(--vw)), 260px); margin: 0 auto 6px; }
+.portrait-tour .portrait-sorciere { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 24px rgba(240, 138, 44, .45)) drop-shadow(0 12px 18px rgba(0,0,0,.6)); }
+.ligne-tour { padding-left: 52px; margin-top: 24px; }
+.tour-gauche, .sorciere.active { width: 156px; }
+.sorciere.active { padding-left: 24px; padding-right: 8px; font-size: 1.35rem; }
+.sorciere.active .chapeau { left: -70px; bottom: -14px; width: 90px; }
+.scene { margin-top: 16px; }
+.ligne-tour { margin-top: 30px; }
+.sorciere.active .chapeau { pointer-events: none; }

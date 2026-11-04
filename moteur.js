@@ -253,7 +253,7 @@ async function debutTour(avecRideau = true) {
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
   $('#consigne').innerHTML = `<b>${j.nom}</b> : cueille une carte, puis jette-en ${S.max > CONFIG.minBrassage ? CONFIG.minBrassage + ' à ' + S.max : S.max} dans l'ordre`;
   if (S.joueurs.length > 1) {
-    if (avecRideau) await rideau(`<div class="icone">🧙‍♀️</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>`, CONFIG.dureeRideau);
+    if (avecRideau) await rideau(`<div class="portrait-tour">${portraitSorciere(S.courant)}</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>`, CONFIG.dureeRideau);
     parler('tour', { joueur: j.nom });
   }
 }
