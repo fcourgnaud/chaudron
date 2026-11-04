@@ -127,6 +127,8 @@ if (screen.orientation) screen.orientation.addEventListener('change', recalerPlu
 garderPortrait();
 try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
 
+// Portrait de chaque sorcière, selon sa place (1 à 4) : images/sorcieres/sorciere-1.png …
+const portraitSorciere = k => `<img class="portrait-sorciere" src="images/sorcieres/sorciere-${(k % 4) + 1}.png" alt="" onerror="this.replaceWith('🧙‍♀️')">`;
 let R = { mode: 'concours', nb: 2, taille: 4 };   // réglages choisis
 let S = {};                                         // état de la partie
 
@@ -161,7 +163,7 @@ function majSaisieSorcieres() {
   const anciens = [...box.querySelectorAll('input')].map(i => i.value);
   box.innerHTML = '';
   for (let i = 0; i < R.nb; i++) {
-    box.insertAdjacentHTML('beforeend', `<label class="sorciere-saisie"><span class="chapeau">🧙‍♀️</span><input maxlength="12" value="${anciens[i] || NOMS_PAR_DEFAUT[i]}"></label>`);
+    box.insertAdjacentHTML('beforeend', `<label class="sorciere-saisie"><span class="chapeau">${portraitSorciere(i)}</span><input maxlength="12" value="${anciens[i] || NOMS_PAR_DEFAUT[i]}"></label>`);
   }
 }
 
@@ -653,7 +655,7 @@ function majSorcieres() {
   if (S.mode !== 'concours') return;
   $('#sorcieres').innerHTML = S.joueurs.map((j, k) => {
     const pv = j.pouvoirs.map(id => POUVOIRS.find(p => p.id === id).emoji).join('');
-    return `<div class="sorciere ${k === S.courant ? 'active' : ''} ${j.passe ? 'suie' : ''} ${j.eliminee ? 'eliminee' : ''}"><span class="chapeau">${j.eliminee ? '✖' : '🧙‍♀️'}</span>${j.nom}<span class="trophees">${'★'.repeat(j.victoires)}</span>${pv}</div>`;
+    return `<div class="sorciere ${k === S.courant ? 'active' : ''} ${j.passe ? 'suie' : ''} ${j.eliminee ? 'eliminee' : ''}"><span class="chapeau">${portraitSorciere(k)}</span><span class="nom-sorciere">${j.nom}</span><span class="trophees">${'★'.repeat(j.victoires)}</span>${pv}</div>`;
   }).join('');
 }
 

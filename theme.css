@@ -862,3 +862,20 @@ html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hid
 .carte-ing .titre.tres-long { font-size: calc(4.3 * var(--mm)); top: calc(7.9 * var(--mm)); white-space: normal; line-height: .95; top: calc(5.8 * var(--mm)); }
 /* l'icône de réponse : en bas de la carte, sur le médaillon */
 .emplacement .reponse { top: auto; bottom: -6px; right: -6px; width: 36px; height: 36px; }
+
+
+/* --- 5.2.0 : portraits des sorcières (images/sorcieres/sorciere-1.png à 4) --- */
+/* préparation : médaillon rond */
+.sorciere-saisie .chapeau { width: 58px; height: 58px; overflow: hidden; padding: 0; background: #f1dfc0;
+  box-shadow: 0 0 0 2px #b8692c, 0 0 0 3.5px #f3c47a, 0 4px 10px rgba(0,0,0,.45); }
+.sorciere-saisie .chapeau .portrait-sorciere { width: 118%; height: 118%; object-fit: cover; object-position: 50% 8%; margin: 4% 0 0 -9%; }
+.liste-sorcieres { gap: 14px 12px; }
+/* jeu : le buste à gauche de la pastille, qui la chevauche */
+.ligne-tour { padding-left: 44px; }
+.tour-gauche { width: 150px; }
+.sorciere.active { position: relative; width: 150px; overflow: visible; padding-left: 34px; justify-content: center; }
+.sorciere.active .chapeau { display: block; position: absolute; left: -64px; bottom: -14px; width: 86px; height: auto; background: none; box-shadow: none; border-radius: 0; z-index: 3; }
+.sorciere.active .chapeau .portrait-sorciere { display: block; width: 100%; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,.55)); }
+.sorciere.active .nom-sorciere { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sorciere.active .chapeau { left: -58px; bottom: -8px; width: 70px; }
+.ligne-tour { margin-top: 14px; }

@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.1.2', date: '2026-11-04' };
+const VERSION = { numero: '5.2.0', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.2.0', date: '2026-11-04', nouveautes: [
+    "Les 4 sorcières ont leur portrait : en médaillon sur l'écran de préparation, et en buste à côté de son nom pendant son tour.",
+  ]},
   { numero: '5.1.2', date: '2026-11-04', nouveautes: [
     "Correction : après avoir penché le téléphone, les boutons répondent de nouveau au toucher.",
   ]},
