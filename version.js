@@ -9,9 +9,10 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.2.3', date: '2026-11-04' };
+const VERSION = { numero: '5.2.4', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.2.4', date: '2026-11-04', nouveautes: ["Accueil : le personnage est plus grand et plus haut."]},
   { numero: '5.2.3', date: '2026-11-04', nouveautes: [
     "À chaque arrivée sur l'accueil, le chaudron prend une de ses 10 poses au hasard.",
   ]},
