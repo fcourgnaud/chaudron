@@ -762,3 +762,10 @@ button:focus-visible { outline: 2px solid var(--flamme); outline-offset: 4px; }
 #btn-main { position: absolute; left: calc(100% + 6px); top: 50%; transform: translateY(-50%); width: 38px; height: 38px; font-size: 1rem; }
 /* les cartes juste dessous */
 .scene { margin-top: 16px; }
+
+/* --- 5.0.0 : couleur des pastilles de réponse (dont la nouvelle réponse Œil) --- */
+.emplacement .libelle.rep-bulle { color: #9fe39f; }
+.emplacement .libelle.rep-sifflement { color: var(--or-clair); }
+.emplacement .libelle.rep-oeil { color: #d7b4ff; }
+.emplacement .libelle.rep-pschitt { color: var(--creme); }
+.zone-fumee .etiquette-fumee { font-size: .82rem; line-height: 1.08; }

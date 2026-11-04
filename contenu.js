@@ -15,7 +15,8 @@ const CONFIG = {
   pauseEntreSons: 900,        // millisecondes entre deux réponses
   voixVitesse: 0.9,           // 0.5 à 2
   voixHauteur: 0.55,          // 0 (grave) à 2 (aigu)
-  dureeRideau: 1800,          // durée des écrans "Au tour de..." (ms)
+  dureeRideau: 1800,
+  dureeRappelGauche: 3500,    // durée du rappel « défaussez, puis passez une carte à gauche » (ms, touche pour passer)          // durée des écrans "Au tour de..." (ms)
   dureeApercuCarte: 1200,     // durée d'affichage en grand d'une carte qu'on vient de jeter (ms)
 
   // Voix enregistrées : fichiers mp3 dans le dossier "voix" (voir VOIX plus bas).
@@ -45,13 +46,20 @@ const CONFIG = {
   // Tes propres sons (optionnel). Mets les fichiers dans le dossier "sons"
   // et liste-les ici, ex. bulle: ['sons/bulle1.mp3', 'sons/bulle2.mp3'].
   // Liste vide = le téléphone fabrique le son lui-même.
-  fichiersSons: { bulle: [], sifflement: [], pschitt: [], explosion: [], victoire: [], scan: [], ambiance: [] },
+  fichiersSons: { bulle: [], sifflement: [], oeil: [], pschitt: [], explosion: [], victoire: [], scan: [], ambiance: [] },
 };
 
+// Manches du solo (anciennes règles)
 const MANCHES = [
   { nom: 'Apprentie', taille: 3 },
   { nom: 'Sorcière',  taille: 4 },
   { nom: 'Archimage', taille: 5 },
+];
+// Manches du Concours à plusieurs (règles v5 : une recette secrète par sorcière)
+const MANCHES_V5 = [
+  { nom: 'Apprentie', taille: 3, expert: false },
+  { nom: 'Sorcière',  taille: 4, expert: false },
+  { nom: 'Archimage', taille: 4, expert: true },   // mode expert : les réponses sont mélangées
 ];
 
 // Les icônes sont dans le dossier images/ (fam-plantes.png, etc. ; à défaut l'app prend le .svg du même nom)
@@ -65,7 +73,7 @@ const FAMILLES = {
 };
 
 // Textes affichés sous les icônes de réponse
-const LIBELLES_REPONSES = { bulle: 'Bonne place', sifflement: 'Mauvaise place', pschitt: 'Absent' };
+const LIBELLES_REPONSES = { bulle: 'Bonne place', sifflement: 'Mauvaise place', oeil: 'Autre recette', pschitt: 'Absent' };
 
 // Texte écrit sur le chaudron après chaque brassage. {couleur} et {famille} sont remplacés.
 const TEXTES_FUMEE = {
@@ -86,7 +94,7 @@ const INGREDIENTS = [
   { n:  4, fam: 'plantes', nom: "Racine de saule", texte: "Elle pleure un peu dans la potion. C'est normal." },
   { n:  5, fam: 'bestioles', nom: "Bave de crapaud", texte: "Fraîche du matin, récoltée avec politesse." },
   { n:  6, fam: 'bestioles', nom: "Aile de chauve-souris", texte: "Légère comme un soupir, noire comme une dette." },
-  { n:  7, fam: 'bestioles', nom: "Œil de triton", texte: "Il vous regarde encore. Évitez de cligner." },
+  { n:  7, fam: 'bestioles', nom: "Queue de lézard", texte: "Elle repousse. Lui, il est parti sans elle." },
   { n:  8, fam: 'bestioles', nom: "Patte d'araignée", texte: "Une seule. L'araignée a gardé les sept autres." },
   { n:  9, fam: 'mineraux', nom: "Quartz chantant", texte: "Il fredonne faux, mais avec conviction." },
   { n: 10, fam: 'mineraux', nom: "Soufre", texte: "Ça sent l'œuf pourri et l'ambition." },

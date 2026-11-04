@@ -9,9 +9,16 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '4.2.1', date: '2026-11-03' };
+const VERSION = { numero: '5.0.0', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.0.0', date: '2026-11-04', nouveautes: [
+    "Nouvelles règles du Concours à 2, 3 ou 4 sorcières : chacune a sa propre recette secrète (aucun ingrédient en commun). Pour gagner une manche, il faut brasser toute sa recette dans le bon ordre.",
+    "Nouvelle réponse : l'Œil, quand l'ingrédient est dans la recette d'une autre sorcière. Les sons passent d'abord, puis les icônes et la fumée.",
+    "Manches : Apprentie 3 ingrédients, Sorcière 4, Archimage 4 en mode expert.",
+    "Plus de marché, plus d'ingrédient secret, plus d'annonce : à la fin de chaque tour, l'app rappelle de défausser jusqu'à 4 cartes et de passer une carte à gauche.",
+    "L'Œil de triton devient la Queue de lézard. Le solo et la Pleine Lune gardent les anciennes règles.",
+  ]},
   { numero: '4.2.1', date: '2026-11-03', nouveautes: [
     "Haut de l'écran de jeu d'après la maquette : la sorcière du tour et, collé à droite, le bouton Brasser ou Au suivant. Les cartes sont juste dessous et ne bougent plus.",
   ]},

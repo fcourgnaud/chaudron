@@ -41,7 +41,7 @@ const codeQR = n => CONFIG.prefixeQR + String(n).padStart(2, '0');
 const varCSS = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim() || '#888';
 const couleurFamille = f => varCSS('--fam-' + f);
 const phrase = (cle, vars = {}) => hasard(PHRASES[cle]).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
-const ORDRE_REP = ['bulle', 'sifflement', 'pschitt'];
+const ORDRE_REP = ['bulle', 'sifflement', 'oeil', 'pschitt'];
 const imgReponse = r => `images/rep-${r}.${FORMAT_PICTOS}`;
 const imgFamille = f => `images/fam-${f}.${FORMAT_PICTOS}`;
 // si un picto .png manque, on prend le .svg du même nom
@@ -112,6 +112,10 @@ function demarrerPartie() {
     manche: 0,
     pouvoirsDispo: melanger(POUVOIRS.map(p => p.id)),
   };
+  // Règles v5 : Concours à 2, 3 ou 4 sorcières, chacune sa recette secrète. Le solo et la Pleine Lune gardent les anciennes règles.
+  S.v5 = S.mode === 'concours' && S.joueurs.length > 1;
+  S.expertChoisi = S.expert;
+  S.joueurs.forEach(j => { j.recette = []; j.absents = new Set(); j.malPlaces = {}; });
   montrer('ecran-jeu'); Perso.repos();
   remplirEtagere(); remplirLegendeFumees();
   if ($('#opt-ambiance').checked) Ambiance.demarrer(); majBoutonAmbiance();
@@ -124,11 +128,18 @@ function demarrerPartie() {
 
 async function nouvelleManche(premiere) {
   Musique.piste(S.mode === 'lune' ? 'lune' : 'manche' + (S.manche + 1));   // la musique de cette manche
-  const taille = S.mode === 'lune' ? R.taille : MANCHES[S.manche].taille;
+  const taille = S.mode === 'lune' ? R.taille : (S.v5 ? MANCHES_V5 : MANCHES)[S.manche].taille;
   const tirage = melanger(INGREDIENTS.map(i => i.n));
   S.recette = tirage.slice(0, taille);
-  // 2 ingrédients instables, hors recette, de familles différentes
-  const reste = tirage.slice(taille);
+  let reste = tirage.slice(taille);
+  if (S.v5) {
+    // une recette par sorcière, sans aucun ingrédient en commun
+    S.joueurs.forEach((j, k) => { j.recette = tirage.slice(k * taille, (k + 1) * taille); j.absents = new Set(); j.malPlaces = {}; });
+    reste = tirage.slice(S.joueurs.length * taille);
+    S.recette = S.joueurs[0].recette;
+    S.expert = S.expertChoisi || MANCHES_V5[S.manche].expert;
+  }
+  // 2 ingrédients instables, hors de toutes les recettes, de familles différentes
   S.instables = [reste[0], reste.find(n => ING(n).fam !== ING(reste[0]).fam)];
   S.max = taille;                       // autant d'emplacements que d'ingrédients dans la recette
   S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {};
@@ -145,18 +156,21 @@ async function nouvelleManche(premiere) {
     $('#consigne').innerHTML = 'Jetez vos cartes une par une, <b>dans l\'ordre</b>';
     return;
   }
-  const m = MANCHES[S.manche];
-  await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${taille} ingrédients · l'ordre compte</div>`, CONFIG.dureeRideau + 600);
+  const m = (S.v5 ? MANCHES_V5 : MANCHES)[S.manche];
+  const sous = S.v5 ? `Chacune sa recette secrète · ${taille} ingrédients${S.expert ? ' · mode expert' : ''}` : `${taille} ingrédients · l'ordre compte`;
+  await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${sous}</div>`, CONFIG.dureeRideau + 600);
   if (premiere) await parler('accueil');
-  await parler('manche', { manche: m.nom, n: taille });
+  // la voix enregistrée correspond au nombre d'ingrédients (l'Archimage v5 en a 4, comme la Sorcière)
+  await parler('manche', { manche: S.v5 && taille === 4 ? 'Sorcière' : m.nom, n: taille });
   S.toursDepuisMarche = 0;
-  if (S.joueurs.length > 1) await distribuerSecrets();
+  if (S.joueurs.length > 1 && !S.v5) await distribuerSecrets();
   await debutTour(false);
 }
 
 async function debutTour(avecRideau = true) {
   const j = S.joueurs[S.courant];
   S.annonceCeTour = false;
+  if (S.v5) { S.recette = j.recette; S.absents = j.absents; S.malPlaces = j.malPlaces; }
   S.brassage = []; S.phase = 'brassage';
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
   $('#consigne').innerHTML = `<b>${j.nom}</b> : cueille une carte, puis jette-en ${S.max > CONFIG.minBrassage ? CONFIG.minBrassage + ' à ' + S.max : S.max} dans l'ordre`;
@@ -168,9 +182,12 @@ async function debutTour(avecRideau = true) {
 
 async function tourSuivant() {
   // après un tour de table complet, le marché se refait
-  S.toursDepuisMarche = (S.toursDepuisMarche || 0) + 1;
-  const enJeu = S.joueurs.filter(j => !j.eliminee).length;
-  if (S.toursDepuisMarche >= enJeu) { S.toursDepuisMarche = 0; await rappelMarche(); }
+  if (S.v5) await rappelGauche();
+  else {
+    S.toursDepuisMarche = (S.toursDepuisMarche || 0) + 1;
+    const enJeu = S.joueurs.filter(j => !j.eliminee).length;
+    if (S.toursDepuisMarche >= enJeu) { S.toursDepuisMarche = 0; await rappelMarche(); }
+  }
   for (let k = 0; k < S.joueurs.length; k++) {
     S.courant = (S.courant + 1) % S.joueurs.length;
     const j = S.joueurs[S.courant];
@@ -205,8 +222,10 @@ $('#plateau').onclick = e => { if (e.target.closest('.emplacement.retirable')) $
 $('#btn-brasser').onclick = () => { fermerTiroirs(); brasser(); };
 
 // la règle : bulle = bonne place, sifflement = mauvaise place, pschitt = absent
+// règles v5 : œil = pas dans ta recette, mais dans celle d'une autre sorcière
 function calculerReponses(brassage, recette) {
-  return brassage.map((n, i) => recette[i] === n ? 'bulle' : recette.includes(n) ? 'sifflement' : 'pschitt');
+  const autres = S.v5 ? new Set(S.joueurs.filter(j => j.recette !== recette).flatMap(j => j.recette)) : new Set();
+  return brassage.map((n, i) => recette[i] === n ? 'bulle' : recette.includes(n) ? 'sifflement' : autres.has(n) ? 'oeil' : 'pschitt');
 }
 
 // fumée : une famille de la recette absente du brassage ; dorée si toutes y sont
@@ -260,16 +279,21 @@ async function brasser() {
     if (bete) await parler('moquerie', { ingredient: ING(bete).nom });
   }
   if (!secret) ids.forEach((n, i) => {
-    if (res[i] === 'pschitt') S.absents.add(n);
+    if (res[i] === 'pschitt' || res[i] === 'oeil') S.absents.add(n);
     if (res[i] === 'sifflement') (S.malPlaces[n] ||= new Set()).add(i);
   });
 
   const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
   S.derniere = { res, secret };
-  colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);
-  await jouerReponses(res, secret);
+  if (S.v5) {
+    await jouerReponses(res, secret, true);                 // les sons d'abord…
+    colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis les icônes et la fumée
+  } else {
+    colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);
+    await jouerReponses(res, secret);
+  }
 
-  ajouterJournal(secret ? { qui: j.nom, secret: true } : { qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais}`, ids, res, couleur, texteFumee });
+  ajouterJournal(secret ? { qui: j.nom, secret: true } : { qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais}`, ids, res, couleur, texteFumee, expert: S.expert });
 
   if (secret) { S.secret = false; colorerPotion(null); fermerFenetre(); majPlateau(); }
   if (gagne) return victoireManche();
@@ -278,22 +302,39 @@ async function brasser() {
   finDuBrassage();
 }
 
-async function jouerReponses(res, secret) {
+async function jouerReponses(res, secret, sonsDabord = false) {
   const ordre = S.expert ? melanger(res).sort((a, b) => ORDRE_REP.indexOf(a) - ORDRE_REP.indexOf(b)) : res;
   $('#reponses-expert').innerHTML = '';
+  if (sonsDabord) {
+    for (let i = 0; i < ordre.length; i++) {
+      Sons.jouer(ordre[i]);
+      if (ordre[i] === 'bulle') Fumee.bouffee(Fumee.couleur, 30);
+      await attendre(CONFIG.pauseEntreSons);
+    }
+    if (!secret) ordre.forEach((r, i) => afficherReponse(r, i));
+    await attendre(400);
+    return;
+  }
   for (let i = 0; i < ordre.length; i++) {
     if (!secret) {
       if (S.expert) $('#reponses-expert').insertAdjacentHTML('beforeend', `<figure><img src="${imgReponse(ordre[i])}" alt=""><figcaption>${LIBELLES_REPONSES[ordre[i]]}</figcaption></figure>`);
       else {
         const el = $('#rep-' + i), lib = $('#lib-' + i);
         if (el) { el.src = imgReponse(ordre[i]); el.classList.add('visible'); }
-        if (lib) { lib.textContent = LIBELLES_REPONSES[ordre[i]]; lib.className = 'libelle visible ' + ordre[i]; }
+        if (lib) { lib.textContent = LIBELLES_REPONSES[ordre[i]]; lib.className = 'libelle visible rep-' + ordre[i]; }
       }
     }
     Sons.jouer(ordre[i]);
     if (ordre[i] === 'bulle') Fumee.bouffee(Fumee.couleur, 30);
     await attendre(CONFIG.pauseEntreSons);
   }
+}
+
+function afficherReponse(r, i) {
+  if (S.expert) { $('#reponses-expert').insertAdjacentHTML('beforeend', `<figure><img src="${imgReponse(r)}" alt=""><figcaption>${LIBELLES_REPONSES[r]}</figcaption></figure>`); return; }
+  const el = $('#rep-' + i), lib = $('#lib-' + i);
+  if (el) { el.src = imgReponse(r); el.classList.add('visible'); }
+  if (lib) { lib.textContent = LIBELLES_REPONSES[r]; lib.className = 'libelle visible rep-' + r; }
 }
 
 async function finDuBrassage() {
@@ -370,6 +411,12 @@ async function distribuerSecrets() {
   }
   fermerFenetre();
   await parler('secrets');
+}
+
+/* ---------- RÈGLES V5 : à la fin de chaque tour, défausse puis tout le monde passe une carte à gauche ---------- */
+async function rappelGauche() {
+  await rideau(`<div class="icone">🃏 ⬅</div><div class="petit-titre">Fin du tour</div><div class="grand-titre">Passez à gauche</div>
+    <div class="sous-titre">Défausse pour revenir à 4 cartes (sous la pioche),<br>puis tout le monde donne en même temps<br>une carte face cachée à sa voisine de gauche.</div>`, CONFIG.dureeRappelGauche);
 }
 
 /* ---------- LE MARCHÉ SE REFAIT après chaque tour de table ---------- */
@@ -530,7 +577,8 @@ function majTitre() {
     $('#lunes').innerHTML = Array.from({ length: CONFIG.essaisPleineLune }, (_, i) => `<span class="${i < S.essais ? 'levee' : ''}"></span>`).join('');
   } else {
     $('#lunes').hidden = true; $('#sorcieres').hidden = false;
-    $('#titre-manche').innerHTML = `${MANCHES[S.manche].nom}<small>Manche ${S.manche + 1} sur ${MANCHES.length} - ${S.recette.length} ingrédients</small>`;
+    const m = (S.v5 ? MANCHES_V5 : MANCHES)[S.manche];
+    $('#titre-manche').innerHTML = `${m.nom}<small>Manche ${S.manche + 1} sur ${MANCHES.length} - ${S.recette.length} ingrédients${S.v5 && S.expert ? ' - expert' : ''}</small>`;
   }
 }
 
@@ -580,6 +628,7 @@ function majActions(quoi) {
   $('#actions-brassage').hidden = quoi !== 'brassage';
   // le bouton d'annonce reste toujours à sa place : grisé quand on ne peut pas annoncer
   $('#actions-annonce').hidden = false;
+  $('#actions-annonce').style.visibility = S.v5 ? 'hidden' : '';
   $('#btn-annonce').disabled = !(quoi === 'brassage' || quoi === 'suite') || !!S.annonceCeTour;
   $('#btn-annonce').textContent = quoi === 'suite' ? "J'annonce maintenant" : "J'annonce la recette";
   $('#actions-suite').hidden = quoi !== 'suite';
@@ -616,7 +665,7 @@ function majJournal() {
     else if (e.secret) corps = '🦉 a écouté en secret';
     else if (e.serpent) corps = '🐍 a interrogé le chaudron';
     else if (e.annonce) corps = e.annonce === 'juste' ? '📜 a annoncé la bonne recette !' : '📜 a fait une annonce fausse';
-    else if (S.expert) corps = e.ids.map(n => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}">${ING(n).nom}</span>`).join(' ') +
+    else if (e.expert ?? S.expert) corps = e.ids.map(n => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}">${ING(n).nom}</span>`).join(' ') +
       ` <span class="expert">${[...e.res].sort((a, b) => ORDRE_REP.indexOf(a) - ORDRE_REP.indexOf(b)).map(r => `<img src="${imgReponse(r)}" alt="">`).join('')}</span>`;
     else corps = e.ids.map((n, i) => `<span class="ing" style="--c:${couleurFamille(ING(n).fam)}"><img class="r" src="${imgReponse(e.res[i])}" alt="">${ING(n).nom}</span>`).join(' ');
     const fumee = e.couleur ? `<span class="fumee-journal" style="--c:${e.couleur}">${e.texteFumee || ''}</span>` : '';
@@ -718,6 +767,16 @@ const Sons = {
         enveloppe(g, t + k * .11, .02, .9, .22); o.connect(g).connect(AC.destination); o.start(t + k * .11); o.stop(t + k * .11 + 1);
       });
       for (let k = 0; k < 8; k++) bloup(t + .6 + k * .07, 300 + Math.random() * 400, .25);
+    },
+    oeil() {
+      const t = AC.currentTime;
+      [880, 1318.5, 1760].forEach((f, k) => {
+        const o = AC.createOscillator(), g = AC.createGain(), v = AC.createOscillator(), vg = AC.createGain();
+        o.type = 'sine'; o.frequency.value = f; v.frequency.value = 6; vg.gain.value = f * .012;
+        v.connect(vg).connect(o.frequency);
+        enveloppe(g, t + k * .07, .01, .9, .18 - k * .04); o.connect(g).connect(AC.destination);
+        o.start(t + k * .07); o.stop(t + k * .07 + 1); v.start(t); v.stop(t + 1.2);
+      });
     },
     scan() { bloup(AC.currentTime, 520, .3); },
   },
