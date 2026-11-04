@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.2.2', date: '2026-11-04' };
+const VERSION = { numero: '5.2.3', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.2.3', date: '2026-11-04', nouveautes: [
+    "À chaque arrivée sur l'accueil, le chaudron prend une de ses 10 poses au hasard.",
+  ]},
   { numero: '5.2.2', date: '2026-11-04', nouveautes: [
     "App allégée : images à la bonne taille, musiques et voix compressées (environ 3 fois moins à télécharger).",
     "Le fond animé calcule deux fois moins : le téléphone chauffe moins et la batterie dure plus longtemps.",

@@ -133,7 +133,16 @@ let R = { mode: 'concours', nb: 2, taille: 4 };   // réglages choisis
 let S = {};                                         // état de la partie
 
 /* ---------- 2. NAVIGATION ET PRÉPARATION ---------- */
-function montrer(id) { $$('.ecran').forEach(e => e.classList.toggle('actif', e.id === id)); window.scrollTo(0, 0); if (window.FondMagique) FondMagique.ecran(id); }
+function montrer(id) { $$('.ecran').forEach(e => e.classList.toggle('actif', e.id === id)); window.scrollTo(0, 0); if (window.FondMagique) FondMagique.ecran(id); if (id === 'ecran-titre') poseAccueil(); }
+// À chaque arrivée sur l'accueil, le chaudron prend une pose au hasard (jamais deux fois la même de suite).
+// Toutes les images des poses ont le même format (400 × 500) : les proportions ne changent pas.
+let dernierePose = '';
+function poseAccueil() {
+  const im = document.querySelector('.perso-titre'); if (!im) return;
+  const poses = [...new Set(Object.values(POSTURES))].filter(p => p !== dernierePose);
+  dernierePose = poses[Math.floor(Math.random() * poses.length)];
+  im.onerror = null; im.src = `images/chaudron/${dernierePose}.png`;
+}
 // menu de l'écran titre : le curseur ▸ suit le doigt / la souris
 $$('.menu-rpg button').forEach(b => b.onmouseenter = b.onfocus = () => $$('.menu-rpg button').forEach(x => x.classList.toggle('choisi', x === b)));
 
@@ -1514,6 +1523,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 $$('[data-chaudron]').forEach((el, k) => { el.innerHTML = $('#modele-chaudron').innerHTML.replace(/(g-corps|g-potion|clip-potion)/g, `$1-${k}`); });
 majSaisieSorcieres();
 Perso.charger();
+poseAccueil();
 // image de secours si un fichier n'est pas (encore) livré, par ex. repos.png
 function secours(im, src) {
   const mettre = () => { im.onerror = null; im.src = src; };
