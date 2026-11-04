@@ -9,9 +9,14 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.2.1', date: '2026-11-04' };
+const VERSION = { numero: '5.2.2', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.2.2', date: '2026-11-04', nouveautes: [
+    "App allégée : images à la bonne taille, musiques et voix compressées (environ 3 fois moins à télécharger).",
+    "Le fond animé calcule deux fois moins : le téléphone chauffe moins et la batterie dure plus longtemps.",
+    "Le lecteur de QR codes est inclus dans l'app : elle marche entièrement hors ligne.",
+  ]},
   { numero: '5.2.1', date: '2026-11-04', nouveautes: [
     "Plus de bouton Brasser : le brassage part quand toutes les cases sont remplies. « Au suivant » et la main sont toujours affichés : « Au suivant » s'allume après les résultats, la main se grise une fois les cartes choisies.",
     "Titres des cartes tous à la même taille, sur deux lignes si besoin. Portrait et cartes un peu plus bas ; personnage de l'accueil plus grand.",

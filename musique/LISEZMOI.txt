@@ -1,7 +1,7 @@
-Musiques de l'app (mp3), réglées dans contenu.js (CONFIG.musiques) :
-- theme-manche1.mp3 : manche 1 (Apprentie)
+Musiques de l'app (mp3, réglées dans contenu.js : CONFIG.musiques) :
+- theme-manche1.mp3 : accueil, préparation et manche 1 (Apprentie)
 - theme-manche2.mp3 : manche 2 (Sorcière)
 - theme-manche3.mp3 : manche 3 (Archimage)
 - theme-lune.mp3    : partie Pleine Lune
-- theme.mp3 (facultatif) : écran de préparation. Sans lui, l'app joue sa musique composée.
 Chaque musique tourne en boucle et change en fondu au début de la manche suivante.
+Astuce poids : 128 kbit/s suffit largement pour un haut-parleur de téléphone.

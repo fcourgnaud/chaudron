@@ -29,7 +29,7 @@ const CONFIG = {
   // Musique de fond : mets tes morceaux (mp3) dans le dossier "musique"
   // et liste-les ici. Plusieurs morceaux = ils s'enchaînent au hasard.
   // Si aucun fichier n'est trouvé, l'app joue une musique qu'elle compose elle-même.
-  fichiersMusique: ['musique/theme.mp3'],
+  fichiersMusique: [],         // ancienne musique unique (plus utilisée : voir « musiques » ci-dessous)
   // une musique par moment de la partie (elle tourne en boucle et change quand le moment change)
   // accueil : si vide, l'app prend fichiersMusique ci-dessus, ou sa musique composée
   musiques: {

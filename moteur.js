@@ -922,7 +922,8 @@ const Musique = {
         this.trouves.push(f);
       } catch (e) {}
     })).then(() => {
-      $('#musique-info').textContent = this.trouves.length
+      $('#musique-info').textContent = Object.values(CONFIG.musiques || {}).some(Boolean) ? 'Une musique par manche'
+        : this.trouves.length
         ? `${this.trouves.length} morceau(x) trouvé(s)`
         : (CONFIG.musiqueComposee ? "Musique composée par l'app (aucun fichier trouvé)" : 'Aucun fichier trouvé');
     });
@@ -1335,10 +1336,10 @@ void main(){
     }
   }
   function taille() {
-    const d = Math.min(1.5, devicePixelRatio || 1);
+    const d = Math.min(1, devicePixelRatio || 1) * .8;     // fond flou : 80 % de la résolution suffit, et le téléphone chauffe moins
     const E = ecranPortrait();
     cv.width = E.w * d; cv.height = E.h * d; if (gl) gl.viewport(0, 0, cv.width, cv.height);
-    const d2 = Math.min(2, devicePixelRatio || 1); BW = E.w; BH = E.h;
+    const d2 = Math.min(1.5, devicePixelRatio || 1); BW = E.w; BH = E.h;
     bc.width = BW * d2; bc.height = BH * d2; bx.setTransform(d2, 0, 0, d2, 0, 0);
   }
 
@@ -1385,7 +1386,8 @@ void main(){
   const calme = matchMedia('(prefers-reduced-motion: reduce)').matches;
   (function boucle(now) {
     now = now || performance.now();
-    const dt = Math.min(50, now - avant) / 1000; avant = now;
+    if (now - avant < 31) { requestAnimationFrame(boucle); return; }   // 30 images/s : bien assez pour un fond, deux fois moins de calcul
+    const dt = Math.min(70, now - avant) / 1000; avant = now;
     if (!document.hidden) {
       front = Math.min(2, front + dt * .42);
       const cp = enJeu ? cible : 0, cs = enJeu ? cibleSat : 1;
