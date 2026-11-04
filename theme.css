@@ -5,7 +5,15 @@
    dans images/ que tu peux remplacer par tes dessins.
    ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;700&family=Alegreya:wght@500;800&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&display=swap');
+/* Polices incluses dans l'app (dossier polices/) : plus besoin d'internet pour elles */
+@font-face { font-family: 'Grenze Gotisch'; src: url(polices/GrenzeGotisch-variable.woff) format('woff'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url(polices/Cinzel-variable.woff) format('woff'); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: 'Cormorant Garamond'; src: url(polices/CormorantGaramond-variable.woff) format('woff'); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: 'Cormorant Garamond'; src: url(polices/CormorantGaramond-Italic-variable.woff) format('woff'); font-weight: 300 700; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Alegreya'; src: url(polices/Alegreya-variable.woff) format('woff'); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: 'Alegreya'; src: url(polices/Alegreya-Italic-variable.woff) format('woff'); font-weight: 400 900; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Philosopher'; src: url(polices/Philosopher-Italic.woff) format('woff'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Philosopher'; src: url(polices/Philosopher-BoldItalic.woff) format('woff'); font-weight: 700; font-style: italic; font-display: swap; }
 
 :root {
   /* ---------- Polices ---------- */
@@ -60,6 +68,13 @@
   --fam-liquides:  #4b7be8;
   --fam-ossements: #d9d2bf;
   --fam-etoiles:   #b26bf0;
+  /* couleur foncée de chaque famille : contours et titre des cartes */
+  --fam-plantes-fonce:   #2e6b2f;
+  --fam-bestioles-fonce: #7a3f12;
+  --fam-mineraux-fonce:  #16606a;
+  --fam-liquides-fonce:  #1f3c85;
+  --fam-ossements-fonce: #5e563f;
+  --fam-etoiles-fonce:   #55237f;
 
   /* ---------- Fumées spéciales ---------- */
   --fumee-repos:     #f08a2c;
@@ -769,3 +784,79 @@ button:focus-visible { outline: 2px solid var(--flamme); outline-offset: 4px; }
 .emplacement .libelle.rep-oeil { color: #d7b4ff; }
 .emplacement .libelle.rep-pschitt { color: var(--creme); }
 .zone-fumee .etiquette-fumee { font-size: .82rem; line-height: 1.08; }
+
+
+/* =========================================================
+   CARTE INGRÉDIENT (DÉBUT) — la même carte sert à l'app ET au PDF à imprimer.
+   Toutes les mesures sont en mm de la vraie carte (63 × 88 mm) : --mm = 1 mm,
+   quelle que soit la taille d'affichage (la carte s'adapte à sa largeur).
+   ========================================================= */
+.carte-ing { --mm: calc(100cqw / 63); container-type: inline-size; position: relative; width: 100%; aspect-ratio: 63 / 88;
+  background: var(--c); color: var(--f); overflow: hidden; }
+.carte-ing > * { position: absolute; }
+.carte-ing .panneau { left: calc(2.5 * var(--mm)); right: calc(2.2 * var(--mm)); top: calc(2.2 * var(--mm)); height: calc(76.9 * var(--mm));
+  border: calc(.45 * var(--mm)) solid var(--f); border-radius: calc(2.9 * var(--mm));
+  background: radial-gradient(ellipse 58% 42% at 50% 52%, #d9bf8f 0%, #e6d2ad 45%, #f4e7cd 100%); }
+.carte-ing .titre { left: calc(4 * var(--mm)); right: calc(4 * var(--mm)); top: calc(6.4 * var(--mm)); text-align: center; white-space: nowrap;
+  font-family: 'Philosopher', 'Alegreya', Georgia, serif; font-style: italic; font-weight: 400; line-height: 1;
+  font-size: calc(7.2 * var(--mm)); color: var(--f); letter-spacing: -.01em; }
+.carte-ing .titre.long { font-size: calc(5.6 * var(--mm)); top: calc(7.2 * var(--mm)); }
+.carte-ing .titre.tres-long { font-size: calc(4.6 * var(--mm)); top: calc(7.8 * var(--mm)); }
+.carte-ing .num { right: calc(4.6 * var(--mm)); top: calc(4.1 * var(--mm)); padding: calc(.35 * var(--mm)) calc(.8 * var(--mm));
+  background: rgba(255, 252, 240, .45); font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: calc(2.1 * var(--mm)); line-height: 1; color: var(--f); }
+.carte-ing .fenetre-illu { left: calc(6.4 * var(--mm)); width: calc(50.2 * var(--mm)); top: calc(27.4 * var(--mm)); height: calc(32.8 * var(--mm));
+  border: calc(.36 * var(--mm)) solid var(--f); border-radius: calc(1.8 * var(--mm));
+  background: url(images/cartes/brume.png) center / cover, color-mix(in srgb, var(--c) 32%, #f3f1e4); }
+.carte-ing .illu { left: calc(4.4 * var(--mm)); top: calc(17.4 * var(--mm)); width: calc(54 * var(--mm)); height: calc(54 * var(--mm)); object-fit: contain;
+  filter: drop-shadow(0 calc(1.4 * var(--mm)) calc(1.8 * var(--mm)) rgba(90, 58, 18, .45)); }
+.carte-ing .medaillon { left: calc(25.4 * var(--mm)); top: calc(74.3 * var(--mm)); width: calc(12.2 * var(--mm)); height: calc(12.2 * var(--mm)); border-radius: 50%;
+  border: calc(.4 * var(--mm)) solid var(--f); background: #f3e6cb; display: grid; place-items: center; box-sizing: border-box; }
+.carte-ing .medaillon img { width: 74%; height: 74%; object-fit: contain; }
+/* CARTE INGRÉDIENT (FIN) */
+
+/* --- 5.1.0 : la carte dans l'app --- */
+.emplacement.plein { padding: 0; border: none; background: none; box-shadow: 0 6px 14px rgba(0,0,0,.5); border-radius: calc(var(--lc) * .045); overflow: visible; }
+.emplacement.plein .carte-ing { border-radius: inherit; }
+.emplacement.plein .carte-ing .num { display: none; }                 /* trop petit dans les cases */
+.emplacement .reponse { top: -12px; bottom: auto; left: auto; right: -8px; width: 34px; height: 34px; transform: scale(0); z-index: 3; }
+.emplacement .reponse.visible { transform: scale(1); }
+.emplacement .rang { z-index: 3; }
+.apercu-boite.carte { width: min(62vw, 250px); aspect-ratio: auto; padding: 0; background: none; border-radius: 10px;
+  box-shadow: 0 0 0 4px var(--c), 0 0 40px var(--c), var(--ombre); }
+.apercu-boite.carte .carte-ing { border-radius: 10px; }
+.apercu-boite.carte .rang { z-index: 3; }
+.secret-carte.carte { margin: 6px auto; width: min(52vw, 210px); }
+
+/* --- 5.1.0 : l'écran de jeu dans les polices de l'accueil --- */
+.titre-manche { font-family: var(--police-titre); font-weight: 700; font-size: 2.15rem; }
+.titre-manche small { font-family: var(--police-texte); font-weight: 500; }
+.sorciere.active { font-family: var(--police-titre); font-weight: 700; font-size: 1.45rem; letter-spacing: .02em; text-transform: none; }
+.emplacement { font-family: var(--police-titre); font-weight: 600; font-size: 2rem; }
+.dialogue .bulle-parole { font-family: var(--police-texte); font-style: italic; font-weight: 600; font-size: 1.12rem; line-height: 1.22; }
+.emplacement .libelle, .reponses-expert figcaption { font-family: var(--police-ui); font-weight: 700; }
+.zone-fumee .etiquette-fumee { font-family: var(--police-texte); font-size: .95rem; font-weight: 600; }
+
+/* --- 5.1.0 : les écrans ne glissent plus sous le doigt --- */
+html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+.ecran { height: 100dvh; min-height: 0; overflow: hidden; }
+.tiroir-boite, .fenetre-boite { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+/* --- 5.1.0 : préparation, options repliées dans un onglet déroulant --- */
+#ecran-preparation { gap: 26px; justify-content: flex-start; padding-top: max(14px, env(safe-area-inset-top)); }
+.options-jeu { padding: 0 !important; }
+.options-jeu > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 16px 12px;
+  font-family: var(--police-ui); font-weight: 700; font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; color: var(--flamme); }
+.options-jeu > summary::-webkit-details-marker { display: none; }
+.options-jeu > summary::after { content: '▾'; transition: transform .25s; }
+.options-jeu[open] > summary::after { transform: rotate(180deg); }
+.options-jeu .contenu-options { padding: 0 16px 12px; max-height: 42dvh; overflow-y: auto; overscroll-behavior: contain; }
+#btn-allumer { margin-top: auto; margin-bottom: max(18px, env(safe-area-inset-bottom)); }
+
+/* --- 5.1.0 : fenêtre d'options du jeu (roue crantée) --- */
+.options-partie { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.options-partie .interrupteur { color: var(--creme); }
+#btn-options { font-size: 1.2rem; }
+.carte-ing .titre.long { font-size: calc(5.8 * var(--mm)); top: calc(7.1 * var(--mm)); }
+.carte-ing .titre.tres-long { font-size: calc(4.3 * var(--mm)); top: calc(7.9 * var(--mm)); white-space: normal; line-height: .95; top: calc(5.8 * var(--mm)); }
+/* l'icône de réponse : en bas de la carte, sur le médaillon */
+.emplacement .reponse { top: auto; bottom: -6px; right: -6px; width: 36px; height: 36px; }

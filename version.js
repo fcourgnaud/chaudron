@@ -9,9 +9,16 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.0.0', date: '2026-11-04' };
+const VERSION = { numero: '5.1.0', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.1.0', date: '2026-11-04', nouveautes: [
+    "Nouvelles cartes d'après la maquette, avec les illustrations du dossier images/ingredients (même dessin que les cartes imprimées).",
+    "Écran de jeu dans les polices de l'accueil ; polices incluses dans l'app (dossier polices/).",
+    "Roue crantée à la place du livre : fenêtre d'options pour couper les voix, la musique et l'ambiance (et ouvrir le grimoire).",
+    "Préparation : options de jeu dans un onglet déroulant. Les écrans ne glissent plus sous le doigt.",
+    "La musique de l'accueil et de la manche 1 continue sans recommencer. Plus de flèche sur « Au suivant ».",
+  ]},
   { numero: '5.0.0', date: '2026-11-04', nouveautes: [
     "Nouvelles règles du Concours à 2, 3 ou 4 sorcières : chacune a sa propre recette secrète (aucun ingrédient en commun). Pour gagner une manche, il faut brasser toute sa recette dans le bon ordre.",
     "Nouvelle réponse : l'Œil, quand l'ingrédient est dans la recette d'une autre sorcière. Les sons passent d'abord, puis les icônes et la fumée.",

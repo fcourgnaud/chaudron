@@ -33,7 +33,7 @@ const CONFIG = {
   // une musique par moment de la partie (elle tourne en boucle et change quand le moment change)
   // accueil : si vide, l'app prend fichiersMusique ci-dessus, ou sa musique composée
   musiques: {
-    accueil: '',
+    accueil: 'musique/theme-manche1.mp3',   // même musique que la manche 1 : elle continue sans recommencer
     manche1: 'musique/theme-manche1.mp3',
     manche2: 'musique/theme-manche2.mp3',
     manche3: 'musique/theme-manche3.mp3',
@@ -85,7 +85,7 @@ const TEXTES_FUMEE = {
 
 // n = numéro de la carte = son QR code. Pour mettre ton illustration,
 // dépose images/ingredients/CHAUDRON-01.png (ou .jpg, voir FORMAT_ILLUSTRATIONS).
-const FORMAT_ILLUSTRATIONS = 'png';
+const FORMAT_ILLUSTRATIONS = 'png';   // illustrations : images/ingredients/<nom>.png (ex. Mandragore.png)
 const FORMAT_PICTOS = 'png';        // pictos des familles (fam-…) et des réponses (rep-…) ; si le fichier manque, l'app prend le .svg
 const INGREDIENTS = [
   { n:  1, fam: 'plantes', nom: "Mandragore", texte: "Elle hurle quand on l'arrache. Bouchez-vous les oreilles." },

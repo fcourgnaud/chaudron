@@ -57,8 +57,33 @@ document.querySelectorAll('img').forEach(im => {
   if (m && im.complete && !im.naturalWidth) im.src = m[1] + '.svg';
 });
 // illustration de l'ingrédient si elle existe, sinon l'icône de sa famille
+// Illustration d'un ingrédient : images/ingredients/<nom de l'ingrédient>.png (ex. « Mandragore.png »).
+// Si le fichier manque, l'app essaie l'ancien nom CHAUDRON-01.png, puis le picto de la famille.
+const sourcesIngredient = i => [
+  `images/ingredients/${encodeURIComponent(i.nom.normalize('NFC'))}.png`,
+  `images/ingredients/${encodeURIComponent(i.nom.normalize('NFD'))}.png`,
+  `images/ingredients/${codeQR(i.n)}.${FORMAT_ILLUSTRATIONS}`,
+  imgFamille(i.fam),
+];
+window.imageSuivante = im => {
+  const i = ING(+im.dataset.ing), k = +(im.dataset.essai || 0) + 1, l = sourcesIngredient(i);
+  if (k < l.length) { im.dataset.essai = k; im.src = l[k]; } else im.onerror = null;
+};
 const imgIngredient = (i, classe = '') =>
-  `<img class="${classe}" src="images/ingredients/${codeQR(i.n)}.${FORMAT_ILLUSTRATIONS}" alt="" onerror="this.onerror=null;this.src='${imgFamille(i.fam)}'">`;
+  `<img class="${classe}" src="${sourcesIngredient(i)[0]}" data-ing="${i.n}" alt="" onerror="imageSuivante(this)">`;
+
+// La carte ingrédient, d'après la maquette (même dessin que la carte imprimée, voir theme.css)
+function carteIngredient(i) {
+  const n = i.nom.length, taille = n > 19 ? ' tres-long' : n > 12 ? ' long' : '';
+  return `<div class="carte-ing" style="--c:var(--fam-${i.fam});--f:var(--fam-${i.fam}-fonce)">
+    <div class="panneau"></div>
+    <div class="titre${taille}">${i.nom}</div>
+    <div class="num">N° ${String(i.n).padStart(2, '0')}</div>
+    <div class="fenetre-illu"></div>
+    ${imgIngredient(i, 'illu')}
+    <div class="medaillon"><img src="${imgFamille(i.fam)}" alt="${FAMILLES[i.fam].nom}"></div>
+  </div>`;
+}
 
 let R = { mode: 'concours', nb: 2, taille: 4 };   // réglages choisis
 let S = {};                                         // état de la partie
@@ -406,7 +431,7 @@ async function distribuerSecrets() {
       <p>Donne le téléphone à <b>${j.nom}</b>. Les autres sorcières détournent les yeux.</p>`, `Je suis ${j.nom}`, true);
     const ing = ING(n);
     await fenetreBouton(`<p class="secret-titre">Un ingrédient de la recette est…</p>
-      <div class="apercu-boite secret-carte" style="--c:${couleurFamille(ing.fam)}">${imgIngredient(ing, 'vignette')}<b>${ing.nom}</b><small>${FAMILLES[ing.fam].nom}</small></div>
+      <div class="apercu-boite carte secret-carte" style="--c:${couleurFamille(ing.fam)}">${carteIngredient(ing)}</div>
       <p><small>Retiens-le (ou note-le en secret dans ton grimoire). Tu ne connais pas sa place.</small></p>`, "C'est noté", true);
   }
   fermerFenetre();
@@ -596,7 +621,7 @@ function montrerEnGrand(ing, rang) {
   const a = $('#apercu-carte');
   a.style.setProperty('--c', couleurFamille(ing.fam));
   a.style.setProperty('--duree-apercu', CONFIG.dureeApercuCarte + 'ms');
-  a.innerHTML = `<div class="apercu-boite"><span class="rang"><span>${rang}</span></span>${imgIngredient(ing, 'vignette')}<b>${ing.nom}</b><small>${FAMILLES[ing.fam].nom}</small></div>`;
+  a.innerHTML = `<div class="apercu-boite carte" style="--c:${couleurFamille(ing.fam)}"><span class="rang"><span>${rang}</span></span>${carteIngredient(ing)}</div>`;
   a.classList.remove('visible'); void a.offsetWidth; a.classList.add('visible');
   clearTimeout(minuteurApercu);
   minuteurApercu = setTimeout(() => a.classList.remove('visible'), CONFIG.dureeApercuCarte);
@@ -610,7 +635,7 @@ function majPlateau() {
     if (n) {
       const ing = ING(n);
       box.insertAdjacentHTML('beforeend', `<div class="emplacement plein${i === S.brassage.length - 1 && S.phase === 'brassage' ? ' retirable' : ''}" style="--c:${couleurFamille(ing.fam)}">
-        <span class="rang"><span>${i + 1}</span></span>${imgIngredient(ing, 'vignette')}<span class="nom">${ing.nom}</span>
+        <span class="rang"><span>${i + 1}</span></span>${carteIngredient(ing)}
         <img class="reponse" id="rep-${i}" alt=""><span class="libelle" id="lib-${i}"></span></div>`);
     } else {
       box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}</div>`);
@@ -712,6 +737,21 @@ function ouvrirTiroir(id) { $(id).classList.add('ouvert'); }
 function fermerTiroirs() { $$('.tiroir').forEach(t => t.classList.remove('ouvert')); }
 $$('.tiroir').forEach(t => t.addEventListener('click', e => { if (e.target === t || e.target.closest('[data-fermer]')) fermerTiroirs(); }));
 $('#btn-grimoire').onclick = () => ouvrirTiroir('#tiroir-grimoire');
+// ⚙ : couper ou remettre les voix, la musique et l'ambiance pendant la partie
+$('#btn-options').onclick = () => {
+  fenetre(`<h2>Options</h2>
+    <div class="options-partie">
+      <label class="interrupteur"><input type="checkbox" id="o-voix" ${S.voix ? 'checked' : ''}><span><b>Voix du chaudron</b><small>Sans voix, les phrases restent écrites</small></span></label>
+      <label class="interrupteur"><input type="checkbox" id="o-musique" ${Musique.actif ? 'checked' : ''}><span><b>Musique</b><small>Musique de la manche</small></span></label>
+      <label class="interrupteur"><input type="checkbox" id="o-ambiance" ${Ambiance.actif ? 'checked' : ''}><span><b>Ambiance</b><small>Bouillonnement et feu de bois</small></span></label>
+    </div>
+    <div class="actions"><button class="bouton-annonce" id="o-grimoire">Grimoire</button><button class="bouton-or" id="o-fermer">Fermer</button></div>`);
+  $('#o-voix').onchange = e => { S.voix = e.target.checked; $('#opt-voix').checked = S.voix; if (!S.voix) Voix.arreter(); };
+  $('#o-musique').onchange = e => { debloquerAudio(); $('#opt-musique').checked = e.target.checked; e.target.checked ? Musique.demarrer() : Musique.arreter(); };
+  $('#o-ambiance').onchange = e => { debloquerAudio(); $('#opt-ambiance').checked = e.target.checked; e.target.checked ? Ambiance.demarrer() : Ambiance.arreter(); majBoutonAmbiance(); };
+  $('#o-grimoire').onclick = () => { fermerFenetre(); ouvrirTiroir('#tiroir-grimoire'); };
+  $('#o-fermer').onclick = fermerFenetre;
+};
 $('#btn-main').onclick = () => { majEtagere(); ouvrirTiroir('#tiroir-main'); };
 
 /* ---------- 9. SONS ---------- */
@@ -853,8 +893,11 @@ const Musique = {
 
   // change de musique (fondu) : appelé à chaque nouvelle manche
   piste(cle) {
+    const fichier = k => (CONFIG.musiques || {})[k] || '';
     this.cible = cle;
     if (this.enCours === cle) return;               // c'est déjà cette musique qui joue
+    // même fichier (ex. accueil et manche 1) : la musique continue sans recommencer
+    if (this.enCours && fichier(cle) && fichier(this.enCours) === fichier(cle) && this.element) { this.enCours = cle; return; }
     if (this.actif) this.lancer();
   },
   lancer() {

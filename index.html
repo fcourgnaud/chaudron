@@ -72,14 +72,17 @@
     <p class="aide">Mains cachées. On ne parle que de familles d'ingrédients.</p>
   </div>
 
-  <div class="parchemin">
-    <h3>Sortilèges</h3>
+  <!-- les options de jeu, repliées dans un onglet déroulant -->
+  <details class="parchemin options-jeu">
+    <summary>Sortilèges · options de jeu</summary>
+    <div class="contenu-options">
     <label class="interrupteur"><input type="checkbox" id="opt-expert"><span><b>Mode expert</b><small>Les réponses sont mélangées</small></span></label>
     <label class="interrupteur"><input type="checkbox" id="opt-voix" checked><span><b>Voix du chaudron</b><small id="voix-info">Recherche des voix enregistrées…</small></span></label>
     <label class="interrupteur"><input type="checkbox" id="opt-musique" checked><span><b>Musique</b><small id="musique-info">Musique de fond</small></span></label>
     <label class="interrupteur"><input type="checkbox" id="opt-ambiance" checked><span><b>Ambiance</b><small>Bouillonnement et feu de bois</small></span></label>
     <label class="interrupteur"><input type="checkbox" id="opt-camera" checked><span><b>Caméra frontale</b><small>Lire les QR codes des cartes</small></span></label>
-  </div>
+    </div>
+  </details>
 
   <button class="bouton-or grand" id="btn-allumer">✦ Commencer la quête ✦</button>
 </section>
@@ -90,7 +93,8 @@
   <header class="barre-jeu">
     <button class="rond" id="btn-quitter" aria-label="Quitter">✕</button>
     <div class="titre-manche" id="titre-manche"></div>
-    <button class="rond" id="btn-grimoire" aria-label="Grimoire">📖</button>
+    <button class="rond" id="btn-options" aria-label="Options">⚙</button>
+    <button class="rond" id="btn-grimoire" aria-label="Grimoire" hidden>📖</button>
   </header>
 
   <!-- une seule ligne : la sorcière du tour, et à sa droite le bouton du moment (Brasser ou Au suivant) -->
@@ -106,7 +110,7 @@
         <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
       </div>
       <div class="actions" id="actions-suite" hidden>
-        <button class="bouton-or" id="btn-suivant">Au suivant ➜</button>
+        <button class="bouton-or" id="btn-suivant">Au suivant</button>
       </div>
     </div>
   </div>
@@ -148,7 +152,7 @@
 <div class="tiroir" id="tiroir-grimoire">
   <div class="tiroir-boite">
     <div class="tiroir-tete"><h3>Grimoire</h3><button class="rond" data-fermer>✕</button></div>
-    <div class="reglages-jeu">
+    <div class="reglages-jeu" hidden>
       <button class="bouton-pouvoir" id="btn-musique">🎵 Musique</button>
       <button class="bouton-pouvoir" id="btn-ambiance">🔊 Ambiance</button>
     </div>
