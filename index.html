@@ -103,14 +103,16 @@
       <div class="sorcieres" id="sorcieres"></div>
       <div class="lunes" id="lunes" hidden></div>
     </div>
+    <!-- « Au suivant » toujours affiché (grisé jusqu'aux résultats) et la main (grisée une fois les cartes choisies).
+         Le brassage part tout seul quand toutes les cases sont remplies. -->
     <div class="rangee-action">
-      <div class="actions" id="actions-brassage">
-        <button class="rond grand-rond" id="btn-retirer" aria-label="Retirer la dernière carte">↩</button>
-        <button class="bouton-or" id="btn-brasser" disabled>Brasser !</button>
-        <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
+      <div class="actions" id="actions-suite">
+        <button class="bouton-or" id="btn-suivant" disabled>Au suivant</button>
       </div>
-      <div class="actions" id="actions-suite" hidden>
-        <button class="bouton-or" id="btn-suivant">Au suivant</button>
+      <div class="actions" id="actions-brassage">
+        <button class="rond grand-rond" id="btn-retirer" aria-label="Retirer la dernière carte" hidden>↩</button>
+        <button class="bouton-or" id="btn-brasser" disabled hidden>Brasser !</button>
+        <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
       </div>
     </div>
   </div>

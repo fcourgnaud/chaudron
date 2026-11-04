@@ -74,7 +74,7 @@ const imgIngredient = (i, classe = '') =>
 
 // La carte ingrédient, d'après la maquette (même dessin que la carte imprimée, voir theme.css)
 function carteIngredient(i) {
-  const n = i.nom.length, taille = n > 19 ? ' tres-long' : n > 12 ? ' long' : '';
+  const taille = '';   // tous les titres à la même taille (sur 2 lignes si besoin)
   return `<div class="carte-ing" style="--c:var(--fam-${i.fam});--f:var(--fam-${i.fam}-fonce)">
     <div class="panneau"></div>
     <div class="titre${taille}">${i.nom}</div>
@@ -694,13 +694,16 @@ function majPlateau() {
 }
 
 function majActions(quoi) {
-  $('#actions-brassage').hidden = quoi !== 'brassage';
+  // « Au suivant » et la main restent toujours à leur place
+  $('#actions-brassage').hidden = false; $('#actions-suite').hidden = false;
+  $('#btn-main').disabled = quoi !== 'brassage';
+  $('#btn-suivant').disabled = quoi !== 'suite';
   // le bouton d'annonce reste toujours à sa place : grisé quand on ne peut pas annoncer
   $('#actions-annonce').hidden = false;
   $('#actions-annonce').style.visibility = S.v5 ? 'hidden' : '';
   $('#btn-annonce').disabled = !(quoi === 'brassage' || quoi === 'suite') || !!S.annonceCeTour;
   $('#btn-annonce').textContent = quoi === 'suite' ? "J'annonce maintenant" : "J'annonce la recette";
-  $('#actions-suite').hidden = quoi !== 'suite';
+
   if (quoi !== 'brassage') $('#actions-pouvoirs').innerHTML = '';
   if (quoi !== 'brassage') $$('#plateau .retirable').forEach(e => e.classList.remove('retirable'));
 }

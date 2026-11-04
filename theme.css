@@ -879,3 +879,21 @@ html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hid
 .sorciere.active .nom-sorciere { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sorciere.active .chapeau { left: -58px; bottom: -8px; width: 70px; }
 .ligne-tour { margin-top: 14px; }
+
+
+/* --- 5.2.1 --- */
+/* portrait 10 px plus bas, cartes 5 px plus bas */
+.sorciere.active .chapeau { bottom: -18px; }
+.scene { margin-top: 21px; }
+/* Au suivant + main sur la même ligne, toujours visibles */
+.rangee-action { display: flex; align-items: center; gap: 6px; margin-left: -14px; }
+#actions-suite, #actions-brassage { display: flex; margin: 0; }
+#btn-suivant:disabled { opacity: 1; background: rgba(245, 226, 206, .32); color: rgba(107, 29, 51, .75); filter: none; }
+#btn-main { position: static; transform: none; }
+#btn-main:disabled { opacity: .4; filter: grayscale(1); }
+/* titres des cartes : tous à la même taille, sur 2 lignes si besoin */
+.carte-ing .titre, .carte-ing .titre.long, .carte-ing .titre.tres-long { left: calc(7 * var(--mm)); right: calc(7 * var(--mm)); top: calc(4.2 * var(--mm)); height: calc(12.6 * var(--mm));
+  display: flex; align-items: center; justify-content: center; white-space: normal; text-wrap: balance;
+  font-size: calc(6.2 * var(--mm)); line-height: .98; }
+/* accueil : personnage un peu plus grand */
+.perso-titre { width: 88%; margin-bottom: -58%; }

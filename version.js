@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.2.0', date: '2026-11-04' };
+const VERSION = { numero: '5.2.1', date: '2026-11-04' };
 
 const HISTORIQUE = [
+  { numero: '5.2.1', date: '2026-11-04', nouveautes: [
+    "Plus de bouton Brasser : le brassage part quand toutes les cases sont remplies. « Au suivant » et la main sont toujours affichés : « Au suivant » s'allume après les résultats, la main se grise une fois les cartes choisies.",
+    "Titres des cartes tous à la même taille, sur deux lignes si besoin. Portrait et cartes un peu plus bas ; personnage de l'accueil plus grand.",
+  ]},
   { numero: '5.2.0', date: '2026-11-04', nouveautes: [
     "Les 4 sorcières ont leur portrait : en médaillon sur l'écran de préparation, et en buste à côté de son nom pendant son tour.",
   ]},
