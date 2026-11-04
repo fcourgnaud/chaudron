@@ -95,7 +95,7 @@ function ecranPortrait() {
 }
 function garderPortrait() {
   const b = document.body, r = document.documentElement.style, w = innerWidth, h = innerHeight;
-  if (surTelephone && w > h) {
+  if (surTelephone && w > h && !matchMedia('(orientation: portrait)').matches) {
     const angle = (screen.orientation && screen.orientation.angle) ?? window.orientation ?? 90;
     const sens = (angle === 90 || angle === -270) ? -90 : 90;
     Object.assign(b.style, { position: 'fixed', top: '0', left: '0', right: 'auto', bottom: 'auto', width: h + 'px', height: w + 'px', transformOrigin: '0 0',
@@ -106,8 +106,24 @@ function garderPortrait() {
     r.removeProperty('--vw'); r.removeProperty('--vh');
   }
 }
+// Sur iPhone, les dimensions arrivent en retard après la rotation, et les zones de toucher peuvent rester
+// décalées : on recale plusieurs fois, on remet le défilement à zéro et on force un nouveau calcul de la page.
+let dernierEtat = '';
+function recaler() {
+  garderPortrait();
+  const etat = innerWidth + 'x' + innerHeight;
+  window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
+  if (etat !== dernierEtat) {
+    dernierEtat = etat;
+    const b = document.body; b.style.display = 'none'; void b.offsetHeight; b.style.display = '';
+    dispatchEvent(new Event('resize'));
+  }
+}
+function recalerPlusieursFois() { [0, 120, 350, 700, 1200].forEach(t => setTimeout(recaler, t)); }
 addEventListener('resize', garderPortrait);
-addEventListener('orientationchange', () => setTimeout(() => { garderPortrait(); dispatchEvent(new Event('resize')); }, 250));
+addEventListener('orientationchange', recalerPlusieursFois);
+if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(recaler, 50));
+if (screen.orientation) screen.orientation.addEventListener('change', recalerPlusieursFois);
 garderPortrait();
 try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
 
