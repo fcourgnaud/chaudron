@@ -9,9 +9,10 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.2.7', date: '2026-11-05' };
+const VERSION = { numero: '5.3.0', date: '2026-11-05' };
 
 const HISTORIQUE = [
+  { numero: '5.3.0', date: '2026-11-05', nouveautes: ["Les cartes de l'app sont maintenant tes cartes illustrées (images/cartes-ingredients)."]},
   { numero: '5.2.7', date: '2026-11-05', nouveautes: ["Accueil : ombre portée plus diffuse."]},
   { numero: '5.2.6', date: '2026-11-05', nouveautes: ["Accueil : ombre portée sur le personnage et le titre pour les détacher du fond."]},
   { numero: '5.2.5', date: '2026-11-05', nouveautes: ["Portraits des sorcières plus grands : en jeu à côté du nom, et en grand sur l'écran « Au tour de… »."]},

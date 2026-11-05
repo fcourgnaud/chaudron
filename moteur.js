@@ -72,7 +72,7 @@ window.imageSuivante = im => {
 const imgIngredient = (i, classe = '') =>
   `<img class="${classe}" src="${sourcesIngredient(i)[0]}" data-ing="${i.n}" alt="" onerror="imageSuivante(this)">`;
 
-// La carte ingrédient, d'après la maquette (même dessin que la carte imprimée, voir theme.css)
+// La carte ingrédient : l'image de ta carte (images/cartes-ingredients/<nom>.jpg) ; si elle manque, la carte dessinée d'après la maquette (même dessin que la carte imprimée, voir theme.css)
 function carteIngredient(i) {
   const taille = '';   // tous les titres à la même taille (sur 2 lignes si besoin)
   return `<div class="carte-ing" style="--c:var(--fam-${i.fam});--f:var(--fam-${i.fam}-fonce)">
@@ -82,6 +82,7 @@ function carteIngredient(i) {
     <div class="fenetre-illu"></div>
     ${imgIngredient(i, 'illu')}
     <div class="medaillon"><img src="${imgFamille(i.fam)}" alt="${FAMILLES[i.fam].nom}"></div>
+    <img class="carte-photo" src="images/cartes-ingredients/${encodeURIComponent(i.nom.normalize('NFC'))}.jpg" data-nfd="images/cartes-ingredients/${encodeURIComponent(i.nom.normalize('NFD'))}.jpg" alt="${i.nom}" onerror="if(this.dataset.nfd){this.src=this.dataset.nfd;this.dataset.nfd=''}else this.remove()">
   </div>`;
 }
 
