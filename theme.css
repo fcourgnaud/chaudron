@@ -932,3 +932,5 @@ html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hid
 .emplacement .rang { top: -14px; left: -9px; width: 22px; height: 22px; font-size: .7rem; }
 /* --- 5.3.1 : numéro d'ordre plus petit, en bas à gauche de la carte --- */
 .emplacement .rang { top: auto; bottom: -7px; left: -7px; width: 18px; height: 18px; font-size: .62rem; z-index: 3; }
+/* --- 5.3.2 : plus de numéro d'ordre sur les cartes jetées --- */
+.emplacement .rang { display: none; }
