@@ -918,3 +918,7 @@ html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hid
 .scene { margin-top: 16px; }
 .ligne-tour { margin-top: 30px; }
 .sorciere.active .chapeau { pointer-events: none; }
+
+/* --- 5.2.6 : ombre portée sur le personnage et le titre de l'accueil, pour les détacher du fond --- */
+.perso-titre { filter: drop-shadow(0 10px 14px rgba(10, 2, 5, .75)) drop-shadow(0 2px 4px rgba(10, 2, 5, .6)) drop-shadow(0 0 22px rgba(240, 138, 44, .35)); }
+.logo, .logo:hover { filter: drop-shadow(0 8px 12px rgba(10, 2, 5, .8)) drop-shadow(0 2px 3px rgba(10, 2, 5, .7)) drop-shadow(0 0 24px rgba(240, 138, 44, .45)) !important; }
