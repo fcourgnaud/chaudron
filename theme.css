@@ -934,3 +934,8 @@ html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hid
 .emplacement .rang { top: auto; bottom: -7px; left: -7px; width: 18px; height: 18px; font-size: .62rem; z-index: 3; }
 /* --- 5.3.2 : plus de numéro d'ordre sur les cartes jetées --- */
 .emplacement .rang { display: none; }
+
+/* --- 5.3.3 : plus de visages à côté des noms (préparation, jeu, écran « Au tour de ») --- */
+.sorciere-saisie .chapeau, .sorciere.active .chapeau, .portrait-tour { display: none !important; }
+.ligne-tour { padding-left: 0; margin-top: 18px; }
+.sorciere.active { padding-left: 12px; padding-right: 12px; }

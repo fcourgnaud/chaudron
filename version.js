@@ -9,9 +9,10 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.3.2', date: '2026-11-05' };
+const VERSION = { numero: '5.3.3', date: '2026-11-05' };
 
 const HISTORIQUE = [
+  { numero: '5.3.3', date: '2026-11-05', nouveautes: ["Plus de visages à côté des noms des sorcières."]},
   { numero: '5.3.2', date: '2026-11-05', nouveautes: ["Plus de numéro d'ordre sur les cartes jetées."]},
   { numero: '5.3.1', date: '2026-11-05', nouveautes: ["Numéro d'ordre des cartes plus petit, en bas à gauche."]},
   { numero: '5.3.0', date: '2026-11-05', nouveautes: ["Les cartes de l'app sont maintenant tes cartes illustrées (images/cartes-ingredients)."]},
