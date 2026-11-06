@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.4.0', date: '2026-11-06' };
+const VERSION = { numero: '5.5.0', date: '2026-11-06' };
 
 const HISTORIQUE = [
+  { numero: '5.5.0', date: '2026-11-06', nouveautes: [
+    "Lecture des QR codes : de plus près (carte floue ou très grande) et de plus loin (zoom automatique, y compris sur les côtés de l'image).",
+    "Dans le noir : l'image de la caméra est éclaircie avant la lecture, et l'écran s'éclaire sur les bords pour éclairer les cartes (réglable dans ⚙).",
+  ]},
   { numero: '5.4.0', date: '2026-11-06', nouveautes: [
     "Lecture des QR codes améliorée : image de la caméra plus nette, analyse plus rapide, centre de l'image lu en pleine résolution, et détecteur du téléphone quand il existe.",
     "Les cartes pouvoir ont un QR code : on les scanne pour choisir son pouvoir après une manche gagnée, puis pour l'utiliser au début de son tour.",

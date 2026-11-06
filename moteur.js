@@ -607,7 +607,7 @@ function toutCouper() {
   $('#rideau').classList.remove('visible'); $('#apercu-carte').classList.remove('visible');
   fermerFenetre(); fermerTiroirs(); colorerPotion(null);
 }
-function quitter() { toutCouper(); Musique.cible = 'accueil'; montrer('ecran-titre'); }
+function quitter() { Eclairage.regler(false); toutCouper(); Musique.cible = 'accueil'; montrer('ecran-titre'); }
 $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre le feu ?</h2><p>La partie en cours sera perdue.</p>')) quitter(); };
 
 /* ---------- 6. POUVOIRS ---------- */
@@ -823,11 +823,13 @@ $('#btn-options').onclick = () => {
       <label class="interrupteur"><input type="checkbox" id="o-voix" ${S.voix ? 'checked' : ''}><span><b>Voix du chaudron</b><small>Sans voix, les phrases restent écrites</small></span></label>
       <label class="interrupteur"><input type="checkbox" id="o-musique" ${Musique.actif ? 'checked' : ''}><span><b>Musique</b><small>Musique de la manche</small></span></label>
       <label class="interrupteur"><input type="checkbox" id="o-ambiance" ${Ambiance.actif ? 'checked' : ''}><span><b>Ambiance</b><small>Bouillonnement et feu de bois</small></span></label>
+      <label class="interrupteur"><input type="checkbox" id="o-eclairage" ${Eclairage.actif ? 'checked' : ''}><span><b>Éclairer les cartes</b><small>Dans le noir, l'écran s'éclaire pour lire les QR codes</small></span></label>
     </div>
     <div class="actions"><button class="bouton-annonce" id="o-grimoire">Grimoire</button><button class="bouton-or" id="o-fermer">Fermer</button></div>`);
   $('#o-voix').onchange = e => { S.voix = e.target.checked; $('#opt-voix').checked = S.voix; if (!S.voix) Voix.arreter(); };
   $('#o-musique').onchange = e => { debloquerAudio(); $('#opt-musique').checked = e.target.checked; e.target.checked ? Musique.demarrer() : Musique.arreter(); };
   $('#o-ambiance').onchange = e => { debloquerAudio(); $('#opt-ambiance').checked = e.target.checked; e.target.checked ? Ambiance.demarrer() : Ambiance.arreter(); majBoutonAmbiance(); };
+  $('#o-eclairage').onchange = e => { Eclairage.actif = e.target.checked; if (!Eclairage.actif) Eclairage.regler(false); };
   $('#o-grimoire').onclick = () => { fermerFenetre(); ouvrirTiroir('#tiroir-grimoire'); };
   $('#o-fermer').onclick = fermerFenetre;
 };
@@ -1462,17 +1464,52 @@ const Camera = {
     }
   },
   arreter() { this.actif = false; if (this.flux) this.flux.getTracks().forEach(t => t.stop()); this.flux = null; },
-  // jsQR sur une partie de l'image : tour à tour l'image entière réduite et le centre en pleine résolution
+  /* jsQR : à chaque image, une « passe » différente, pour lire les cartes de près, de loin et dans le noir.
+     zone = part de l'image analysée (1 = toute l'image), centre = où la prendre, w = largeur analysée.
+     Une petite zone analysée en grand = un zoom (cartes loin) ; toute l'image en petit = cartes très près ou floues. */
+  passes: [
+    { zone: 1,   w: 560 },                     // l'image entière
+    { zone: .6,  w: 600 },                     // le centre
+    { zone: 1,   w: 320 },                     // carte très près ou floue : l'image en petit
+    { zone: .38, w: 560 },                     // carte loin : zoom ×2,5 sur le centre
+    { zone: .55, w: 560, tuile: true },        // carte loin et décalée : un quart de l'image à tour de rôle
+    { zone: .26, w: 480 },                     // carte très loin : zoom ×4
+  ],
   lireJsQR(v) {
     const c = $('#canvas-scan'), ctx = c.getContext('2d', { willReadFrequently: true });
-    const vw = v.videoWidth, vh = v.videoHeight, k = this.tour++ % 3;
-    let sx = 0, sy = 0, sw = vw, sh = vh, w = 480;
-    if (k === 1) { const cote = Math.min(vw, vh) * .75; sx = (vw - cote) / 2; sy = (vh - cote) / 2; sw = sh = cote; w = Math.min(640, cote); }
-    if (k === 2) { const cote = Math.min(vw, vh) * .5; sx = (vw - cote) / 2; sy = (vh - cote) / 2; sw = sh = cote; w = Math.min(480, cote); }
-    w = Math.round(w); const h = Math.round(w * sh / sw); c.width = w; c.height = h;
-    ctx.drawImage(v, sx, sy, sw, sh, 0, 0, w, h);
-    const r = jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: this.tour % 4 ? 'dontInvert' : 'attemptBoth' });
+    const vw = v.videoWidth, vh = v.videoHeight, n = this.tour++;
+    const P = this.passes[n % this.passes.length];
+    let sw = vw * P.zone, sh = vh * P.zone, cx = .5, cy = .5;
+    if (P.zone < 1) { sw = sh = Math.min(vw, vh) * P.zone * (P.tuile ? 1.6 : 1); sw = Math.min(sw, vw); sh = Math.min(sh, vh); }
+    if (P.tuile) { const q = Math.floor(n / this.passes.length) % 4; cx = q % 2 ? .72 : .28; cy = q < 2 ? .3 : .7; }
+    const sx = Math.max(0, Math.min(vw - sw, vw * cx - sw / 2)), sy = Math.max(0, Math.min(vh - sh, vh * cy - sh / 2));
+    const w = Math.round(P.w), h = Math.round(w * sh / sw);
+    c.width = w; c.height = h;
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(v.image || v, sx, sy, sw, sh, 0, 0, w, h);
+    const img = ctx.getImageData(0, 0, w, h);
+    this.eclairage(img.data);
+    const r = jsQR(img.data, w, h, { inversionAttempts: n % 5 === 4 ? 'attemptBoth' : 'dontInvert' });
     return r && r.data;
+  },
+  /* Image sombre ou terne : on étire le contraste (du gris le plus sombre au plus clair) et on éclaircit les ombres.
+     On mesure aussi la lumière pour proposer l'éclairage par l'écran. */
+  eclairage(d) {
+    const hist = new Uint32Array(256), N = d.length / 4;
+    for (let i = 0; i < d.length; i += 16) hist[(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8]++;
+    const total = N / 4; let acc = 0, bas = 0, haut = 255, somme = 0;
+    for (let k = 0; k < 256; k++) { somme += k * hist[k]; }
+    for (let k = 0; k < 256; k++) { acc += hist[k]; if (acc > total * .02) { bas = k; break; } }
+    acc = 0; for (let k = 255; k >= 0; k--) { acc += hist[k]; if (acc > total * .02) { haut = k; break; } }
+    const moyenne = somme / total; this.lumiere = this.lumiere == null ? moyenne : this.lumiere * .9 + moyenne * .1;
+    Eclairage.mesure(this.lumiere);
+    if (haut - bas > 150 && moyenne > 70) return;                     // image correcte : on n'y touche pas
+    const gamma = moyenne < 60 ? .6 : moyenne < 100 ? .8 : 1, table = new Uint8ClampedArray(256), ecart = Math.max(24, haut - bas);
+    for (let k = 0; k < 256; k++) table[k] = 255 * Math.pow(Math.min(1, Math.max(0, (k - bas) / ecart)), gamma);
+    for (let i = 0; i < d.length; i += 4) {
+      const g = table[(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8];
+      d[i] = d[i + 1] = d[i + 2] = g;
+    }
   },
   async boucle() {
     if (!this.actif) return;
@@ -1480,12 +1517,12 @@ const Camera = {
     if (v.readyState >= 2 && v.videoWidth) {
       let txt = null;
       try {
-        if (this.detecteur) { const r = await this.detecteur.detect(v); txt = r[0] && r[0].rawValue; }
+        if (this.detecteur && this.tour % 2 === 0) { this.tour++; const r = await this.detecteur.detect(v); txt = r[0] && r[0].rawValue; }
         else if (window.jsQR) txt = this.lireJsQR(v);
       } catch (e) { if (window.jsQR) txt = this.lireJsQR(v); }
       if (txt) this.lu(txt.trim());
     }
-    setTimeout(() => requestAnimationFrame(() => this.boucle()), 70);
+    setTimeout(() => requestAnimationFrame(() => this.boucle()), 50);
   },
   lu(txt) {
     const now = Date.now();
@@ -1499,6 +1536,16 @@ const Camera = {
     const m = T.match(/(\d{1,2})\s*$/);
     if (m) ajouterIngredient(parseInt(m[1], 10));
   },
+};
+/* Quand il fait sombre, l'écran éclaire les cartes : un halo blanc s'allume sur les bords (réglable dans ⚙). */
+const Eclairage = {
+  actif: true, allume: false,
+  mesure(l) {
+    if (!this.actif || !$('#ecran-jeu').classList.contains('actif')) return this.regler(false);
+    if (l < 55 && !this.allume) this.regler(true);
+    else if (l > 95 && this.allume) this.regler(false);
+  },
+  regler(oui) { this.allume = oui; document.body.classList.toggle('eclairage', oui); },
 };
 async function garderEcranAllume() { try { await navigator.wakeLock.request('screen'); } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#ecran-jeu').classList.contains('actif')) garderEcranAllume(); });
