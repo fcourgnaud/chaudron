@@ -9,9 +9,14 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.3.3', date: '2026-11-05' };
+const VERSION = { numero: '5.4.0', date: '2026-11-06' };
 
 const HISTORIQUE = [
+  { numero: '5.4.0', date: '2026-11-06', nouveautes: [
+    "Lecture des QR codes améliorée : image de la caméra plus nette, analyse plus rapide, centre de l'image lu en pleine résolution, et détecteur du téléphone quand il existe.",
+    "Les cartes pouvoir ont un QR code : on les scanne pour choisir son pouvoir après une manche gagnée, puis pour l'utiliser au début de son tour.",
+    "Le marché est retiré pour l'instant.",
+  ]},
   { numero: '5.3.3', date: '2026-11-05', nouveautes: ["Plus de visages à côté des noms des sorcières."]},
   { numero: '5.3.2', date: '2026-11-05', nouveautes: ["Plus de numéro d'ordre sur les cartes jetées."]},
   { numero: '5.3.1', date: '2026-11-05', nouveautes: ["Numéro d'ordre des cartes plus petit, en bas à gauche."]},

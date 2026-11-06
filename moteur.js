@@ -265,7 +265,7 @@ async function tourSuivant() {
   else {
     S.toursDepuisMarche = (S.toursDepuisMarche || 0) + 1;
     const enJeu = S.joueurs.filter(j => !j.eliminee).length;
-    if (S.toursDepuisMarche >= enJeu) { S.toursDepuisMarche = 0; await rappelMarche(); }
+    // marché retiré pour l'instant : plus de rappel « le marché se refait »
   }
   for (let k = 0; k < S.joueurs.length; k++) {
     S.courant = (S.courant + 1) % S.joueurs.length;
@@ -612,6 +612,28 @@ $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre
 
 /* ---------- 6. POUVOIRS ---------- */
 const Pouvoirs = {
+  // Carte pouvoir scannée (QR CHAUDRON-P1 à P6, dans l'ordre de POUVOIRS)
+  scanner(k) {
+    const p = POUVOIRS[k - 1]; if (!p || !S.joueurs) return;
+    Sons.jouer('scan');
+    // 1. on choisit son pouvoir après avoir gagné une manche
+    const choix = document.querySelector(`#fenetre.visible [data-p="${p.id}"]`);
+    if (choix) return choix.click();
+    if (document.querySelector('#fenetre.visible [data-p]')) return this.message(p, 'Ce pouvoir ne fait pas partie du choix.');
+    // 2. on l'utilise pendant son tour, avant de jeter ses cartes
+    const j = S.joueurs[S.courant];
+    if (S.mode !== 'concours' || !j) return;
+    if (!j.pouvoirs.includes(p.id)) return this.message(p, `Ce pouvoir n'appartient pas à ${j.nom}.`);
+    if (j.utilises.has(p.id)) return this.message(p, 'Déjà utilisé pendant cette manche.');
+    if (p.id === 'amulette') return this.message(p, "L'amulette agit toute seule en cas d'explosion.");
+    if (S.phase !== 'brassage' || S.brassage.length) return this.message(p, 'Un pouvoir se joue au début du tour, avant de jeter ses cartes.');
+    const bouton = [...$$('#actions-pouvoirs button')].find(b => b.dataset.id === p.id) || document.createElement('button');
+    this.utiliser(p.id, bouton);
+    this.message(p, p.app ? 'Pouvoir activé !' : 'Pouvoir validé : applique-le à la table.');
+  },
+  message(p, texte) {
+    rideau(`<div class="icone">${p.emoji}</div><div class="grand-titre">${p.nom}</div><div class="sous-titre">${texte}</div>`, 1800);
+  },
   utiliser(id, bouton) {
     const j = S.joueurs[S.courant];
     if (id === 'chouette') { S.secret = true; parler('chouette'); }
@@ -639,8 +661,8 @@ function majPouvoirs() {
   const box = $('#actions-pouvoirs'); box.innerHTML = '';
   if (S.mode !== 'concours' || S.phase !== 'brassage') return;
   const j = S.joueurs[S.courant];
-  j.pouvoirs.map(id => POUVOIRS.find(p => p.id === id)).filter(p => p.app && p.id !== 'amulette').forEach(p => {
-    const b = document.createElement('button');
+  j.pouvoirs.map(id => POUVOIRS.find(p => p.id === id)).filter(p => p.id !== 'amulette').forEach(p => {
+    const b = document.createElement('button'); b.dataset.id = p.id;
     b.className = 'bouton-pouvoir'; b.textContent = `${p.emoji} ${p.nom}`;
     b.disabled = j.utilises.has(p.id);
     b.onclick = () => Pouvoirs.utiliser(p.id, b);
@@ -1422,12 +1444,17 @@ window.FondMagique = FondMagique;
 
 /* ---------- 12. CAMÉRA ET QR CODES ---------- */
 const Camera = {
-  flux: null, actif: false, dernier: '', quand: 0,
+  flux: null, actif: false, dernier: '', quand: 0, tour: 0, detecteur: null,
   async demarrer() {
     $('#oeil').hidden = false; $('#oeil-etat').textContent = '…';
     try {
-      this.flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+      // meilleure image : 1280 × 720 si possible, mise au point continue
+      this.flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      const piste = this.flux.getVideoTracks()[0];
+      try { await piste.applyConstraints({ advanced: [{ focusMode: 'continuous' }, { exposureMode: 'continuous' }] }); } catch (e) {}
       const v = $('#video'); v.srcObject = this.flux; await v.play();
+      // détecteur intégré au téléphone quand il existe (Android) : plus rapide et plus fiable que jsQR
+      try { if ('BarcodeDetector' in window && (await BarcodeDetector.getSupportedFormats()).includes('qr_code')) this.detecteur = new BarcodeDetector({ formats: ['qr_code'] }); } catch (e) {}
       $('#oeil-etat').textContent = ''; this.actif = true; this.boucle();
     } catch (e) {
       $('#oeil').hidden = true;
@@ -1435,27 +1462,42 @@ const Camera = {
     }
   },
   arreter() { this.actif = false; if (this.flux) this.flux.getTracks().forEach(t => t.stop()); this.flux = null; },
-  boucle() {
+  // jsQR sur une partie de l'image : tour à tour l'image entière réduite et le centre en pleine résolution
+  lireJsQR(v) {
+    const c = $('#canvas-scan'), ctx = c.getContext('2d', { willReadFrequently: true });
+    const vw = v.videoWidth, vh = v.videoHeight, k = this.tour++ % 3;
+    let sx = 0, sy = 0, sw = vw, sh = vh, w = 480;
+    if (k === 1) { const cote = Math.min(vw, vh) * .75; sx = (vw - cote) / 2; sy = (vh - cote) / 2; sw = sh = cote; w = Math.min(640, cote); }
+    if (k === 2) { const cote = Math.min(vw, vh) * .5; sx = (vw - cote) / 2; sy = (vh - cote) / 2; sw = sh = cote; w = Math.min(480, cote); }
+    w = Math.round(w); const h = Math.round(w * sh / sw); c.width = w; c.height = h;
+    ctx.drawImage(v, sx, sy, sw, sh, 0, 0, w, h);
+    const r = jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: this.tour % 4 ? 'dontInvert' : 'attemptBoth' });
+    return r && r.data;
+  },
+  async boucle() {
     if (!this.actif) return;
-    const v = $('#video'), c = $('#canvas-scan');
-    if (v.readyState >= 2 && window.jsQR && v.videoWidth) {
-      const w = 360, h = Math.round(w * v.videoHeight / v.videoWidth);
-      c.width = w; c.height = h;
-      const ctx = c.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(v, 0, 0, w, h);
-      const r = jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' });
-      if (r && r.data) this.lu(r.data.trim());
+    const v = $('#video');
+    if (v.readyState >= 2 && v.videoWidth) {
+      let txt = null;
+      try {
+        if (this.detecteur) { const r = await this.detecteur.detect(v); txt = r[0] && r[0].rawValue; }
+        else if (window.jsQR) txt = this.lireJsQR(v);
+      } catch (e) { if (window.jsQR) txt = this.lireJsQR(v); }
+      if (txt) this.lu(txt.trim());
     }
-    setTimeout(() => requestAnimationFrame(() => this.boucle()), 120);
+    setTimeout(() => requestAnimationFrame(() => this.boucle()), 70);
   },
   lu(txt) {
     const now = Date.now();
     if (txt === this.dernier && now - this.quand < 2500) return;   // même carte encore devant l'œil
     this.dernier = txt; this.quand = now;
-    const T = txt.toUpperCase(), m = T.match(/(\d{1,2})\s*$/);
-    if (!T.startsWith(CONFIG.prefixeQR) || !m) return;
+    const T = txt.toUpperCase();
+    if (!T.startsWith(CONFIG.prefixeQR)) return;
     $('#oeil').classList.add('lu'); setTimeout(() => $('#oeil').classList.remove('lu'), 400);
-    ajouterIngredient(parseInt(m[1], 10));
+    const p = T.match(/-P(\d)\s*$/);                    // carte pouvoir : CHAUDRON-P1 … CHAUDRON-P6
+    if (p) return Pouvoirs.scanner(+p[1]);
+    const m = T.match(/(\d{1,2})\s*$/);
+    if (m) ajouterIngredient(parseInt(m[1], 10));
   },
 };
 async function garderEcranAllume() { try { await navigator.wakeLock.request('screen'); } catch (e) {} }
