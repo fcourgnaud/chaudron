@@ -324,6 +324,7 @@ async function brasser() {
   const j = S.joueurs[S.courant];
   const ids = [...S.brassage];
   j.essais++; S.essais++;
+  await attendre(CONFIG.pauseAvantSons);          // on laisse le temps de voir les cartes jetées
   $('#scene').classList.add('agite');
 
   if (S.secret) {
@@ -365,13 +366,14 @@ async function brasser() {
   const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
   S.derniere = { res, secret };
   if (S.v5) {
-    await jouerReponses(res, secret, true);                 // les sons d'abord…
-    colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis les icônes et la fumée
+    await jouerReponses(res, secret);                       // chaque son avec son icône…
+    colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis la couleur de la fumée
   } else {
     colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);
     await jouerReponses(res, secret);
   }
 
+  await attendre(CONFIG.pauseApresSons);          // un temps de silence avant que le chaudron parle
   ajouterJournal(secret ? { qui: j.nom, secret: true } : { qui: S.mode === 'concours' ? j.nom : `Essai ${S.essais}`, ids, res, couleur, texteFumee, expert: S.expert });
 
   if (secret) { S.secret = false; colorerPotion(null); fermerFenetre(); majPlateau(); }
@@ -398,9 +400,8 @@ async function jouerReponses(res, secret, sonsDabord = false) {
     if (!secret) {
       if (S.expert) $('#reponses-expert').insertAdjacentHTML('beforeend', `<figure><img src="${imgReponse(ordre[i])}" alt=""><figcaption>${LIBELLES_REPONSES[ordre[i]]}</figcaption></figure>`);
       else {
-        const el = $('#rep-' + i), lib = $('#lib-' + i);
+        const el = $('#rep-' + i);
         if (el) { el.src = imgReponse(ordre[i]); el.classList.add('visible'); }
-        if (lib) { lib.textContent = LIBELLES_REPONSES[ordre[i]]; lib.className = 'libelle visible rep-' + ordre[i]; }
       }
     }
     Sons.jouer(ordre[i]);
@@ -411,9 +412,8 @@ async function jouerReponses(res, secret, sonsDabord = false) {
 
 function afficherReponse(r, i) {
   if (S.expert) { $('#reponses-expert').insertAdjacentHTML('beforeend', `<figure><img src="${imgReponse(r)}" alt=""><figcaption>${LIBELLES_REPONSES[r]}</figcaption></figure>`); return; }
-  const el = $('#rep-' + i), lib = $('#lib-' + i);
+  const el = $('#rep-' + i);
   if (el) { el.src = imgReponse(r); el.classList.add('visible'); }
-  if (lib) { lib.textContent = LIBELLES_REPONSES[r]; lib.className = 'libelle visible rep-' + r; }
 }
 
 async function finDuBrassage() {
@@ -712,7 +712,7 @@ function majPlateau() {
       const ing = ING(n);
       box.insertAdjacentHTML('beforeend', `<div class="emplacement plein${i === S.brassage.length - 1 && S.phase === 'brassage' ? ' retirable' : ''}" style="--c:${couleurFamille(ing.fam)}">
         <span class="rang"><span>${i + 1}</span></span>${carteIngredient(ing)}
-        <img class="reponse" id="rep-${i}" alt=""><span class="libelle" id="lib-${i}"></span></div>`);
+        <span class="nom-sous">${ing.nom}</span><img class="reponse" id="rep-${i}" alt=""></div>`);
     } else {
       box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}</div>`);
     }
@@ -742,8 +742,8 @@ function majActions(quoi) {
 
 function colorerPotion(couleur, texte = '') {
   const c = $('#ecran-jeu .grand-chaudron'), scene = $('#scene'), etiquette = $('#etiquette-fumee');
-  etiquette.hidden = !(couleur && texte);
-  if (couleur && texte) {
+  etiquette.hidden = true;        // plus de texte de fumée : seule la couleur parle
+  if (false) {
     etiquette.innerHTML = `<span class="pastille-fumee"></span><span>${texte.replace(/ ([:!?;])/g, '\u00a0$1')}</span>`;
     etiquette.style.setProperty('--c', couleur);
     etiquette.classList.remove('nouvelle'); void etiquette.offsetWidth; etiquette.classList.add('nouvelle');
@@ -1336,15 +1336,15 @@ void main(){
   float bruit = (fbm(p * 4. + t * .15) - .5) * .18;
   float dedans = smoothstep(front, front - .3, r + bruit);
   vec3 c = mix(coulA, coulB, dedans);
-  col = mix(col, mix(col, c * (l * 1.7 + .08), .65), potion);
+  col = mix(col, c * (l * 1.25 + .3), .9 * potion);            // la potion prend franchement la couleur de la famille
   vec2 m = rot(p, t * .08) * 1.6;
   float nuage = smoothstep(.12, .48, fbm(m * 1.8 + vec2(t * .05, t * .03)) * fbm(m * 3.1 - vec2(t * .07, 0.)));
   float onde = exp(-pow((r + bruit - front) * 4.5, 2.)) * vague;
   float densite = nuage * (potion * .28 + onde * .95);
-  col = mix(col, mix(vec3(.96, .9, .92), c, .55), clamp(densite, 0., .85));
+  col = mix(col, mix(vec3(.96, .9, .92), c, .55 + .35 * potion), clamp(densite, 0., .85));
   vec2 f = rot(p, t * .18 + r * 3.2);
   float v = smoothstep(.2, .52, fbm(f * 2.6 + vec2(t * .06, -t * .09)) * fbm(f * 1.4 - t * .04));
-  col = mix(col, mix(vec3(.93, .82, .86), c, potion * .6), v * (.28 + .22 * potion));
+  col = mix(col, mix(vec3(.93, .82, .86), c * 1.15, potion * .85), v * (.28 + .12 * potion));
   col += vec3(1., .95, .9) * reflet * .22 + col * caustique;
   gl_FragColor = vec4(col, 1.);
 }`;

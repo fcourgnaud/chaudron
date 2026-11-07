@@ -9,9 +9,15 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.6.1', date: '2026-11-07' };
+const VERSION = { numero: '5.7.0', date: '2026-11-07' };
 
 const HISTORIQUE = [
+  { numero: '5.7.0', date: '2026-11-07', nouveautes: [
+    "Le nom de chaque carte est écrit en grand sous la carte, avec la grande icône de réponse en dessous.",
+    "Plus de texte de fumée ni de texte sous les icônes de réponse.",
+    "Quand toutes les cartes sont jetées, 3 secondes de pause avant les sons ; chaque icône apparaît avec son son ; 3 secondes de silence avant que le chaudron parle.",
+    "La couleur du chaudron est plus dense et correspond mieux à la couleur de la famille.",
+  ]},
   { numero: '5.6.1', date: '2026-11-07', nouveautes: [
     "Retour à l'écran de jeu debout de la version 5.5.0 (l'écran à l'horizontale de la 5.6.0 est annulé).",
   ]},
