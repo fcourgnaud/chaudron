@@ -957,3 +957,11 @@ body.eclairage::after { opacity: 1; }
 .reponses-expert img { width: 64px; height: 64px; }
 .emplacement .reponse { width: calc(var(--lc) * .8); height: calc(var(--lc) * .8); top: calc(100% + 40px); }
 .plateau { padding-bottom: calc(var(--lc) * .8 + 40px); }
+/* --- 5.7.1 : nom des cartes plus gros, sur le même fond que les anciens mots de réponse --- */
+.emplacement .nom-sous { top: calc(100% + 8px); left: -4px; right: -4px; height: 48px; box-sizing: border-box; padding: 2px 4px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(233, 184, 102, .85); border-radius: 7px; background: rgba(42, 9, 20, .55);
+  font-family: var(--police-jeu); font-weight: 800; font-size: 1.12rem; line-height: 1.02; letter-spacing: 0; color: var(--creme); }
+.emplacement .reponse { top: calc(100% + 64px); }
+.plateau { padding-bottom: calc(var(--lc) * .8 + 66px); }
+.emplacement .nom-sous { font-size: min(1.12rem, calc(var(--lc) * .165)); }

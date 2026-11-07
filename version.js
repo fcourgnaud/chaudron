@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.7.0', date: '2026-11-07' };
+const VERSION = { numero: '5.7.1', date: '2026-11-07' };
 
 const HISTORIQUE = [
+  { numero: '5.7.1', date: '2026-11-07', nouveautes: [
+    "Le nom des cartes est plus gros, dans un cadre doré au fond sombre (le même que les anciens mots de réponse).",
+  ]},
   { numero: '5.7.0', date: '2026-11-07', nouveautes: [
     "Le nom de chaque carte est écrit en grand sous la carte, avec la grande icône de réponse en dessous.",
     "Plus de texte de fumée ni de texte sous les icônes de réponse.",
