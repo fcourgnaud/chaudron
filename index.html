@@ -89,57 +89,57 @@
 
 <!-- ==================== 3. JEU ==================== -->
 <section id="ecran-jeu" class="ecran">
-  <!-- L'écran de jeu est à l'horizontale. Deux vues : « scan » (les cartes) et « personnage » (quand le chaudron parle). -->
+  <!-- en haut : quitter, la manche, le grimoire -->
   <header class="barre-jeu">
-    <div class="colonne-boutons">
-      <button class="rond" id="btn-quitter" aria-label="Quitter">✕</button>
-      <button class="rond" id="btn-options" aria-label="Options">⚙</button>
-      <button class="rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
-    </div>
+    <button class="rond" id="btn-quitter" aria-label="Quitter">✕</button>
     <div class="titre-manche" id="titre-manche"></div>
-    <div class="ligne-tour">
-      <div class="tour-gauche">
-        <div class="sorcieres" id="sorcieres"></div>
-        <div class="lunes" id="lunes" hidden></div>
-      </div>
-      <div class="rangee-action">
-        <div class="actions" id="actions-suite">
-          <button class="bouton-or" id="btn-suivant" disabled>Au suivant&nbsp;➜</button>
-        </div>
-      </div>
-    </div>
+    <button class="rond" id="btn-options" aria-label="Options">⚙</button>
+    <button class="rond" id="btn-grimoire" aria-label="Grimoire" hidden>📖</button>
   </header>
 
-  <!-- VUE SCAN : les cartes jetées et les icônes de réponse -->
-  <div class="vue vue-scan">
-    <div class="scene" id="scene">
-      <canvas id="fumee"></canvas>
-      <div class="grand-chaudron" data-chaudron></div>
-      <div class="plateau" id="plateau"></div>
-      <div class="reponses-expert" id="reponses-expert"></div>
+  <!-- une seule ligne : la sorcière du tour, et à sa droite le bouton du moment (Brasser ou Au suivant) -->
+  <div class="ligne-tour">
+    <div class="tour-gauche">
+      <div class="sorcieres" id="sorcieres"></div>
+      <div class="lunes" id="lunes" hidden></div>
+    </div>
+    <!-- « Au suivant » toujours affiché (grisé jusqu'aux résultats) et la main (grisée une fois les cartes choisies).
+         Le brassage part tout seul quand toutes les cases sont remplies. -->
+    <div class="rangee-action">
+      <div class="actions" id="actions-suite">
+        <button class="bouton-or" id="btn-suivant" disabled>Au suivant</button>
+      </div>
+      <div class="actions" id="actions-brassage">
+        <button class="rond grand-rond" id="btn-retirer" aria-label="Retirer la dernière carte" hidden>↩</button>
+        <button class="bouton-or" id="btn-brasser" disabled hidden>Brasser !</button>
+        <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
+      </div>
     </div>
   </div>
+  <div class="actions" id="actions-pouvoirs"></div>
 
-  <!-- VUE PERSONNAGE : le chaudron et sa boîte de dialogue -->
-  <div class="vue vue-perso">
-    <!-- Le personnage : un fichier par posture dans images/chaudron/ (voir POSTURES dans contenu.js) -->
-    <div class="perso" id="perso" aria-hidden="true"><img id="perso-img" src="images/chaudron/repos.png" alt=""></div>
+  <!-- les cartes jetées -->
+  <div class="scene" id="scene">
+    <canvas id="fumee"></canvas>
+    <div class="grand-chaudron" data-chaudron></div>
+    <div class="plateau" id="plateau"></div>
+    <div class="reponses-expert" id="reponses-expert"></div>
+  </div>
+  <!-- la couleur de la fumée, sous les cartes -->
+  <div class="zone-fumee"><div class="etiquette-fumee" id="etiquette-fumee" hidden></div></div>
+
+  <!-- en bas : l'annonce, le personnage du chaudron et sa boîte de dialogue -->
+  <div class="bas-jeu">
     <div class="cadre dialogue">
       <span class="qui">Le Chaudron</span>
       <div class="bulle-parole" id="parole"></div>
+      <div class="consigne" id="consigne" hidden></div>
     </div>
-  </div>
-
-  <!-- éléments gardés pour le fonctionnement, mais pas affichés -->
-  <div class="caches" hidden>
-    <div class="actions" id="actions-brassage">
-      <button id="btn-retirer">↩</button><button id="btn-brasser" disabled>Brasser !</button>
+    <div class="actions" id="actions-annonce">
+      <button class="bouton-annonce" id="btn-annonce">J'annonce la recette</button>
     </div>
-    <div class="actions" id="actions-pouvoirs"></div>
-    <div class="zone-fumee"><div class="etiquette-fumee" id="etiquette-fumee" hidden></div></div>
-    <div class="actions" id="actions-annonce"><button class="bouton-annonce" id="btn-annonce">J'annonce la recette</button></div>
-    <div class="consigne" id="consigne"></div>
-    <button id="btn-grimoire">📖</button>
+    <!-- Le personnage : un fichier par posture dans images/chaudron/ (voir POSTURES dans contenu.js) -->
+    <div class="perso" id="perso" aria-hidden="true"><img id="perso-img" src="images/chaudron/repos.png" alt=""></div>
   </div>
 
   <!-- La caméra reste allumée pour lire les QR codes, mais son image n'est plus affichée -->

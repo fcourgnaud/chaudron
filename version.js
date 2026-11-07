@@ -9,13 +9,11 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.6.0', date: '2026-11-07' };
+const VERSION = { numero: '5.6.1', date: '2026-11-07' };
 
 const HISTORIQUE = [
-  { numero: '5.6.0', date: '2026-11-07', nouveautes: [
-    "L'écran de jeu se joue à l'horizontale (l'accueil et la préparation restent debout).",
-    "Deux vues : les cartes et les grandes icônes de réponse quand on scanne, le chaudron et sa boîte de dialogue dès qu'il parle.",
-    "À gauche : quitter, options et la main. Les pouvoirs se jouent en scannant leur carte.",
+  { numero: '5.6.1', date: '2026-11-07', nouveautes: [
+    "Retour à l'écran de jeu debout de la version 5.5.0 (l'écran à l'horizontale de la 5.6.0 est annulé).",
   ]},
   { numero: '5.5.0', date: '2026-11-06', nouveautes: [
     "Lecture des QR codes : de plus près (carte floue ou très grande) et de plus loin (zoom automatique, y compris sur les côtés de l'image).",
