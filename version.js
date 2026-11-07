@@ -9,9 +9,17 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.9.0', date: '2026-11-07' };
+const VERSION = { numero: '6.0.0', date: '2026-11-07' };
 
 const HISTORIQUE = [
+  { numero: '6.0.0', date: '2026-11-07', nouveautes: [
+    "Nouvelles règles de 2 à 4 sorcières : main de départ de 4 cartes, appel de carte chez une adversaire au début du tour, on brasse toujours 3 cartes (recettes de 3 ingrédients à chaque manche).",
+    "À la fin du tour, l'app dit quelles cartes défausser (celles qui ne servent à aucune recette), puis on refait sa main à 4 cartes.",
+    "La couleur de la fumée donne une famille qui manque à la recette de la sorcière dont c'est le tour.",
+    "Retirés pour l'instant : pouvoirs, ingrédients instables (explosion), passer à gauche, mode expert automatique de la manche 3.",
+    "Seule : on joue avec le principe de la Pleine Lune (une recette, un nombre d'essais limité), avec le choix de la taille de la recette.",
+    "Si aucune carte n'est scannée pendant 3 minutes, l'app s'endort (caméra, musique et écran) ; un toucher la réveille.",
+  ]},
   { numero: '5.9.0', date: '2026-11-07', nouveautes: [
     "Familles en jeu : avant la partie, on choisit les familles d'ingrédients utilisées (au moins assez pour les recettes : 2 à 5 selon le nombre de sorcières).",
     "Les recettes, les ingrédients instables, la main et la légende des fumées n'utilisent que ces familles. Scanner une carte d'une autre famille fait réagir le chaudron.",

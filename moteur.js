@@ -154,7 +154,7 @@ $$('#ecran-titre [data-mode]').forEach(b => b.onclick = () => {
   R.mode = b.dataset.mode;
   $('#prep-titre').textContent = R.mode === 'concours' ? 'Le Concours' : 'La Pleine Lune';
   $('#prep-sorcieres').hidden = R.mode !== 'concours';
-  $('#prep-taille').hidden = R.mode !== 'lune';
+  majPrepTaille();
   majFamilles();
   montrer('ecran-preparation');
 });
@@ -167,7 +167,9 @@ function choix(id, attr, cb) {
     cb(b.dataset[attr]);
   });
 }
-choix('#choix-nombre', 'n', v => { R.nb = +v; majSaisieSorcieres(); majFamilles(); });
+choix('#choix-nombre', 'n', v => { R.nb = +v; majSaisieSorcieres(); majPrepTaille(); majFamilles(); });
+// seule, on joue avec le principe de la Pleine Lune : on choisit la taille de la recette
+function majPrepTaille() { $('#prep-taille').hidden = !(R.mode === 'lune' || R.nb === 1); }
 choix('#choix-taille', 't', v => { R.taille = +v; majFamilles(); });
 
 /* Familles en jeu : on choisit les familles d'ingrédients de la partie.
@@ -175,7 +177,7 @@ choix('#choix-taille', 't', v => { R.taille = +v; majFamilles(); });
 function minFamilles() {
   const parFamille = 4;
   let besoin;
-  if (R.mode === 'lune') besoin = R.taille + 2;
+  if (R.mode === 'lune' || R.nb === 1) besoin = R.taille + 2;
   else if (R.nb > 1) besoin = R.nb * Math.max(...MANCHES_V5.map(m => m.taille)) + 2;
   else besoin = Math.max(...MANCHES.map(m => m.taille)) + 2;
   return Math.max(2, Math.ceil(besoin / parFamille));
@@ -189,7 +191,7 @@ function majFamilles() {
     <img src="${imgFamille(id)}" alt=""><span>${FAMILLES[id].nom}</span></button>`).join('');
   const n = R.familles.length;
   $('#aide-familles').textContent = `${n} famille${n > 1 ? 's' : ''} sur ${ids.length} · ${n * 4} ingrédients. Il en faut au moins ${min}` +
-    (R.mode === 'lune' ? ` pour une recette de ${R.taille}.` : R.nb > 1 ? ` pour ${R.nb} sorcières.` : ' pour jouer seule.');
+    (R.mode === 'lune' || R.nb === 1 ? ` pour une recette de ${R.taille}.` : ` pour ${R.nb} sorcières.`);
   try { localStorage.setItem('chaudron-familles', JSON.stringify(R.familles)); } catch (e) {}
 }
 $('#choix-familles').addEventListener('click', e => {
@@ -219,11 +221,13 @@ $('#btn-allumer').onclick = () => { debloquerAudio(); demarrerPartie(); };
 /* ---------- 3. PARTIE : MANCHES ET TOURS ---------- */
 function demarrerPartie() {
   const noms = [...$('#liste-sorcieres').querySelectorAll('input')].map((i, k) => i.value.trim() || NOMS_PAR_DEFAUT[k]);
+  const solo = R.mode === 'concours' && R.nb === 1;     // seule : principe de la Pleine Lune
   S = {
-    mode: R.mode,
+    mode: solo ? 'lune' : R.mode,
+    solo,
     expert: $('#opt-expert').checked,
     voix: $('#opt-voix').checked,
-    joueurs: (R.mode === 'concours' ? noms : ['Le cercle']).map(nom => ({ nom, victoires: 0, pouvoirs: [], utilises: new Set(), passe: false, essais: 0, eliminee: false })),
+    joueurs: (R.mode === 'concours' ? noms.slice(0, R.nb) : ['Le cercle']).map(nom => ({ nom, victoires: 0, pouvoirs: [], utilises: new Set(), passe: false, essais: 0, eliminee: false })),
     courant: 0,
     manche: 0,
     pouvoirsDispo: melanger(POUVOIRS.map(p => p.id)),
@@ -239,7 +243,7 @@ function demarrerPartie() {
   if ($('#opt-musique').checked) Musique.demarrer(); else Musique.arreter();
   majBoutonMusique();
   if ($('#opt-camera').checked) Camera.demarrer(); else $('#oeil').hidden = true;
-  garderEcranAllume();
+  garderEcranAllume(); Veille.reveil();
   nouvelleManche(true);
 }
 
@@ -254,10 +258,10 @@ async function nouvelleManche(premiere) {
     S.joueurs.forEach((j, k) => { j.recette = tirage.slice(k * taille, (k + 1) * taille); j.absents = new Set(); j.malPlaces = {}; });
     reste = tirage.slice(S.joueurs.length * taille);
     S.recette = S.joueurs[0].recette;
-    S.expert = S.expertChoisi || MANCHES_V5[S.manche].expert;
+    S.expert = S.expertChoisi;
   }
-  // 2 ingrédients instables, hors de toutes les recettes, de familles différentes
-  S.instables = [reste[0], reste.find(n => ING(n).fam !== ING(reste[0]).fam)];
+  // 2 ingrédients instables, hors de toutes les recettes, de familles différentes (pas avec les règles de 2 à 4 sorcières)
+  S.instables = S.v5 ? [] : [reste[0], reste.find(n => ING(n).fam !== ING(reste[0]).fam)];
   S.max = taille;                       // autant d'emplacements que d'ingrédients dans la recette
   S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {};
   S.essais = 0; S.phase = 'attente'; S.derniere = null;
@@ -267,21 +271,21 @@ async function nouvelleManche(premiere) {
   majTitre(); majSorcieres(); majPlateau(); majJournal(); majPouvoirs(); majActions('brassage');
 
   if (S.mode === 'lune') {
-    await rideau(`<div class="icone">🌕</div><div class="petit-titre">Mode coopératif</div><div class="grand-titre">La Pleine Lune</div><div class="sous-titre">${taille} ingrédients · ${CONFIG.essaisPleineLune} essais</div>`, CONFIG.dureeRideau + 600);
+    await rideau(`<div class="icone">🌕</div><div class="petit-titre">${S.solo ? 'Seule face au chaudron' : 'Mode coopératif'}</div><div class="grand-titre">La Pleine Lune</div><div class="sous-titre">${taille} ingrédients · ${CONFIG.essaisPleineLune} essais</div>`, CONFIG.dureeRideau + 600);
     await parler('luneDebut', { n: taille, essais: CONFIG.essaisPleineLune });
     S.phase = 'brassage'; majPlateau();
     $('#consigne').innerHTML = 'Jetez vos cartes une par une, <b>dans l\'ordre</b>';
     return;
   }
   const m = (S.v5 ? MANCHES_V5 : MANCHES)[S.manche];
-  const sous = S.v5 ? `Chacune sa recette secrète · ${taille} ingrédients${S.expert ? ' · mode expert' : ''}` : `${taille} ingrédients · l'ordre compte`;
+  const sous = S.v5 ? `Chacune sa recette secrète · main de 4 cartes · ${taille} ingrédients${S.expert ? ' · mode expert' : ''}` : `${taille} ingrédients · l'ordre compte`;
   await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${sous}</div>`, CONFIG.dureeRideau + 600);
   if (premiere) await parler('accueil');
   // la voix enregistrée correspond au nombre d'ingrédients (l'Archimage v5 en a 4, comme la Sorcière)
-  await parler('manche', { manche: S.v5 && taille === 4 ? 'Sorcière' : m.nom, n: taille });
+  await parler('manche', { manche: S.v5 ? (taille === 4 ? 'Sorcière' : taille === 3 ? 'Apprentie' : m.nom) : m.nom, n: taille });
   S.toursDepuisMarche = 0;
   if (S.joueurs.length > 1 && !S.v5) await distribuerSecrets();
-  await debutTour(false);
+  await debutTour(S.v5);              // règles de 2 à 4 : le rideau rappelle l'appel de carte dès le premier tour
 }
 
 async function debutTour(avecRideau = true) {
@@ -290,16 +294,18 @@ async function debutTour(avecRideau = true) {
   if (S.v5) { S.recette = j.recette; S.absents = j.absents; S.malPlaces = j.malPlaces; }
   S.brassage = []; S.phase = 'brassage';
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
-  $('#consigne').innerHTML = `<b>${j.nom}</b> : cueille une carte, puis jette-en ${S.max > CONFIG.minBrassage ? CONFIG.minBrassage + ' à ' + S.max : S.max} dans l'ordre`;
+  $('#consigne').innerHTML = S.v5 ? `<b>${j.nom}</b> : fais ton appel de carte, puis jette 3 cartes dans l'ordre`
+    : `<b>${j.nom}</b> : cueille une carte, puis jette-en ${S.max > CONFIG.minBrassage ? CONFIG.minBrassage + ' à ' + S.max : S.max} dans l'ordre`;
   if (S.joueurs.length > 1) {
-    if (avecRideau) await rideau(`<div class="portrait-tour">${portraitSorciere(S.courant)}</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>`, CONFIG.dureeRideau);
+    const appel = S.v5 ? `<div class="sous-titre">Appel de carte : demande une carte à une adversaire.<br>Si elle l'a, elle te la donne et pioche une carte.<br>Puis jette 3 cartes dans l'ordre.</div>` : '';
+    if (avecRideau) await rideau(`<div class="portrait-tour">${portraitSorciere(S.courant)}</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>${appel}`, CONFIG.dureeRideau + (S.v5 ? 2500 : 0));
     parler('tour', { joueur: j.nom });
   }
 }
 
 async function tourSuivant() {
   // après un tour de table complet, le marché se refait
-  if (S.v5) await rappelGauche();
+  if (S.v5) await finDeTourV6();
   else {
     S.toursDepuisMarche = (S.toursDepuisMarche || 0) + 1;
     const enJeu = S.joueurs.filter(j => !j.eliminee).length;
@@ -320,6 +326,7 @@ $('#btn-suivant').onclick = tourSuivant;
 /* ---------- 4. BRASSER : LE CŒUR DU JEU ---------- */
 function ajouterIngredient(n) {
   if (!ING(n)) return;
+  Veille.activite();
   if (S.question) return Pouvoirs.repondreSerpent(n);
   if (S.phase !== 'brassage') return;
   if (!enJeu(n)) { parler('horsJeu'); return; }
@@ -372,7 +379,7 @@ async function brasser() {
   }
 
   // --- explosion ---
-  if (S.instables.every(n => ids.includes(n))) {
+  if (S.instables.length && S.instables.every(n => ids.includes(n))) {
     const [a, b] = S.instables.map(n => ING(n).nom);
     $('#scene').classList.add('secoue'); setTimeout(() => $('#scene').classList.remove('secoue'), 700);
     Sons.jouer('explosion');
@@ -403,7 +410,7 @@ async function brasser() {
   });
 
   const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
-  S.derniere = { res, secret };
+  S.derniere = { res, secret, ids };
   if (S.v5) {
     await jouerReponses(res, secret);                       // chaque son avec son icône…
     colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis la couleur de la fumée
@@ -475,7 +482,9 @@ async function finDuBrassage() {
   }
   S.phase = 'suite';
   majActions('suite'); majPouvoirs();
-  $('#consigne').innerHTML = S.joueurs.length > 1 ? 'Notez la réponse dans vos grimoires…' : 'Note la réponse dans ton grimoire…';
+  const def = S.v5 ? cartesADefausser() : [];
+  $('#consigne').innerHTML = S.v5 ? (def.length ? `Défausse : <b>${def.map(n => ING(n).nom).join(', ')}</b>, puis refais ta main à 4 cartes.` : 'Rien à défausser : refais ta main à 4 cartes.')
+    : S.joueurs.length > 1 ? 'Notez la réponse dans vos grimoires…' : 'Note la réponse dans ton grimoire…';
 }
 
 /* ---------- 5. VICTOIRES ET FIN DE PARTIE ---------- */
@@ -496,6 +505,13 @@ async function victoireManche(k = S.courant, cle = 'victoire') {
   if (derniere || (!solo && j.victoires >= 2)) {
     if (!solo) await parler('grande', { joueur: meilleure().nom });
     return finPartie(true);
+  }
+  if (S.v5) {                                  // règles de 2 à 4 sorcières : pas de pouvoir pour l'instant
+    await fenetreBouton(`<h2>${j.nom} remporte la manche ${MANCHES[S.manche].nom} !</h2>${recetteHTML()}<p>Tout le monde reprend une main de 4 cartes.</p>`, 'Manche suivante', true);
+    fermerFenetre();
+    S.manche++;
+    S.courant = (S.courant + 1) % S.joueurs.length;
+    return nouvelleManche(false);
   }
   // choisir un pouvoir parmi 3
   const choixP = S.pouvoirsDispo.slice(0, 3).map(id => POUVOIRS.find(p => p.id === id));
@@ -532,6 +548,15 @@ async function distribuerSecrets() {
 }
 
 /* ---------- RÈGLES V5 : à la fin de chaque tour, défausse puis tout le monde passe une carte à gauche ---------- */
+// Fin du tour (2 à 4 sorcières) : on défausse les cartes qui ne servent à aucune recette (pschitt), puis on refait sa main à 4 cartes.
+const cartesADefausser = () => (S.derniere && S.derniere.ids && !S.derniere.secret) ? S.derniere.ids.filter((n, i) => S.derniere.res[i] === 'pschitt') : [];
+async function finDeTourV6() {
+  const j = S.joueurs[S.courant], def = cartesADefausser();
+  const liste = def.length ? `<div class="recette-revelee">${def.map(n => `<span style="--c:${couleurFamille(ING(n).fam)}">${ING(n).nom}</span>`).join('')}</div>`
+    : `<div class="sous-titre">Aucune carte à défausser.</div>`;
+  await rideau(`<div class="icone">🃏</div><div class="petit-titre">Fin du tour de ${j.nom}</div><div class="grand-titre">${def.length ? 'Défausse' : 'Garde tes cartes'}</div>
+    ${liste}<div class="sous-titre">${def.length > 1 ? 'Ces cartes ne servent à aucune recette.<br>' : def.length ? 'Cette carte ne sert à aucune recette.<br>' : ''}Puis refais ta main à 4 cartes avec la pioche.</div>`, CONFIG.dureeRappelGauche + 1500);
+}
 async function rappelGauche() {
   await rideau(`<div class="icone">🃏 ⬅</div><div class="petit-titre">Fin du tour</div><div class="grand-titre">Passez à gauche</div>
     <div class="sous-titre">Défausse pour revenir à 4 cartes (sous la pioche),<br>puis tout le monde donne en même temps<br>une carte face cachée à sa voisine de gauche.</div>`, CONFIG.dureeRappelGauche);
@@ -642,7 +667,7 @@ function finPartie(gagne) {
 function toutCouper() {
   Partie.numero++;                                   // les tours en attente s'arrêtent
   viderParole();                                     // voix enregistrées + voix du téléphone
-  Camera.arreter(); Ambiance.arreter(); Musique.arreter();
+  Camera.arreter(); Ambiance.arreter(); Musique.arreter(); Veille.arreter();
   $('#rideau').classList.remove('visible'); $('#apercu-carte').classList.remove('visible');
   fermerFenetre(); fermerTiroirs(); colorerPotion(null);
 }
@@ -653,7 +678,7 @@ $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre
 const Pouvoirs = {
   // Carte pouvoir scannée (QR CHAUDRON-P1 à P6, dans l'ordre de POUVOIRS)
   scanner(k) {
-    const p = POUVOIRS[k - 1]; if (!p || !S.joueurs) return;
+    const p = POUVOIRS[k - 1]; if (!p || !S.joueurs || S.v5 || S.mode === 'lune') return;
     Sons.jouer('scan');
     // 1. on choisit son pouvoir après avoir gagné une manche
     const choix = document.querySelector(`#fenetre.visible [data-p="${p.id}"]`);
@@ -1586,6 +1611,7 @@ const Camera = {
     const T = txt.toUpperCase();
     if (!T.startsWith(CONFIG.prefixeQR)) return;
     $('#oeil').classList.add('lu'); setTimeout(() => $('#oeil').classList.remove('lu'), 400);
+    Veille.activite();
     const p = T.match(/-P(\d)\s*$/);                    // carte pouvoir : CHAUDRON-P1 … CHAUDRON-P6
     if (p) return Pouvoirs.scanner(+p[1]);
     const m = T.match(/(\d{1,2})\s*$/);
@@ -1602,8 +1628,37 @@ const Eclairage = {
   },
   regler(oui) { this.allume = oui; document.body.classList.toggle('eclairage', oui); },
 };
-async function garderEcranAllume() { try { await navigator.wakeLock.request('screen'); } catch (e) {} }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#ecran-jeu').classList.contains('actif')) garderEcranAllume(); });
+async function garderEcranAllume() { try { Veille.verrou = await navigator.wakeLock.request('screen'); } catch (e) {} }
+
+/* ---------- VEILLE : sans carte scannée pendant 3 minutes, l'app s'endort ----------
+   Caméra, musique, ambiance et voix s'arrêtent, l'écran peut s'éteindre. Un toucher réveille tout. */
+const Veille = {
+  minuteur: null, endormie: false, verrou: null, ambiance: false,
+  activite() { if (this.endormie) return; clearTimeout(this.minuteur); if (!$('#ecran-jeu').classList.contains('actif')) return;
+    this.minuteur = setTimeout(() => this.dormir(), CONFIG.veilleMinutes * 60000); },
+  dormir() {
+    if (!$('#ecran-jeu').classList.contains('actif') || this.endormie) return;
+    this.endormie = true; this.ambiance = Ambiance.actif;
+    Camera.arreter(); Musique.arreter(); Ambiance.arreter(); Voix.arreter(); Eclairage.regler(false);
+    try { this.verrou && this.verrou.release(); } catch (e) {} this.verrou = null;
+    $('#veille').hidden = false;
+  },
+  reveil() {
+    const dormait = this.endormie;
+    this.endormie = false; $('#veille').hidden = true;
+    if (dormait) {
+      debloquerAudio();
+      if ($('#opt-camera').checked) Camera.demarrer();
+      if ($('#opt-musique').checked) Musique.demarrer();
+      if (this.ambiance) Ambiance.demarrer();
+      majBoutonMusique(); majBoutonAmbiance(); garderEcranAllume();
+    }
+    this.activite();
+  },
+  arreter() { clearTimeout(this.minuteur); this.endormie = false; $('#veille').hidden = true; },
+};
+$('#veille').addEventListener('pointerdown', e => { e.preventDefault(); Veille.reveil(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#ecran-jeu').classList.contains('actif') && !Veille.endormie) garderEcranAllume(); });
 
 /* ---------- 13. VERSION ET MISES À JOUR ---------- */
 const dateFr = d => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });

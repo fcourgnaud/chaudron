@@ -984,3 +984,12 @@ body.eclairage::after { opacity: 1; }
 .choix-familles button:active { transform: scale(.96); }
 #aide-familles.alerte { animation: alerte-familles .9s ease; }
 @keyframes alerte-familles { 0%, 60% { color: #ffb08a; } }
+
+/* --- 6.0.0 : veille (rien de scanné pendant 3 minutes) --- */
+.veille { position: fixed; inset: 0; z-index: 60; background: #050103; display: grid; place-items: center; cursor: pointer; animation: veille-arrive 1.2s ease; }
+.veille[hidden] { display: none; }
+.veille-contenu { text-align: center; display: grid; gap: 6px; opacity: .55; }
+.veille-lune { font-size: 3.4rem; color: var(--or-maquette, #e9b866); animation: respire 6s ease-in-out infinite; }
+.veille-titre { margin: 0; font-family: var(--police-titre); font-size: 1.7rem; color: var(--or-maquette, #e9b866); }
+.veille-aide { margin: 0; font-family: var(--police-texte); font-style: italic; color: var(--creme); }
+@keyframes veille-arrive { from { opacity: 0; } }

@@ -15,6 +15,7 @@ const CONFIG = {
   pauseEntreSons: 900,        // millisecondes entre deux réponses
   pauseAvantSons: 3000,       // pause quand toutes les cartes sont jetées, avant les sons
   pauseApresSons: 3000,       // pause après le dernier son, avant que le chaudron parle
+  veilleMinutes: 3,           // sans carte scannée pendant ce temps, l'app s'endort (caméra, sons et écran)
   voixVitesse: 0.9,           // 0.5 à 2
   voixHauteur: 0.55,          // 0 (grave) à 2 (aigu)
   dureeRideau: 1800,
@@ -58,10 +59,11 @@ const MANCHES = [
   { nom: 'Archimage', taille: 5 },
 ];
 // Manches du Concours à plusieurs (règles v5 : une recette secrète par sorcière)
+// Règles de 2 à 4 sorcières (v6) : main de 4 cartes, appel de carte, on brasse toujours 3 cartes.
 const MANCHES_V5 = [
   { nom: 'Apprentie', taille: 3, expert: false },
-  { nom: 'Sorcière',  taille: 4, expert: false },
-  { nom: 'Archimage', taille: 4, expert: true },   // mode expert : les réponses sont mélangées
+  { nom: 'Sorcière',  taille: 3, expert: false },
+  { nom: 'Archimage', taille: 3, expert: false },
 ];
 
 // Les icônes sont dans le dossier images/ (fam-plantes.png, etc. ; à défaut l'app prend le .svg du même nom)

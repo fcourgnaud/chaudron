@@ -63,7 +63,7 @@
       <button data-n="1">1</button><button data-n="2" class="on">2</button><button data-n="3">3</button><button data-n="4">4</button>
     </div>
     <div class="liste-sorcieres" id="liste-sorcieres"></div>
-    <p class="aide" id="aide-nombre">De 2 à 4 sorcières : chacune a sa propre recette secrète. Seule : les règles du solo.</p>
+    <p class="aide" id="aide-nombre">De 2 à 4 sorcières : chacune sa recette secrète, une main de 4 cartes et un appel de carte à chaque tour. Seule : le principe de la Pleine Lune.</p>
   </div>
 
   <div class="parchemin" id="prep-taille" hidden>
@@ -196,6 +196,8 @@
   <button class="bouton-or" id="btn-recharger">Mettre à jour</button>
 </div>
 <div class="apercu-carte" id="apercu-carte" aria-hidden="true"></div>
+<!-- l'app s'endort quand rien n'est scanné pendant 3 minutes -->
+<div class="veille" id="veille" hidden><div class="veille-contenu"><div class="veille-lune">☾</div><p class="veille-titre">Le chaudron s'est endormi</p><p class="veille-aide">Touche l'écran pour le réveiller</p></div></div>
 <div class="rideau" id="rideau"><div class="rideau-contenu" id="rideau-contenu"></div></div>
 <div class="fenetre" id="fenetre"><div class="fenetre-boite parchemin" id="fenetre-boite"></div></div>
 
