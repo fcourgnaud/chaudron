@@ -17,6 +17,8 @@
   try { V = V || localStorage.getItem('chaudron-version') || ''; } catch (e) { V = V || ''; }
   var Q = V ? '?v=' + encodeURIComponent(V) : '';
   document.write('<link rel="stylesheet" href="theme.css' + Q + '">');
+  // les polices choisies avec l'assistant (polices.css) passent par-dessus celles de theme.css
+  document.write('<link rel="stylesheet" href="polices.css' + Q + '">');
 </script>
 <script src="lib/jsQR.js"></script>  <!-- lecteur de QR codes, inclus dans l'app (marche hors ligne) -->
 </head>
@@ -112,7 +114,7 @@
       <div class="actions" id="actions-brassage">
         <button class="rond grand-rond" id="btn-retirer" aria-label="Retirer la dernière carte" hidden>↩</button>
         <button class="bouton-or" id="btn-brasser" disabled hidden>Brasser !</button>
-        <button class="rond grand-rond" id="btn-main" aria-label="Choisir sans caméra">✋</button>
+        <button class="rond grand-rond" id="btn-main" disabled aria-label="Choisir sans caméra">✋</button>
       </div>
     </div>
   </div>

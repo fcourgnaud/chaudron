@@ -1,0 +1,15 @@
+/* =========================================================
+   LE CHAUDRON — polices.css
+   Les polices de l'app. Ce fichier est fait avec l'assistant des polices :
+   choisis tes polices dans l'assistant, copie le texte qu'il donne,
+   puis remplace tout le contenu de ce fichier sur GitHub.
+   Sans changement ici, l'app garde ses polices d'origine (dossier polices/).
+   ========================================================= */
+:root {
+  --police-titre:  'Grenze Gotisch', Georgia, serif;      /* titres : menu, manche, nom de la sorcière, fenêtres */
+  --police-ui:     'Cinzel', Georgia, serif;              /* boutons et étiquettes */
+  --police-parole: 'Cormorant Garamond', Georgia, serif;  /* phrases du chaudron */
+  --police-texte:  'Cormorant Garamond', Georgia, serif;  /* textes d'aide, sous-titres */
+  --police-jeu:    'Alegreya', Georgia, serif;            /* noms des ingrédients sous les cartes */
+  --police-magie:  'Cormorant Garamond', Georgia, serif;  /* noms des ingrédients dans la main */
+}

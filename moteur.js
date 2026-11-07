@@ -703,6 +703,16 @@ function montrerEnGrand(ing, rang) {
   minuteurApercu = setTimeout(() => a.classList.remove('visible'), CONFIG.dureeApercuCarte);
 }
 
+// pas de coupure au milieu d'un mot : les traits d'union deviennent insécables
+const sansCesure = t => t.replace(/-/g, '\u2011');
+// si un nom ne tient pas dans son cadre, on réduit la police jusqu'à ce qu'il tienne
+function ajusterNoms() {
+  $$('.nom-sous').forEach(e => {
+    e.style.fontSize = '';
+    let t = parseFloat(getComputedStyle(e).fontSize);
+    while (t > 9 && (e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1)) { t -= .5; e.style.fontSize = t + 'px'; }
+  });
+}
 function majPlateau() {
   const box = $('#plateau'); box.innerHTML = '';
   box.style.setProperty('--nb', S.max);
@@ -712,7 +722,7 @@ function majPlateau() {
       const ing = ING(n);
       box.insertAdjacentHTML('beforeend', `<div class="emplacement plein${i === S.brassage.length - 1 && S.phase === 'brassage' ? ' retirable' : ''}" style="--c:${couleurFamille(ing.fam)}">
         <span class="rang"><span>${i + 1}</span></span>${carteIngredient(ing)}
-        <span class="nom-sous">${ing.nom}</span><img class="reponse" id="rep-${i}" alt=""></div>`);
+        <span class="nom-sous">${sansCesure(ing.nom)}</span><img class="reponse" id="rep-${i}" alt=""></div>`);
     } else {
       box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}</div>`);
     }
@@ -723,12 +733,14 @@ function majPlateau() {
   $('#btn-brasser-main').disabled = $('#btn-brasser').disabled;
   $('#btn-retirer-main').disabled = $('#btn-retirer').disabled;
   $('#main-compte').textContent = S.brassage.length ? S.brassage.map(n => ING(n).nom).join(' › ') : 'Touche les ingrédients dans l\'ordre';
+  requestAnimationFrame(ajusterNoms);
 }
 
 function majActions(quoi) {
+  S.mainPossible = quoi === 'brassage';
   // « Au suivant » et la main restent toujours à leur place
   $('#actions-brassage').hidden = false; $('#actions-suite').hidden = false;
-  $('#btn-main').disabled = quoi !== 'brassage';
+  majMain();
   $('#btn-suivant').disabled = quoi !== 'suite';
   // le bouton d'annonce reste toujours à sa place : grisé quand on ne peut pas annoncer
   $('#actions-annonce').hidden = false;
@@ -1188,10 +1200,13 @@ function parler(cle, vars = {}, discret = false) {
 
 // Les phrases passent l'une après l'autre (jamais en même temps),
 // avec CONFIG.pauseEntrePhrases de silence entre deux phrases.
-const Parole = { file: Promise.resolve(), finDerniere: 0, generation: 0 };
+const Parole = { file: Promise.resolve(), finDerniere: 0, generation: 0, enCours: 0 };
+// la main ne s'active que quand le chaudron a fini de parler
+function majMain() { const b = $('#btn-main'); if (b) b.disabled = !S.mainPossible || Parole.enCours > 0; }
 
 function dire(texte, discret = false, fichier = null, posture = null) {
   const gen = Parole.generation;
+  if (!discret) { Parole.enCours++; majMain(); }
   const tour = Parole.file.then(async () => {
     if (gen !== Parole.generation) return;               // partie quittée entre-temps
     const attente = Parole.finDerniere + CONFIG.pauseEntrePhrases - Date.now();
@@ -1207,6 +1222,7 @@ function dire(texte, discret = false, fichier = null, posture = null) {
     Parole.finDerniere = Date.now();
   });
   Parole.file = tour.catch(() => {});
+  if (!discret) tour.finally(() => { if (gen === Parole.generation) { Parole.enCours = Math.max(0, Parole.enCours - 1); majMain(); } }).catch(() => {});
   return tour;
 }
 /* Le personnage du chaudron : une image par posture (images/chaudron/<posture>.png).
@@ -1229,7 +1245,7 @@ const Perso = {
   },
   repos() { const img = $('#perso-img'); if (!img) return; img.src = this.src(this.pret.has(POSTURE_REPOS) ? POSTURE_REPOS : POSTURE_PAR_DEFAUT); $('#perso').classList.remove('glisse'); },
 };
-function viderParole() { Parole.generation++; Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
+function viderParole() { Parole.generation++; Parole.enCours = 0; majMain(); Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
 
 async function parlerVraiment(texte, fichier) {
   const gen = Parole.generation;

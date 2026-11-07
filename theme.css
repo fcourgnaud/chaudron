@@ -965,3 +965,10 @@ body.eclairage::after { opacity: 1; }
 .emplacement .reponse { top: calc(100% + 64px); }
 .plateau { padding-bottom: calc(var(--lc) * .8 + 66px); }
 .emplacement .nom-sous { font-size: min(1.12rem, calc(var(--lc) * .165)); }
+
+/* --- 5.8.0 --- */
+#ecran-jeu .perso { translate: 0 30px; }                 /* personnage 30 px plus bas */
+.emplacement .nom-sous { hyphens: none; -webkit-hyphens: none; overflow-wrap: normal; word-break: normal; }
+/* les phrases du chaudron ont leur propre police (réglable avec l'assistant, dans polices.css) */
+:root { --police-parole: var(--police-texte); }
+#parole, .bulle-parole { font-family: var(--police-parole); }

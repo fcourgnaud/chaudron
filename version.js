@@ -9,9 +9,15 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.7.1', date: '2026-11-07' };
+const VERSION = { numero: '5.8.0', date: '2026-11-07' };
 
 const HISTORIQUE = [
+  { numero: '5.8.0', date: '2026-11-07', nouveautes: [
+    "Le personnage de l'écran de jeu descend de 30 px.",
+    "Plus de mots coupés dans le nom des cartes (un nom trop long rétrécit pour tenir dans son cadre).",
+    "La main ne s'active qu'une fois que le chaudron a fini de parler.",
+    "Nouveau fichier polices.css : les polices de l'app se changent avec l'assistant des polices.",
+  ]},
   { numero: '5.7.1', date: '2026-11-07', nouveautes: [
     "Le nom des cartes est plus gros, dans un cadre doré au fond sombre (le même que les anciens mots de réponse).",
   ]},
