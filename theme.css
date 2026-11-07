@@ -944,3 +944,88 @@ html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hid
 body::after { content: ''; position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0; transition: opacity .8s;
   box-shadow: inset 0 0 0 10px #fff, inset 0 0 60px 30px rgba(255, 250, 235, .95); }
 body.eclairage::after { opacity: 1; }
+
+/* =========================================================
+   5.6.0 : l'écran de jeu à l'horizontale, en deux vues
+   - vue « scan » : les cartes jetées et les icônes de réponse
+   - vue « personnage » : le chaudron et sa boîte de dialogue, pendant qu'il parle
+   Tout est placé au pixel près sur la maquette (852 × 393), puis mis à l'échelle (--echelle).
+   ========================================================= */
+html.jeu-paysage #ecran-jeu.actif {
+  display: block; position: absolute; left: 50%; top: 50%; width: 852px; height: 393px; max-width: none; min-height: 0;
+  margin: 0; padding: 0; transform: translate(-50%, -50%) scale(var(--echelle, 1)); animation: apparait-jeu .4s ease; }
+@keyframes apparait-jeu { from { opacity: 0; } }
+html.jeu-paysage body { overflow: hidden; }
+
+/* colonne de gauche : quitter, options, main */
+#ecran-jeu .barre-jeu { display: block; position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+#ecran-jeu .barre-jeu > * { pointer-events: auto; }
+#ecran-jeu .colonne-boutons { position: absolute; left: 70px; top: 12px; display: flex; flex-direction: column; gap: 12px; }
+#ecran-jeu .colonne-boutons .rond { width: 42px; height: 42px; font-size: 1.05rem; position: static; transform: none; }
+
+/* titre et manche sur une seule ligne */
+#ecran-jeu .titre-manche { position: absolute; left: 130px; top: 13px; display: flex; align-items: baseline; gap: 7px; text-align: left;
+  font-size: 26px; line-height: 1; white-space: nowrap; }
+#ecran-jeu .titre-manche small { display: inline; margin: 0; font-size: 13px; letter-spacing: .02em; }
+
+/* en haut à droite : la sorcière dont c'est le tour, collée au bouton « Au suivant » */
+#ecran-jeu .ligne-tour { position: absolute; left: 517px; top: 17px; display: flex; align-items: center; margin: 0; padding: 0; gap: 0; }
+#ecran-jeu .tour-gauche, #ecran-jeu .sorcieres { display: flex; margin: 0; }
+#ecran-jeu .sorciere.active { box-sizing: border-box; width: 173px; min-width: 0; height: 39px; padding: 0 8px; border-radius: 8px; font-size: 19px; position: relative; z-index: 1; }
+#ecran-jeu .sorciere .trophees { font-size: .7rem; }
+#ecran-jeu .rangee-action, #ecran-jeu #actions-suite { display: flex; margin: 0; }
+#ecran-jeu #btn-suivant { position: relative; z-index: 2; width: 124px; height: 34px; margin-left: -2px; padding: 0 12px 0 10px; font-size: 11px; letter-spacing: .08em;
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 0 100%); }
+#ecran-jeu #btn-suivant::after { content: none; }
+#ecran-jeu .lunes { margin: 0; }
+
+/* les deux vues */
+#ecran-jeu .vue { position: absolute; inset: 0; transition: opacity .35s ease, visibility .35s; }
+#ecran-jeu .vue-perso { opacity: 0; visibility: hidden; }
+#ecran-jeu.vue-parole .vue-perso { opacity: 1; visibility: visible; }
+#ecran-jeu.vue-parole .vue-scan { opacity: 0; visibility: hidden; }
+
+/* vue scan : 3 ou 4 cartes, une grande icône de réponse sous chacune */
+#ecran-jeu .scene { position: absolute; inset: 0; height: auto; margin: 0; display: block; }
+#ecran-jeu #fumee, #ecran-jeu .grand-chaudron { display: none; }
+#ecran-jeu .plateau { --lc: min(147px, calc((620px - (var(--nb, 3) - 1) * 20px) / var(--nb, 3)));
+  position: absolute; left: 28px; right: 0; top: 69px; display: grid; grid-template-columns: repeat(var(--nb, 3), var(--lc));
+  justify-content: center; gap: 0 23px; padding: 0; margin: 0; }
+#ecran-jeu .plateau[style*="--nb: 4"] { gap: 0 20px; }
+#ecran-jeu .emplacement { border-radius: 7px; font-size: 30px; }
+#ecran-jeu .emplacement .reponse { top: calc(100% + 4px); bottom: auto; width: 88px; height: 80px; object-fit: contain; transform: translateX(-50%) scale(0); }
+#ecran-jeu .emplacement .reponse.visible { transform: translateX(-50%) scale(1); }
+#ecran-jeu .emplacement .libelle { display: none; }
+#ecran-jeu .reponses-expert { position: absolute; left: 28px; right: 0; top: 286px; display: flex; justify-content: center; gap: 18px; margin: 0; }
+#ecran-jeu .reponses-expert figure { margin: 0; }
+#ecran-jeu .reponses-expert img { width: 72px; height: 72px; object-fit: contain; }
+#ecran-jeu .reponses-expert figcaption { display: none; }
+
+/* vue personnage : le chaudron à gauche, la boîte de dialogue à droite */
+#ecran-jeu .vue-perso .perso { position: absolute; left: 150px; top: 60px; width: 250px; height: 305px; bottom: auto; z-index: 2;
+  display: flex; align-items: flex-end; justify-content: center; }
+#ecran-jeu .vue-perso .perso img { width: auto; height: 100%; max-width: 100%; object-fit: contain; }
+#ecran-jeu .vue-perso .dialogue { position: absolute; left: 338px; top: 160px; width: 423px; height: 144px; min-height: 0; box-sizing: border-box;
+  margin: 0; padding: 34px 36px 16px 104px; border-radius: 10px; display: flex; flex-direction: column; justify-content: flex-start; }
+#ecran-jeu .vue-perso .dialogue .qui { left: 73%; top: -13px; font-size: 13px; padding: 4px 22px; }
+#ecran-jeu .vue-perso .bulle-parole { font-family: var(--police-texte); font-style: italic; font-size: 17px; line-height: 1.33; color: #f0a95e; overflow: hidden; }
+/* polices de la maquette paysage */
+#ecran-jeu .titre-manche { font-family: var(--police-jeu); font-weight: 800; }
+#ecran-jeu .titre-manche small { font-family: 'Philosopher', var(--police-texte); font-style: italic; font-weight: 400; -webkit-text-fill-color: var(--creme); }
+#ecran-jeu .sorciere.active, #ecran-jeu .sorciere.active .nom-sorciere { font-family: var(--police-jeu); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; }
+#ecran-jeu #btn-suivant { display: flex; align-items: center; justify-content: center; white-space: nowrap; padding: 0 14px 0 8px; }
+#ecran-jeu .vue-perso .bulle-parole { font-family: 'Philosopher', var(--police-texte); font-size: 16.5px; }
+#ecran-jeu .vue-perso .perso { top: 56px; height: 312px; }
+#ecran-jeu #btn-suivant { flex-direction: row; }
+#ecran-jeu #btn-suivant { width: 126px; font-size: 10.5px; letter-spacing: .05em; padding: 0 12px 0 6px; }
+/* la carte qu'on vient de scanner, en grand : à la hauteur de l'écran couché */
+html.jeu-paysage .apercu-boite { width: calc(200px * var(--echelle, 1)); --lc: calc(200px * var(--echelle, 1)); padding: 0; }
+.apercu-boite .rang { display: none; }
+/* fenêtres et tiroirs quand le jeu est couché : plus larges, moins hauts */
+html.jeu-paysage .fenetre-boite { max-width: 680px; gap: 8px; padding: 12px 20px 14px; }
+html.jeu-paysage .fenetre-boite h2 { font-size: 1.4rem; margin: 0; }
+html.jeu-paysage .options-partie { display: grid; grid-template-columns: 1fr 1fr; column-gap: 22px; }
+html.jeu-paysage .options-partie .interrupteur { padding: 7px 0; }
+html.jeu-paysage .fenetre-boite .actions { margin-top: 0; }
+#ecran-jeu #btn-suivant { margin-left: 3px; }
+#ecran-jeu #btn-suivant { min-width: 128px; flex: none; padding: 0 16px 0 12px; }

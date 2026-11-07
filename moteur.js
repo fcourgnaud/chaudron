@@ -90,20 +90,28 @@ function carteIngredient(i) {
    Quand on penche le téléphone, l'app ne pivote pas : on la tourne dans l'autre sens pour qu'elle reste
    comme en portrait (le téléphone est souvent posé à plat au milieu de la table). */
 const surTelephone = matchMedia('(pointer: coarse)').matches;
-function ecranPortrait() {
+function ecranPortrait() {      // taille de l'écran telle que l'app l'affiche (après rotation éventuelle)
   const w = innerWidth, h = innerHeight;
-  return surTelephone && w > h ? { w: h, h: w } : { w, h };
+  return surTelephone && (w > h) !== veutPaysage() ? { w: h, h: w } : { w, h };
 }
+// L'écran de jeu est à l'horizontale ; l'accueil et la préparation restent debout.
+const veutPaysage = () => !!document.querySelector('#ecran-jeu.actif');
 function garderPortrait() {
   const b = document.body, r = document.documentElement.style, w = innerWidth, h = innerHeight;
-  if (surTelephone && w > h && !matchMedia('(orientation: portrait)').matches) {
+  const paysage = w > h, faut = veutPaysage();
+  document.documentElement.classList.toggle('jeu-paysage', faut);
+  if (faut !== garderPortrait.avant) { garderPortrait.avant = faut; try { screen.orientation.lock(faut ? 'landscape' : 'portrait').catch(() => {}); } catch (e) {} }
+  const tourne = surTelephone && paysage !== faut, L = tourne ? h : w, H = tourne ? w : h;
+  // l'écran de jeu est dessiné pour 852 × 393 (iPhone à l'horizontale) puis mis à l'échelle de l'écran
+  r.setProperty('--echelle', Math.min(L / 852, H / 393).toFixed(4));
+  if (tourne) {
     const angle = (screen.orientation && screen.orientation.angle) ?? window.orientation ?? 90;
     const sens = (angle === 90 || angle === -270) ? -90 : 90;
-    Object.assign(b.style, { position: 'fixed', top: '0', left: '0', right: 'auto', bottom: 'auto', width: h + 'px', height: w + 'px', transformOrigin: '0 0',
+    Object.assign(b.style, { position: 'fixed', top: '0', left: '0', right: 'auto', bottom: 'auto', width: h + 'px', height: w + 'px', minHeight: '0', transformOrigin: '0 0',
       transform: sens === -90 ? `translate(0, ${h}px) rotate(-90deg)` : `translate(${w}px, 0) rotate(90deg)` });
     r.setProperty('--vw', h / 100 + 'px'); r.setProperty('--vh', w / 100 + 'px');
   } else {
-    ['position', 'top', 'left', 'right', 'bottom', 'width', 'height', 'transform', 'transformOrigin'].forEach(k => b.style[k] = '');
+    ['position', 'top', 'left', 'right', 'bottom', 'width', 'height', 'minHeight', 'transform', 'transformOrigin'].forEach(k => b.style[k] = '');
     r.removeProperty('--vw'); r.removeProperty('--vh');
   }
 }
@@ -126,7 +134,6 @@ addEventListener('orientationchange', recalerPlusieursFois);
 if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(recaler, 50));
 if (screen.orientation) screen.orientation.addEventListener('change', recalerPlusieursFois);
 garderPortrait();
-try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
 
 // Portrait de chaque sorcière, selon sa place (1 à 4) : images/sorcieres/sorciere-1.png …
 const portraitSorciere = k => `<img class="portrait-sorciere" src="images/sorcieres/sorciere-${(k % 4) + 1}.png" alt="" onerror="this.replaceWith('🧙‍♀️')">`;
@@ -134,7 +141,7 @@ let R = { mode: 'concours', nb: 2, taille: 4 };   // réglages choisis
 let S = {};                                         // état de la partie
 
 /* ---------- 2. NAVIGATION ET PRÉPARATION ---------- */
-function montrer(id) { $$('.ecran').forEach(e => e.classList.toggle('actif', e.id === id)); window.scrollTo(0, 0); if (window.FondMagique) FondMagique.ecran(id); if (id === 'ecran-titre') poseAccueil(); }
+function montrer(id) { $$('.ecran').forEach(e => e.classList.toggle('actif', e.id === id)); window.scrollTo(0, 0); if (typeof recalerPlusieursFois === 'function') recalerPlusieursFois(); if (window.FondMagique) FondMagique.ecran(id); if (id === 'ecran-titre') poseAccueil(); }
 // À chaque arrivée sur l'accueil, le chaudron prend une pose au hasard (jamais deux fois la même de suite).
 // Toutes les images des poses ont le même format (400 × 500) : les proportions ne changent pas.
 let dernierePose = '';
@@ -1198,13 +1205,14 @@ function dire(texte, discret = false, fichier = null, posture = null) {
     if (attente > 0) await attendre(attente);
     if (gen !== Parole.generation) return;
     const p = $('#parole');
-    if (!discret) { p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); Perso.montrer(posture); }
+    if (!discret) { Vue.parle(true); p.textContent = texte; p.classList.remove('nouvelle'); void p.offsetWidth; p.classList.add('nouvelle'); Perso.montrer(posture); }
     if (!S.voix) await attendre(900 + texte.length * 30);
     else {
       Musique.baisser(true);
       try { await parlerVraiment(texte, fichier); } finally { Musique.baisser(false); }
     }
     Parole.finDerniere = Date.now();
+    if (!discret) Vue.parle(false);
   });
   Parole.file = tour.catch(() => {});
   return tour;
@@ -1229,7 +1237,19 @@ const Perso = {
   },
   repos() { const img = $('#perso-img'); if (!img) return; img.src = this.src(this.pret.has(POSTURE_REPOS) ? POSTURE_REPOS : POSTURE_PAR_DEFAUT); $('#perso').classList.remove('glisse'); },
 };
-function viderParole() { Parole.generation++; Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
+/* Les deux vues de l'écran de jeu : le personnage quand le chaudron parle, les cartes le reste du temps. */
+const Vue = {
+  enCours: 0, minuteur: null,
+  parle(oui) {
+    clearTimeout(this.minuteur);
+    if (oui) { this.enCours++; $('#ecran-jeu').classList.add('vue-parole'); return; }
+    this.enCours = Math.max(0, this.enCours - 1);
+    // on attend un peu : si une autre phrase suit, le personnage reste
+    this.minuteur = setTimeout(() => { if (!this.enCours) $('#ecran-jeu').classList.remove('vue-parole'); }, CONFIG.pauseEntrePhrases + 300);
+  },
+  scan() { clearTimeout(this.minuteur); this.enCours = 0; $('#ecran-jeu').classList.remove('vue-parole'); },
+};
+function viderParole() { Vue.scan(); Parole.generation++; Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
 
 async function parlerVraiment(texte, fichier) {
   const gen = Parole.generation;
