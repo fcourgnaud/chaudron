@@ -993,3 +993,8 @@ body.eclairage::after { opacity: 1; }
 .veille-titre { margin: 0; font-family: var(--police-titre); font-size: 1.7rem; color: var(--or-maquette, #e9b866); }
 .veille-aide { margin: 0; font-family: var(--police-texte); font-style: italic; color: var(--creme); }
 @keyframes veille-arrive { from { opacity: 0; } }
+
+/* --- 6.0.1 : l'écran de préparation (options) défile de nouveau au doigt ; les autres écrans restent fixes --- */
+#ecran-preparation { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+#ecran-preparation.actif { padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+#ecran-preparation > * { flex-shrink: 0; }

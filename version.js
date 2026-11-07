@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.0.0', date: '2026-11-07' };
+const VERSION = { numero: '6.0.1', date: '2026-11-07' };
 
 const HISTORIQUE = [
+  { numero: '6.0.1', date: '2026-11-07', nouveautes: [
+    "L'écran de préparation (sorcières, familles, options) défile de nouveau au doigt.",
+  ]},
   { numero: '6.0.0', date: '2026-11-07', nouveautes: [
     "Nouvelles règles de 2 à 4 sorcières : main de départ de 4 cartes, appel de carte chez une adversaire au début du tour, on brasse toujours 3 cartes (recettes de 3 ingrédients à chaque manche).",
     "À la fin du tour, l'app dit quelles cartes défausser (celles qui ne servent à aucune recette), puis on refait sa main à 4 cartes.",
