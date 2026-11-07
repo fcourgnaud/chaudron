@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.0.1', date: '2026-11-07' };
+const VERSION = { numero: '6.1.0', date: '2026-11-07' };
 
 const HISTORIQUE = [
+  { numero: '6.1.0', date: '2026-11-07', nouveautes: [
+    "Nouvelles images des 24 cartes ingrédients (PDF Cartes_APP).",
+    "Plus de nom sous les cartes : la grande icône de réponse est juste sous la carte.",
+  ]},
   { numero: '6.0.1', date: '2026-11-07', nouveautes: [
     "L'écran de préparation (sorcières, familles, options) défile de nouveau au doigt.",
   ]},

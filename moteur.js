@@ -786,7 +786,7 @@ function majPlateau() {
       const ing = ING(n);
       box.insertAdjacentHTML('beforeend', `<div class="emplacement plein${i === S.brassage.length - 1 && S.phase === 'brassage' ? ' retirable' : ''}" style="--c:${couleurFamille(ing.fam)}">
         <span class="rang"><span>${i + 1}</span></span>${carteIngredient(ing)}
-        <span class="nom-sous">${sansCesure(ing.nom)}</span><img class="reponse" id="rep-${i}" alt=""></div>`);
+        <img class="reponse" id="rep-${i}" alt=""></div>`);
     } else {
       box.insertAdjacentHTML('beforeend', `<div class="emplacement">${i + 1}</div>`);
     }

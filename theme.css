@@ -998,3 +998,8 @@ body.eclairage::after { opacity: 1; }
 #ecran-preparation { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
 #ecran-preparation.actif { padding-bottom: max(28px, env(safe-area-inset-bottom)); }
 #ecran-preparation > * { flex-shrink: 0; }
+
+/* --- 6.1.0 : plus de nom sous les cartes (il est sur l'image) ; la grande icône remonte juste sous la carte --- */
+.emplacement .nom-sous { display: none; }
+.emplacement .reponse { top: calc(100% + 10px); }
+.plateau { padding-bottom: calc(var(--lc) * .8 + 14px); }
