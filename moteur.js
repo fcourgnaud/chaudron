@@ -130,7 +130,8 @@ try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
 
 // Portrait de chaque sorcière, selon sa place (1 à 4) : images/sorcieres/sorciere-1.png …
 const portraitSorciere = k => `<img class="portrait-sorciere" src="images/sorcieres/sorciere-${(k % 4) + 1}.png" alt="" onerror="this.replaceWith('🧙‍♀️')">`;
-let R = { mode: 'concours', nb: 2, taille: 4 };   // réglages choisis
+let R = { mode: 'concours', nb: 2, taille: 4, familles: Object.keys(FAMILLES) };   // réglages choisis
+try { const f = JSON.parse(localStorage.getItem('chaudron-familles')); if (Array.isArray(f) && f.length) R.familles = Object.keys(FAMILLES).filter(id => f.includes(id)); } catch (e) {}
 let S = {};                                         // état de la partie
 
 /* ---------- 2. NAVIGATION ET PRÉPARATION ---------- */
@@ -154,6 +155,7 @@ $$('#ecran-titre [data-mode]').forEach(b => b.onclick = () => {
   $('#prep-titre').textContent = R.mode === 'concours' ? 'Le Concours' : 'La Pleine Lune';
   $('#prep-sorcieres').hidden = R.mode !== 'concours';
   $('#prep-taille').hidden = R.mode !== 'lune';
+  majFamilles();
   montrer('ecran-preparation');
 });
 $('#prep-retour').onclick = () => montrer('ecran-titre');
@@ -165,8 +167,43 @@ function choix(id, attr, cb) {
     cb(b.dataset[attr]);
   });
 }
-choix('#choix-nombre', 'n', v => { R.nb = +v; majSaisieSorcieres(); });
-choix('#choix-taille', 't', v => { R.taille = +v; });
+choix('#choix-nombre', 'n', v => { R.nb = +v; majSaisieSorcieres(); majFamilles(); });
+choix('#choix-taille', 't', v => { R.taille = +v; majFamilles(); });
+
+/* Familles en jeu : on choisit les familles d'ingrédients de la partie.
+   Il en faut assez pour les recettes (sans ingrédient en commun) et les 2 ingrédients instables. */
+function minFamilles() {
+  const parFamille = 4;
+  let besoin;
+  if (R.mode === 'lune') besoin = R.taille + 2;
+  else if (R.nb > 1) besoin = R.nb * Math.max(...MANCHES_V5.map(m => m.taille)) + 2;
+  else besoin = Math.max(...MANCHES.map(m => m.taille)) + 2;
+  return Math.max(2, Math.ceil(besoin / parFamille));
+}
+function majFamilles() {
+  const min = minFamilles(), ids = Object.keys(FAMILLES);
+  // si on a ajouté des sorcières, on rajoute des familles pour qu'il y en ait assez
+  for (const id of ids) { if (R.familles.length >= min) break; if (!R.familles.includes(id)) R.familles.push(id); }
+  R.familles = ids.filter(id => R.familles.includes(id));
+  $('#choix-familles').innerHTML = ids.map(id => `<button type="button" data-fam="${id}" class="${R.familles.includes(id) ? 'on' : ''}" style="--c:${couleurFamille(id)}" aria-pressed="${R.familles.includes(id)}">
+    <img src="${imgFamille(id)}" alt=""><span>${FAMILLES[id].nom}</span></button>`).join('');
+  const n = R.familles.length;
+  $('#aide-familles').textContent = `${n} famille${n > 1 ? 's' : ''} sur ${ids.length} · ${n * 4} ingrédients. Il en faut au moins ${min}` +
+    (R.mode === 'lune' ? ` pour une recette de ${R.taille}.` : R.nb > 1 ? ` pour ${R.nb} sorcières.` : ' pour jouer seule.');
+  try { localStorage.setItem('chaudron-familles', JSON.stringify(R.familles)); } catch (e) {}
+}
+$('#choix-familles').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const id = b.dataset.fam, min = minFamilles();
+  if (R.familles.includes(id)) {
+    if (R.familles.length <= min) {             // pas assez de familles : on refuse, et on le dit
+      const a = $('#aide-familles'); a.classList.remove('alerte'); void a.offsetWidth; a.classList.add('alerte'); return;
+    }
+    R.familles = R.familles.filter(f => f !== id);
+  } else R.familles.push(id);
+  majFamilles();
+});
+const enJeu = n => !S.familles || S.familles.includes(ING(n).fam);
 
 function majSaisieSorcieres() {
   const box = $('#liste-sorcieres');
@@ -190,6 +227,7 @@ function demarrerPartie() {
     courant: 0,
     manche: 0,
     pouvoirsDispo: melanger(POUVOIRS.map(p => p.id)),
+    familles: [...R.familles],            // les familles d'ingrédients de la partie
   };
   // Règles v5 : Concours à 2, 3 ou 4 sorcières, chacune sa recette secrète. Le solo et la Pleine Lune gardent les anciennes règles.
   S.v5 = S.mode === 'concours' && S.joueurs.length > 1;
@@ -208,7 +246,7 @@ function demarrerPartie() {
 async function nouvelleManche(premiere) {
   Musique.piste(S.mode === 'lune' ? 'lune' : 'manche' + (S.manche + 1));   // la musique de cette manche
   const taille = S.mode === 'lune' ? R.taille : (S.v5 ? MANCHES_V5 : MANCHES)[S.manche].taille;
-  const tirage = melanger(INGREDIENTS.map(i => i.n));
+  const tirage = melanger(INGREDIENTS.filter(i => S.familles.includes(i.fam)).map(i => i.n));
   S.recette = tirage.slice(0, taille);
   let reste = tirage.slice(taille);
   if (S.v5) {
@@ -284,6 +322,7 @@ function ajouterIngredient(n) {
   if (!ING(n)) return;
   if (S.question) return Pouvoirs.repondreSerpent(n);
   if (S.phase !== 'brassage') return;
+  if (!enJeu(n)) { parler('horsJeu'); return; }
   if (S.brassage.includes(n)) { parler('doublon'); return; }
   if (S.brassage.length >= S.max) return;
   S.brassage.push(n);
@@ -790,12 +829,12 @@ function majJournal() {
 }
 
 function remplirLegendeFumees() {
-  $('#legende-fumees').innerHTML = Object.entries(FAMILLES).map(([id, f]) => `<span style="--c:${couleurFamille(id)}">${f.nom}</span>`).join('') +
+  $('#legende-fumees').innerHTML = Object.entries(FAMILLES).filter(([id]) => S.familles.includes(id)).map(([id, f]) => `<span style="--c:${couleurFamille(id)}">${f.nom}</span>`).join('') +
     `<span style="--c:${varCSS('--fumee-complete')}">Toutes là</span>`;
 }
 
 function remplirEtagere(box = $('#etagere')) {
-  box.innerHTML = Object.entries(FAMILLES).map(([id, f]) =>
+  box.innerHTML = Object.entries(FAMILLES).filter(([id]) => !S.familles || S.familles.includes(id)).map(([id, f]) =>
     `<h4><img src="${imgFamille(id)}" alt="">${f.nom}</h4>` +
     INGREDIENTS.filter(i => i.fam === id).map(i => `<button data-n="${i.n}" style="--c:${couleurFamille(id)}">${i.nom}</button>`).join('')
   ).join('');

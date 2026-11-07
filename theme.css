@@ -972,3 +972,15 @@ body.eclairage::after { opacity: 1; }
 /* les phrases du chaudron ont leur propre police (réglable avec l'assistant, dans polices.css) */
 :root { --police-parole: var(--police-texte); }
 #parole, .bulle-parole { font-family: var(--police-parole); }
+
+/* --- 5.9.0 : familles en jeu (préparation) --- */
+.choix-familles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.choix-familles button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px 7px; border-radius: 8px;
+  border: 1.5px solid color-mix(in srgb, var(--c) 70%, transparent); background: color-mix(in srgb, var(--c) 22%, rgba(22, 5, 11, .75));
+  color: var(--creme); font-family: var(--police-ui); font-weight: 700; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; cursor: pointer;
+  transition: opacity .2s, filter .2s, transform .15s; }
+.choix-familles button img { width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
+.choix-familles button:not(.on) { opacity: .4; filter: grayscale(.85); border-style: dashed; }
+.choix-familles button:active { transform: scale(.96); }
+#aide-familles.alerte { animation: alerte-familles .9s ease; }
+@keyframes alerte-familles { 0%, 60% { color: #ffb08a; } }

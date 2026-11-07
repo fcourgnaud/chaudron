@@ -144,6 +144,7 @@ const PHRASES = {
   protege:   ['Ok ! Ton amulette a avalé la suie !'],
   passe:     ['Ahah ! Encore couverte de suie ? Tu passes ton tour !'],
   doublon:   ['Alors… Celui-là est déjà dans mon ventre !'],
+  horsJeu:   ["Celui-là n'est pas de la partie ! Range-le.", 'Pas cette famille-là aujourd\'hui ! Je n\'en veux pas.'],
   victoire:  ['Parfait. Absolument parfait. Tu as trouvé la potion !', 'Délicieux ! Tu remportes la manche !'],
   annonce:   ['Une annonce ? Voyons ça… Les autres, détournez les yeux.', 'Tu crois connaître ma recette ? Montre-moi.'],
   secrets:   ['Chacune connaît maintenant un de mes secrets. Gardez-le bien.', 'Mes secrets sont distribués. Que le meilleur nez gagne.'],

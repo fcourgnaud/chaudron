@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '5.8.0', date: '2026-11-07' };
+const VERSION = { numero: '5.9.0', date: '2026-11-07' };
 
 const HISTORIQUE = [
+  { numero: '5.9.0', date: '2026-11-07', nouveautes: [
+    "Familles en jeu : avant la partie, on choisit les familles d'ingrédients utilisées (au moins assez pour les recettes : 2 à 5 selon le nombre de sorcières).",
+    "Les recettes, les ingrédients instables, la main et la légende des fumées n'utilisent que ces familles. Scanner une carte d'une autre famille fait réagir le chaudron.",
+  ]},
   { numero: '5.8.0', date: '2026-11-07', nouveautes: [
     "Le personnage de l'écran de jeu descend de 30 px.",
     "Plus de mots coupés dans le nom des cartes (un nom trop long rétrécit pour tenir dans son cadre).",
