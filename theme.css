@@ -1028,3 +1028,24 @@ body.eclairage::after { opacity: 1; }
 .pouvoir-partie .emoji { grid-row: span 2; font-size: 1.7rem; text-align: center; }
 .pouvoir-partie b { font-family: var(--police-ui); font-size: .9rem; letter-spacing: .04em; color: var(--or-maquette, #e9b866); }
 .pouvoir-partie small { font-family: var(--police-texte); font-size: 1rem; line-height: 1.2; color: var(--creme); }
+
+/* --- 6.5.0 : rappel permanent des familles instables, en bas de la boîte de dialogue --- */
+.dialogue { display: flex; flex-direction: column; }
+.rappel-instables { margin-top: auto; padding-top: 7px; border-top: 1px dashed rgba(233, 184, 102, .45); font-family: var(--police-texte); font-size: .92rem; line-height: 1.25; color: var(--creme); }
+.rappel-instables[hidden] { display: none; }
+.rappel-instables > span:first-child { font-family: var(--police-ui); font-weight: 700; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: #ff9b6a; }
+.rappel-instables img { width: 18px; height: 18px; vertical-align: -4px; margin: 0 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.rappel-instables .et { opacity: .8; }
+.dialogue .bulle-parole { margin-bottom: 8px; }
+/* boîte un peu plus haute (taille fixe : rien ne bouge) : 4 lignes de phrase + 1 ligne de rappel */
+.dialogue { height: 172px; }
+.dialogue .bulle-parole { flex: none; max-height: calc(4 * 1.22em); overflow: hidden; margin-bottom: 4px; }
+.rappel-instables { flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .95rem; }
+.rappel-instables { white-space: normal; text-overflow: clip; font-size: .9rem; line-height: 1.3; }
+.rappel-instables > span:first-child { display: block; }
+.dialogue .bulle-parole { max-height: calc(3 * 1.22em); }
+.rappel-instables { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.rappel-instables > span:first-child { display: inline; }
+.rappel-instables img { width: 26px; height: 26px; vertical-align: middle; margin: 0; }
+.rappel-instables .et { font-size: 1rem; color: #ff9b6a; opacity: 1; }
+.dialogue .bulle-parole { max-height: calc(4 * 1.22em); }

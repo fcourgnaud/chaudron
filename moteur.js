@@ -269,7 +269,10 @@ async function nouvelleManche(premiere) {
     S.expert = S.expertChoisi;
   }
   // 2 ingrédients instables, hors de toutes les recettes, de familles différentes (pas avec les règles de 2 à 4 sorcières)
-  S.instables = S.v5 ? [] : [reste[0], reste.find(n => ING(n).fam !== ING(reste[0]).fam)];
+  // 2 ingrédients instables, hors de toutes les recettes, de deux familles différentes, annoncées au début de la manche
+  S.instables = [reste[0], reste.find(n => ING(n).fam !== ING(reste[0]).fam)].filter(Boolean);
+  if (S.instables.length < 2) S.instables = [];
+  majRappelInstables();
   S.max = taille;                       // autant d'emplacements que d'ingrédients dans la recette
   S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {};
   S.essais = 0; S.phase = 'attente'; S.derniere = null;
@@ -281,6 +284,7 @@ async function nouvelleManche(premiere) {
   if (S.mode === 'lune') {
     await rideau(`<div class="icone">🌕</div><div class="petit-titre">${S.solo ? 'Seule face au chaudron' : 'Mode coopératif'}</div><div class="grand-titre">La Pleine Lune</div><div class="sous-titre">${taille} ingrédients · ${CONFIG.essaisPleineLune} essais</div>`, CONFIG.dureeRideau + 600);
     await parler('luneDebut', { n: taille, essais: CONFIG.essaisPleineLune });
+    if (S.instables.length) await parler('instables', { f1: FAMILLES[ING(S.instables[0]).fam].nom, f2: FAMILLES[ING(S.instables[1]).fam].nom });
     S.phase = 'brassage'; majPlateau();
     $('#consigne').innerHTML = 'Jetez vos cartes une par une, <b>dans l\'ordre</b>';
     return;
@@ -296,8 +300,10 @@ async function nouvelleManche(premiere) {
       <div class="sous-titre">Pioché, un pouvoir se pose devant soi et on pioche une carte pour le remplacer. Un pouvoir par tour au maximum.</div>`, "C'est fait");
   }
   if (premiere) await parler('accueil');
+  const annoncerInstables = () => S.instables.length ? parler('instables', { f1: FAMILLES[ING(S.instables[0]).fam].nom, f2: FAMILLES[ING(S.instables[1]).fam].nom }) : null;
   // la voix enregistrée correspond au nombre d'ingrédients (l'Archimage v5 en a 4, comme la Sorcière)
   await parler('manche', { manche: S.v5 ? (taille === 4 ? 'Sorcière' : taille === 3 ? 'Apprentie' : m.nom) : m.nom, n: taille });
+  await annoncerInstables();
   S.toursDepuisMarche = 0;
   if (S.joueurs.length > 1 && !S.v5) await distribuerSecrets();
   await debutTour(S.v5);              // règles de 2 à 4 : le rideau rappelle l'appel de carte dès le premier tour
@@ -408,6 +414,7 @@ async function brasser() {
     colorerPotion(varCSS('--fumee-explosion'), S.secret ? '' : TEXTES_FUMEE.explosion); Fumee.bouffee(varCSS('--fumee-explosion'), 140);
     if (S.secret) { S.secret = false; fermerFenetre(); }
     ajouterJournal({ qui: j.nom, explosion: `${a} + ${b}` });
+    S.derniere = { ids, res: ids.map(n => S.instables.includes(n) ? 'pschitt' : 'garde'), secret: false };   // on défausse les deux instables
     await parler('explosion', { a, b });
     if (S.mode === 'concours') {
       if (j.pouvoirs.includes('amulette') && !j.utilises.has('amulette')) { j.utilises.add('amulette'); await parler('protege', { joueur: j.nom }); }
@@ -1366,6 +1373,15 @@ const Perso = {
   },
   repos() { const img = $('#perso-img'); if (!img) return; img.src = this.src(this.pret.has(POSTURE_REPOS) ? POSTURE_REPOS : POSTURE_PAR_DEFAUT); $('#perso').classList.remove('glisse'); },
 };
+// rappel permanent en bas de la boîte de dialogue
+function majRappelInstables() {
+  const r = $('#rappel-instables'); if (!r) return;
+  if (!S.instables || S.instables.length < 2) { r.hidden = true; return; }
+  const [f1, f2] = S.instables.map(n => ING(n).fam);
+  r.innerHTML = `<span>⚠ Instables</span> <img src="${imgFamille(f1)}" alt="${FAMILLES[f1].nom}"><span class="et">✕</span><img src="${imgFamille(f2)}" alt="${FAMILLES[f2].nom}">`;
+  r.title = `Un ingrédient des ${FAMILLES[f1].nom} et un des ${FAMILLES[f2].nom} ne se supportent pas`;
+  r.hidden = false;
+}
 function viderParole() { Parole.generation++; Parole.enCours = 0; majMain(); Parole.file = Promise.resolve(); Parole.finDerniere = 0; Voix.arreter(); }
 
 async function parlerVraiment(texte, fichier) {

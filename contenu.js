@@ -145,6 +145,7 @@ const PHRASES = {
   moquerie:  ['Encore ça ? Vraiment ?', "Celui-là, je l'ai déjà recraché !", "Tu n'écoutes rien ! Toujours pas !", 'Encore le même ingrédient ! Quelle imagination.'],
   rate:      ['Mouais !… Ben non !', "Ben c'est raté ! Encore !", 'Je reste de nouveau sur ma faim !', 'Intéressant. Mais non !', 'Ça mijote pas !', 'Beurk !… Au suivant !'],
   presque:   ['Presque !… Allez, au suivant !', "Presque !… J'en salive déjà !", 'Ça sent bon… mais pas assez !'],
+  instables: ['Attention ! Ce soir, un ingrédient des {f1} et un des {f2} ne se supportent pas…', 'Méfiez-vous : un des {f1} et un des {f2} ne doivent pas se rencontrer !'],
   explosion: ['BOUM ! Et voilà !… Ces deux-là ne se supportent pas !', 'Au nom de Saint Chaudron, pas ces deux-là ensemble ! Voilà, BOUM !'],
   protege:   ['Ok ! Ton amulette a avalé la suie !'],
   passe:     ['Ahah ! Encore couverte de suie ? Tu passes ton tour !'],

@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.4.0', date: '2026-11-08' };
+const VERSION = { numero: '6.5.0', date: '2026-11-08' };
 
 const HISTORIQUE = [
+  { numero: '6.5.0', date: '2026-11-08', nouveautes: [
+    "L'explosion revient : 2 ingrédients instables par manche, hors de toutes les recettes. Le chaudron annonce leurs deux familles en début de manche, et un rappel reste affiché en bas de sa boîte de dialogue.",
+    "Brasser les deux instables ensemble : explosion, la sorcière passe son prochain tour et défausse les deux cartes.",
+  ]},
   { numero: '6.4.0', date: '2026-11-08', nouveautes: [
     "Les pouvoirs reviennent, dans la pioche : 2 à 4 par partie selon le nombre de familles (l'app les tire au sort et les annonce au début). Pioché, un pouvoir se pose devant soi ; un pouvoir par tour au maximum, puis il va à la défausse.",
     "Pouvoirs rééquilibrés : Œil de chouette (brassage secret), Langue de serpent (dit aussi la place), Amulette de suie (refuse un appel de carte), Sablier (défausse, refais ta main et rebrasse), Balai rapide (pioche 2, garde 1), Chat noir (échange une carte au hasard).",
