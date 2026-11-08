@@ -306,8 +306,6 @@ async function debutTour(avecRideau = true) {
   if (S.v5) {
     // écran « Au tour de… » : reste affiché jusqu'au bouton « Brasser »
     await rideauBouton(`<div class="grand-titre">Au tour de ${j.nom}</div><div class="sous-titre grand">Demande une carte à une adversaire.<br>Si elle l'a, elle te la donne et pioche une carte.</div>`, 'Brasser');
-    // la fumée de son brassage précédent : une famille qui manque à sa recette
-    if (j.fumee) { colorerPotion(j.fumee); Fumee.bouffee(j.fumee, 70); }
     parler('tour', { joueur: j.nom });
     return;
   }
@@ -428,9 +426,8 @@ async function brasser() {
   const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
   S.derniere = { res, secret, ids };
   if (S.v5) {
-    await jouerReponses(res, secret);                       // chaque son avec son icône
-    // la fumée (une famille qui manque à sa recette) n'arrive qu'au début de son prochain tour
-    if (!secret && !gagne) j.fumee = couleur;
+    await jouerReponses(res, secret);                       // chaque son avec son icône…
+    colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis la fumée : une famille qui manque à sa recette
   } else {
     colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);
     await jouerReponses(res, secret);

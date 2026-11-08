@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.3.0', date: '2026-11-08' };
+const VERSION = { numero: '6.3.1', date: '2026-11-08' };
 
 const HISTORIQUE = [
+  { numero: '6.3.1', date: '2026-11-08', nouveautes: [
+    "La couleur de la fumée revient à la fin du brassage, juste après les sons (une famille qui manque à la recette de la sorcière qui vient de brasser).",
+  ]},
   { numero: '6.3.0', date: '2026-11-08', nouveautes: [
     "Écrans de passage simplifiés : début de manche (2,5 s), « Au tour de … » avec bouton Brasser, fin de tour avec le visuel des cartes à défausser et bouton Au suivant, victoire de manche avec le visuel de la recette et bouton Manche suivante.",
     "Rien ne peut être scanné pendant ces écrans.",
