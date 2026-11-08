@@ -1387,7 +1387,7 @@ function majRappelInstables() {
   const r = $('#rappel-instables'); if (!r) return;
   if (!S.instables || S.instables.length < 2) { r.hidden = true; return; }
   const [f1, f2] = S.instables.map(n => ING(n).fam);
-  r.innerHTML = `<span>⚠ Instables</span> <img src="${imgFamille(f1)}" alt="${FAMILLES[f1].nom}"><span class="et">✕</span><img src="${imgFamille(f2)}" alt="${FAMILLES[f2].nom}">`;
+  r.innerHTML = `<span>Instables</span> <img src="${imgFamille(f1)}" alt="${FAMILLES[f1].nom}"><span class="barre"></span><img src="${imgFamille(f2)}" alt="${FAMILLES[f2].nom}">`;
   r.title = `Un ingrédient des ${FAMILLES[f1].nom} et un des ${FAMILLES[f2].nom} ne se supportent pas`;
   r.hidden = false;
 }

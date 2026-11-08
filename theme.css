@@ -1052,3 +1052,5 @@ body.eclairage::after { opacity: 1; }
 
 /* --- 6.5.1 : main ✋ : les cartes défaussées sont grisées et ne se choisissent plus --- */
 .etagere button.defaussee, .etagere button:disabled { opacity: .28; filter: grayscale(1); text-decoration: line-through; cursor: not-allowed; box-shadow: none; }
+/* --- 6.6.1 : rappel des instables, une barre verticale entre les deux familles --- */
+.rappel-instables .barre { display: inline-block; width: 1.5px; height: 20px; margin: 0 4px; background: rgba(233, 184, 102, .75); border-radius: 1px; }
