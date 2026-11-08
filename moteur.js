@@ -274,7 +274,7 @@ async function nouvelleManche(premiere) {
   if (S.instables.length < 2) S.instables = [];
   majRappelInstables();
   S.max = taille;                       // autant d'emplacements que d'ingrédients dans la recette
-  S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {};
+  S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {}; S.defausse = new Set();
   S.essais = 0; S.phase = 'attente'; S.derniere = null;
   S.secret = false; S.question = false; S.sablier = false;
   S.joueurs.forEach(j => { j.passe = false; j.eliminee = false; j.utilises = new Set(); j.fumee = null; });
@@ -415,6 +415,7 @@ async function brasser() {
     if (S.secret) { S.secret = false; fermerFenetre(); }
     ajouterJournal({ qui: j.nom, explosion: `${a} + ${b}` });
     S.derniere = { ids, res: ids.map(n => S.instables.includes(n) ? 'pschitt' : 'garde'), secret: false };   // on défausse les deux instables
+    S.instables.forEach(n => S.defausse && S.defausse.add(n));
     await parler('explosion', { a, b });
     if (S.mode === 'concours') {
       if (j.pouvoirs.includes('amulette') && !j.utilises.has('amulette')) { j.utilises.add('amulette'); await parler('protege', { joueur: j.nom }); }
@@ -440,6 +441,8 @@ async function brasser() {
 
   const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
   S.derniere = { res, secret, ids };
+  // les cartes à défausser (croix rouge) ne peuvent plus être choisies avec la main pendant cette manche
+  if (S.v5 && !secret) ids.forEach((n, i) => { if (res[i] === 'pschitt') S.defausse.add(n); });
   if (S.v5) {
     await jouerReponses(res, secret);                       // chaque son avec son icône…
     colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis la fumée : une famille qui manque à sa recette
@@ -916,7 +919,13 @@ function remplirEtagere(box = $('#etagere')) {
   ).join('');
   box.querySelectorAll('button').forEach(b => b.onclick = () => ajouterIngredient(+b.dataset.n));
 }
-function majEtagere() { $$('#etagere button').forEach(b => b.classList.toggle('dedans', S.brassage.includes(+b.dataset.n))); }
+function majEtagere() {
+  $$('#etagere button').forEach(b => {
+    const n = +b.dataset.n, def = !!(S.defausse && S.defausse.has(n));
+    b.classList.toggle('dedans', S.brassage.includes(n));
+    b.classList.toggle('defaussee', def); b.disabled = def;      // carte défaussée : plus possible de la choisir
+  });
+}
 
 /* ---------- 8. RIDEAU, FENÊTRES, TIROIRS ---------- */
 function rideau(html, duree) {

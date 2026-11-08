@@ -1049,3 +1049,6 @@ body.eclairage::after { opacity: 1; }
 .rappel-instables img { width: 26px; height: 26px; vertical-align: middle; margin: 0; }
 .rappel-instables .et { font-size: 1rem; color: #ff9b6a; opacity: 1; }
 .dialogue .bulle-parole { max-height: calc(4 * 1.22em); }
+
+/* --- 6.5.1 : main ✋ : les cartes défaussées sont grisées et ne se choisissent plus --- */
+.etagere button.defaussee, .etagere button:disabled { opacity: .28; filter: grayscale(1); text-decoration: line-through; cursor: not-allowed; box-shadow: none; }

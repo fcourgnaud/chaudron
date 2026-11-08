@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.5.0', date: '2026-11-08' };
+const VERSION = { numero: '6.5.1', date: '2026-11-08' };
 
 const HISTORIQUE = [
+  { numero: '6.5.1', date: '2026-11-08', nouveautes: [
+    "Main ✋ : les cartes défaussées pendant la manche sont grisées et ne peuvent plus être choisies.",
+  ]},
   { numero: '6.5.0', date: '2026-11-08', nouveautes: [
     "L'explosion revient : 2 ingrédients instables par manche, hors de toutes les recettes. Le chaudron annonce leurs deux familles en début de manche, et un rappel reste affiché en bas de sa boîte de dialogue.",
     "Brasser les deux instables ensemble : explosion, la sorcière passe son prochain tour et défausse les deux cartes.",
