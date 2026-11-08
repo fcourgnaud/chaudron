@@ -285,7 +285,8 @@ async function nouvelleManche(premiere) {
   }
   const m = (S.v5 ? MANCHES_V5 : MANCHES)[S.manche];
   const sous = S.v5 ? `Chacune sa recette secrète · main de 4 cartes · ${taille} ingrédients${S.expert ? ' · mode expert' : ''}` : `${taille} ingrédients · l'ordre compte`;
-  await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${sous}</div>`, CONFIG.dureeRideau + 600);
+  if (S.v5) await rideau(`<div class="grand-titre">Manche ${S.manche + 1} · ${m.nom}</div><div class="sous-titre grand">${sous}</div>`, CONFIG.dureeRideau + 700);
+  else await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${sous}</div>`, CONFIG.dureeRideau + 600);
   if (premiere) await parler('accueil');
   // la voix enregistrée correspond au nombre d'ingrédients (l'Archimage v5 en a 4, comme la Sorcière)
   await parler('manche', { manche: S.v5 ? (taille === 4 ? 'Sorcière' : taille === 3 ? 'Apprentie' : m.nom) : m.nom, n: taille });
@@ -302,10 +303,16 @@ async function debutTour(avecRideau = true) {
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
   $('#consigne').innerHTML = S.v5 ? `<b>${j.nom}</b> : fais ton appel de carte, puis jette 3 cartes dans l'ordre`
     : `<b>${j.nom}</b> : cueille une carte, puis jette-en ${S.max > CONFIG.minBrassage ? CONFIG.minBrassage + ' à ' + S.max : S.max} dans l'ordre`;
-  // la fumée de son brassage précédent : une famille qui manque à sa recette
-  if (S.v5 && j.fumee) { colorerPotion(j.fumee); Fumee.bouffee(j.fumee, 70); }
+  if (S.v5) {
+    // écran « Au tour de… » : reste affiché jusqu'au bouton « Brasser »
+    await rideauBouton(`<div class="grand-titre">Au tour de ${j.nom}</div><div class="sous-titre grand">Demande une carte à une adversaire.<br>Si elle l'a, elle te la donne et pioche une carte.</div>`, 'Brasser');
+    // la fumée de son brassage précédent : une famille qui manque à sa recette
+    if (j.fumee) { colorerPotion(j.fumee); Fumee.bouffee(j.fumee, 70); }
+    parler('tour', { joueur: j.nom });
+    return;
+  }
   if (S.joueurs.length > 1) {
-    const appel = S.v5 ? `<div class="sous-titre">Appel de carte : demande une carte à une adversaire.<br>Si elle l'a, elle te la donne et pioche une carte.<br>Puis jette 3 cartes dans l'ordre.</div>` : '';
+    const appel = '';
     if (avecRideau) await rideau(`<div class="portrait-tour">${portraitSorciere(S.courant)}</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>${appel}`, CONFIG.dureeRideau + (S.v5 ? 2500 : 0));
     parler('tour', { joueur: j.nom });
   }
@@ -335,6 +342,7 @@ $('#btn-suivant').onclick = tourSuivant;
 function ajouterIngredient(n) {
   if (!ING(n)) return;
   Veille.activite();
+  if (ecranDePassage()) return;              // rien ne se scanne pendant les écrans de passage
   if (S.question) return Pouvoirs.repondreSerpent(n);
   if (S.phase !== 'brassage') return;
   if (!enJeu(n)) { parler('horsJeu'); return; }
@@ -516,8 +524,7 @@ async function victoireManche(k = S.courant, cle = 'victoire') {
     return finPartie(true);
   }
   if (S.v5) {                                  // règles de 2 à 4 sorcières : pas de pouvoir pour l'instant
-    await fenetreBouton(`<h2>${j.nom} remporte la manche ${MANCHES[S.manche].nom} !</h2>${recetteHTML()}<p>Tout le monde reprend une main de 4 cartes.</p>`, 'Manche suivante', true);
-    fermerFenetre();
+    await rideauBouton(`<div class="grand-titre">${j.nom} remporte la manche ${MANCHES[S.manche].nom} !</div>${cartesVisuels(S.recette)}`, 'Manche suivante');
     S.manche++;
     S.courant = (S.courant + 1) % S.joueurs.length;
     return nouvelleManche(false);
@@ -561,10 +568,7 @@ async function distribuerSecrets() {
 const cartesADefausser = () => (S.derniere && S.derniere.ids && !S.derniere.secret) ? S.derniere.ids.filter((n, i) => S.derniere.res[i] === 'pschitt') : [];
 async function finDeTourV6() {
   const j = S.joueurs[S.courant], def = cartesADefausser();
-  const liste = def.length ? `<div class="recette-revelee">${def.map(n => `<span style="--c:${couleurFamille(ING(n).fam)}">${ING(n).nom}</span>`).join('')}</div>`
-    : `<div class="sous-titre">Aucune carte à défausser.</div>`;
-  await rideau(`<div class="icone">🃏</div><div class="petit-titre">Fin du tour de ${j.nom}</div><div class="grand-titre">${def.length ? 'Défausse' : 'Garde tes cartes'}</div>
-    ${liste}<div class="sous-titre">${def.length > 1 ? 'Ces cartes ne servent à aucune recette.<br>' : def.length ? 'Cette carte ne sert à aucune recette.<br>' : ''}Puis refais ta main à 4 cartes avec la pioche.</div>`, CONFIG.dureeRappelGauche + 1500);
+  await rideauBouton(`<div class="grand-titre">Fin du tour de ${j.nom} · ${def.length ? 'Défausse' : 'Rien à défausser'}</div>${def.length ? cartesVisuels(def) : ''}`, 'Au suivant');
 }
 async function rappelGauche() {
   await rideau(`<div class="icone">🃏 ⬅</div><div class="petit-titre">Fin du tour</div><div class="grand-titre">Passez à gauche</div>
@@ -885,6 +889,19 @@ function rideau(html, duree) {
     const t = setTimeout(fin, duree); $('#rideau').onclick = fin;
   });
 }
+// Écran de passage qui reste affiché jusqu'à ce qu'on touche son bouton
+function rideauBouton(html, texte) {
+  return new Promise(r => {
+    $('#rideau-contenu').innerHTML = html + `<div class="actions"><button class="bouton-or" id="rideau-ok">${texte}</button></div>`;
+    $('#rideau').classList.add('visible'); $('#rideau').onclick = null;
+    const n = Partie.numero;
+    $('#rideau-ok').onclick = e => { e.stopPropagation(); $('#rideau').classList.remove('visible'); setTimeout(() => { if (n === Partie.numero) r(); }, 300); };
+  });
+}
+// pendant les écrans de passage, rien ne peut être scanné
+const ecranDePassage = () => $('#rideau').classList.contains('visible');
+// le visuel des cartes, en petit, pour les écrans de passage
+const cartesVisuels = ids => `<div class="cartes-rideau">${ids.map(n => `<div class="carte-rideau">${carteIngredient(ING(n))}</div>`).join('')}</div>`;
 function fenetre(html, noire) { $('#fenetre-boite').innerHTML = html; $('#fenetre').classList.add('visible'); $('#fenetre').classList.toggle('noire', !!noire); }
 function fermerFenetre() { $('#fenetre').classList.remove('visible', 'noire'); }
 function fenetreBouton(html, texte, noire) {
@@ -1621,6 +1638,7 @@ const Camera = {
     if (!T.startsWith(CONFIG.prefixeQR)) return;
     $('#oeil').classList.add('lu'); setTimeout(() => $('#oeil').classList.remove('lu'), 400);
     Veille.activite();
+    if (ecranDePassage()) return;
     const p = T.match(/-P(\d)\s*$/);                    // carte pouvoir : CHAUDRON-P1 … CHAUDRON-P6
     if (p) return Pouvoirs.scanner(+p[1]);
     const m = T.match(/(\d{1,2})\s*$/);

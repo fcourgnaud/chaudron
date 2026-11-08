@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.2.0', date: '2026-11-08' };
+const VERSION = { numero: '6.3.0', date: '2026-11-08' };
 
 const HISTORIQUE = [
+  { numero: '6.3.0', date: '2026-11-08', nouveautes: [
+    "Écrans de passage simplifiés : début de manche (2,5 s), « Au tour de … » avec bouton Brasser, fin de tour avec le visuel des cartes à défausser et bouton Au suivant, victoire de manche avec le visuel de la recette et bouton Manche suivante.",
+    "Rien ne peut être scanné pendant ces écrans.",
+  ]},
   { numero: '6.2.0', date: '2026-11-08', nouveautes: [
     "Nouvelles icônes de réponse : coche verte (bonne place), flèches orange (mauvaise place), sorcières bleues (dans une autre recette), croix rouge (absent).",
     "La grande carte du scan est toujours la même image que la petite : images chargées dès le début de la partie, plus d'ancienne carte dessinée pendant le chargement, et plus de losange numéroté par-dessus.",
