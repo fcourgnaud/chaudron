@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.5.1', date: '2026-11-08' };
+const VERSION = { numero: '6.6.0', date: '2026-11-09' };
 
 const HISTORIQUE = [
+  { numero: '6.6.0', date: '2026-11-09', nouveautes: [
+    "Les icônes des familles deviennent des ronds brillants de la couleur de chaque famille (préparation, main, rappel des instables, légende des fumées).",
+  ]},
   { numero: '6.5.1', date: '2026-11-08', nouveautes: [
     "Main ✋ : les cartes défaussées pendant la manche sont grisées et ne peuvent plus être choisies.",
   ]},
