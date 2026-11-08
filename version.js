@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.6.1', date: '2026-11-09' };
+const VERSION = { numero: '6.6.2', date: '2026-11-09' };
 
 const HISTORIQUE = [
+  { numero: '6.6.2', date: '2026-11-09', nouveautes: [
+    "Icônes de réponse sous les cartes 10 % plus petites.",
+  ]},
   { numero: '6.6.1', date: '2026-11-09', nouveautes: [
     "Rappel des instables : plus de symbole d'avertissement, une barre verticale entre les deux familles.",
   ]},
