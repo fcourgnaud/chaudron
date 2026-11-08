@@ -9,9 +9,14 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.1.0', date: '2026-11-07' };
+const VERSION = { numero: '6.2.0', date: '2026-11-08' };
 
 const HISTORIQUE = [
+  { numero: '6.2.0', date: '2026-11-08', nouveautes: [
+    "Nouvelles icônes de réponse : coche verte (bonne place), flèches orange (mauvaise place), sorcières bleues (dans une autre recette), croix rouge (absent).",
+    "La grande carte du scan est toujours la même image que la petite : images chargées dès le début de la partie, plus d'ancienne carte dessinée pendant le chargement, et plus de losange numéroté par-dessus.",
+    "La fumée qui indique une famille manquante n'apparaît plus à la fin du brassage, mais au début du tour suivant de la même sorcière.",
+  ]},
   { numero: '6.1.0', date: '2026-11-07', nouveautes: [
     "Nouvelles images des 24 cartes ingrédients (PDF Cartes_APP).",
     "Plus de nom sous les cartes : la grande icône de réponse est juste sous la carte.",

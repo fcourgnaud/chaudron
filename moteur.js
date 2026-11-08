@@ -73,6 +73,12 @@ const imgIngredient = (i, classe = '') =>
   `<img class="${classe}" src="${sourcesIngredient(i)[0]}" data-ing="${i.n}" alt="" onerror="imageSuivante(this)">`;
 
 // La carte ingrédient : l'image de ta carte (images/cartes-ingredients/<nom>.jpg) ; si elle manque, la carte dessinée d'après la maquette (même dessin que la carte imprimée, voir theme.css)
+// les images des cartes sont chargées dès le début de la partie : la grande carte du scan est tout de suite la bonne
+const cartesChargees = [];
+function prechargerCartes() {
+  if (cartesChargees.length) return;
+  INGREDIENTS.forEach(i => { const im = new Image(); im.src = `images/cartes-ingredients/${encodeURIComponent(i.nom.normalize('NFC'))}.jpg`; cartesChargees.push(im); });
+}
 function carteIngredient(i) {
   const taille = '';   // tous les titres à la même taille (sur 2 lignes si besoin)
   return `<div class="carte-ing" style="--c:var(--fam-${i.fam});--f:var(--fam-${i.fam}-fonce)">
@@ -238,7 +244,7 @@ function demarrerPartie() {
   S.expertChoisi = S.expert;
   S.joueurs.forEach(j => { j.recette = []; j.absents = new Set(); j.malPlaces = {}; });
   montrer('ecran-jeu'); Perso.repos();
-  remplirEtagere(); remplirLegendeFumees();
+  remplirEtagere(); remplirLegendeFumees(); prechargerCartes();
   if ($('#opt-ambiance').checked) Ambiance.demarrer(); majBoutonAmbiance();
   if ($('#opt-musique').checked) Musique.demarrer(); else Musique.arreter();
   majBoutonMusique();
@@ -266,7 +272,7 @@ async function nouvelleManche(premiere) {
   S.brassage = []; S.journal = []; S.absents = new Set(); S.malPlaces = {};
   S.essais = 0; S.phase = 'attente'; S.derniere = null;
   S.secret = false; S.question = false; S.sablier = false;
-  S.joueurs.forEach(j => { j.passe = false; j.eliminee = false; j.utilises = new Set(); });
+  S.joueurs.forEach(j => { j.passe = false; j.eliminee = false; j.utilises = new Set(); j.fumee = null; });
   colorerPotion(null);
   majTitre(); majSorcieres(); majPlateau(); majJournal(); majPouvoirs(); majActions('brassage');
 
@@ -296,6 +302,8 @@ async function debutTour(avecRideau = true) {
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
   $('#consigne').innerHTML = S.v5 ? `<b>${j.nom}</b> : fais ton appel de carte, puis jette 3 cartes dans l'ordre`
     : `<b>${j.nom}</b> : cueille une carte, puis jette-en ${S.max > CONFIG.minBrassage ? CONFIG.minBrassage + ' à ' + S.max : S.max} dans l'ordre`;
+  // la fumée de son brassage précédent : une famille qui manque à sa recette
+  if (S.v5 && j.fumee) { colorerPotion(j.fumee); Fumee.bouffee(j.fumee, 70); }
   if (S.joueurs.length > 1) {
     const appel = S.v5 ? `<div class="sous-titre">Appel de carte : demande une carte à une adversaire.<br>Si elle l'a, elle te la donne et pioche une carte.<br>Puis jette 3 cartes dans l'ordre.</div>` : '';
     if (avecRideau) await rideau(`<div class="portrait-tour">${portraitSorciere(S.courant)}</div><div class="petit-titre">Au tour de</div><div class="grand-titre">${j.nom}</div>${appel}`, CONFIG.dureeRideau + (S.v5 ? 2500 : 0));
@@ -412,8 +420,9 @@ async function brasser() {
   const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
   S.derniere = { res, secret, ids };
   if (S.v5) {
-    await jouerReponses(res, secret);                       // chaque son avec son icône…
-    colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis la couleur de la fumée
+    await jouerReponses(res, secret);                       // chaque son avec son icône
+    // la fumée (une famille qui manque à sa recette) n'arrive qu'au début de son prochain tour
+    if (!secret && !gagne) j.fumee = couleur;
   } else {
     colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);
     await jouerReponses(res, secret);

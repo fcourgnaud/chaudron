@@ -1003,3 +1003,9 @@ body.eclairage::after { opacity: 1; }
 .emplacement .nom-sous { display: none; }
 .emplacement .reponse { top: calc(100% + 10px); }
 .plateau { padding-bottom: calc(var(--lc) * .8 + 14px); }
+
+/* --- 6.2.0 : tant que l'image de la carte est là, on ne montre qu'elle (plus l'ancienne carte dessinée pendant le chargement) --- */
+.carte-ing:has(.carte-photo) > :not(.carte-photo) { visibility: hidden; }
+.carte-ing:has(.carte-photo) { background: #1a060d; }
+/* la grande carte du scan n'a plus de losange numéroté (il pouvait contredire le chiffre imprimé sur la carte) */
+.apercu-boite .rang { display: none; }
