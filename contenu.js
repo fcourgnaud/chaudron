@@ -120,12 +120,15 @@ const INGREDIENTS = [
 
 // app: true = l'app gère le pouvoir (bouton pendant ton tour)
 const POUVOIRS = [
-  { id: 'chouette', nom: 'Œil de chouette',   emoji: '🦉', app: true,  texte: "Écoute ta réponse en secret, téléphone collé à l'oreille." },
-  { id: 'serpent',  nom: 'Langue de serpent', emoji: '🐍', app: true,  texte: "Montre une carte : le chaudron te chuchote si elle est dans la recette." },
-  { id: 'amulette', nom: 'Amulette de suie',  emoji: '🧿', app: true,  texte: "Te protège d'une explosion (automatique)." },
-  { id: 'sablier',  nom: 'Sablier',           emoji: '⏳', app: true,  texte: "Rejoue un brassage juste après le tien." },
-  { id: 'balai',    nom: 'Balai rapide',      emoji: '🧹', app: false, texte: "Cueille deux cartes au lieu d'une." },
-  { id: 'chat',     nom: 'Chat noir',         emoji: '🐈‍⬛', app: false, texte: "Vole une carte au hasard à une autre sorcière." },
+  // Règles de 2 à 4 sorcières : les pouvoirs sont dans la pioche. Pioché, un pouvoir se pose face visible devant soi
+  // (on pioche une carte pour le remplacer) ; il ne compte pas dans la main, ne peut pas être demandé,
+  // et s'utilise une fois par tour au maximum, puis va à la défausse.
+  { id: 'chouette', nom: 'Œil de chouette',   emoji: '🦉', app: true,  texte: "Ton brassage de ce tour est secret : tu écoutes les réponses, téléphone à l'oreille." },
+  { id: 'serpent',  nom: 'Langue de serpent', emoji: '🐍', app: true,  texte: "Montre une carte au chaudron : il te chuchote si elle est dans ta recette, et à quelle place." },
+  { id: 'amulette', nom: 'Amulette de suie',  emoji: '🧿', app: false, texte: "Refuse un appel de carte. Joue-la quand une adversaire te demande une carte." },
+  { id: 'sablier',  nom: 'Sablier',           emoji: '⏳', app: true,  texte: "Après ton brassage, défausse et refais ta main, puis brasse une seconde fois." },
+  { id: 'balai',    nom: 'Balai rapide',      emoji: '🧹', app: false, texte: "Pioche 2 cartes, garde-en une et défausse l'autre." },
+  { id: 'chat',     nom: 'Chat noir',         emoji: '🐈‍⬛', app: false, texte: "Prends une carte au hasard dans la main d'une adversaire, puis donne-lui une carte de ta main." },
 ];
 
 const NOMS_PAR_DEFAUT = ['Morgane', 'Baba', 'Hécate', 'Circé'];
@@ -164,6 +167,7 @@ const PHRASES = {
   luneGagne: ['La potion est prête avant la lune !… Bravo, jeune apprenti !'],
   lunePerdu: ["La lune est levée. Trop tard. Regardez ce qu'il fallait !"],
   serpentOui:['Oui… il est dans ma recette !'],
+  serpentPlace: ['Oui… il est dans ta recette, à la place {place} !'],
   serpentNon:['Non. Jamais de la vie !'],
   chouette:  ['Colle-moi à ton oreille !'],
   secret:    ["Chut… c'est notre secret !"],

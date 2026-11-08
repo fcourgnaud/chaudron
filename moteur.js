@@ -239,6 +239,8 @@ function demarrerPartie() {
     pouvoirsDispo: melanger(POUVOIRS.map(p => p.id)),
     familles: [...R.familles],            // les familles d'ingrédients de la partie
   };
+  // Règles de 2 à 4 : des pouvoirs mélangés dans la pioche, 1 pour 6 ingrédients en jeu (2 à 4)
+  S.pouvoirsPartie = melanger(POUVOIRS.map(p => p.id)).slice(0, Math.max(2, Math.min(4, Math.floor(S.familles.length * 4 / 6))));
   // Règles v5 : Concours à 2, 3 ou 4 sorcières, chacune sa recette secrète. Le solo et la Pleine Lune gardent les anciennes règles.
   S.v5 = S.mode === 'concours' && S.joueurs.length > 1;
   S.expertChoisi = S.expert;
@@ -287,6 +289,12 @@ async function nouvelleManche(premiere) {
   const sous = S.v5 ? `Chacune sa recette secrète · main de 4 cartes · ${taille} ingrédients${S.expert ? ' · mode expert' : ''}` : `${taille} ingrédients · l'ordre compte`;
   if (S.v5) await rideau(`<div class="grand-titre">Manche ${S.manche + 1} · ${m.nom}</div><div class="sous-titre grand">${sous}</div>`, CONFIG.dureeRideau + 700);
   else await rideau(`<div class="icone">${'🔥'.repeat(S.manche + 1)}</div><div class="petit-titre">Manche ${S.manche + 1}</div><div class="grand-titre">${m.nom}</div><div class="sous-titre">${sous}</div>`, CONFIG.dureeRideau + 600);
+  if (premiere && S.v5) {
+    const cartes = S.pouvoirsPartie.map(id => POUVOIRS.find(p => p.id === id));
+    await rideauBouton(`<div class="grand-titre">Pouvoirs de la partie</div><div class="sous-titre grand">Mélangez ces ${cartes.length} cartes pouvoir dans la pioche.</div>
+      <div class="pouvoirs-partie">${cartes.map(p => `<div class="pouvoir-partie"><span class="emoji">${p.emoji}</span><b>${p.nom}</b><small>${p.texte}</small></div>`).join('')}</div>
+      <div class="sous-titre">Pioché, un pouvoir se pose devant soi et on pioche une carte pour le remplacer. Un pouvoir par tour au maximum.</div>`, "C'est fait");
+  }
   if (premiere) await parler('accueil');
   // la voix enregistrée correspond au nombre d'ingrédients (l'Archimage v5 en a 4, comme la Sorcière)
   await parler('manche', { manche: S.v5 ? (taille === 4 ? 'Sorcière' : taille === 3 ? 'Apprentie' : m.nom) : m.nom, n: taille });
@@ -297,7 +305,7 @@ async function nouvelleManche(premiere) {
 
 async function debutTour(avecRideau = true) {
   const j = S.joueurs[S.courant];
-  S.annonceCeTour = false;
+  S.annonceCeTour = false; S.pouvoirCeTour = false; S.sablier = false; S.secret = false; S.question = false;
   if (S.v5) { S.recette = j.recette; S.absents = j.absents; S.malPlaces = j.malPlaces; }
   S.brassage = []; S.phase = 'brassage';
   majSorcieres(); majPlateau(); majPouvoirs(); majActions('brassage');
@@ -488,6 +496,15 @@ async function finDuBrassage() {
     return;
   }
   const j = S.joueurs[S.courant];
+  if (S.sablier && S.v5) {
+    // ⏳ Sablier : on défausse, on refait sa main, puis on brasse une seconde fois
+    S.sablier = false;
+    const def = cartesADefausser();
+    await rideauBouton(`<div class="grand-titre">⏳ Sablier · ${def.length ? 'Défausse' : 'Rien à défausser'}</div>${def.length ? cartesVisuels(def) : ''}<div class="sous-titre grand">Refais ta main à 4 cartes, puis brasse une seconde fois.</div>`, 'Brasser');
+    S.brassage = []; S.phase = 'brassage'; colorerPotion(null);
+    majPlateau(); majActions('brassage');
+    return;
+  }
   if (S.sablier) {
     S.sablier = false; S.brassage = []; S.phase = 'brassage';
     majPlateau(); majActions('brassage'); majPouvoirs();
@@ -565,6 +582,8 @@ async function distribuerSecrets() {
 const cartesADefausser = () => (S.derniere && S.derniere.ids && !S.derniere.secret) ? S.derniere.ids.filter((n, i) => S.derniere.res[i] === 'pschitt') : [];
 async function finDeTourV6() {
   const j = S.joueurs[S.courant], def = cartesADefausser();
+  if (S.derniere && S.derniere.secret)        // œil de chouette : elle seule sait quoi défausser
+    return rideauBouton(`<div class="grand-titre">Fin du tour de ${j.nom} · Défausse</div><div class="sous-titre grand">Défausse en secret les cartes qui ont fait pschitt.</div>`, 'Au suivant');
   await rideauBouton(`<div class="grand-titre">Fin du tour de ${j.nom} · ${def.length ? 'Défausse' : 'Rien à défausser'}</div>${def.length ? cartesVisuels(def) : ''}`, 'Au suivant');
 }
 async function rappelGauche() {
@@ -688,7 +707,8 @@ $('#btn-quitter').onclick = async () => { if (await fenetreOuiNon('<h2>Éteindre
 const Pouvoirs = {
   // Carte pouvoir scannée (QR CHAUDRON-P1 à P6, dans l'ordre de POUVOIRS)
   scanner(k) {
-    const p = POUVOIRS[k - 1]; if (!p || !S.joueurs || S.v5 || S.mode === 'lune') return;
+    const p = POUVOIRS[k - 1]; if (!p || !S.joueurs || S.mode === 'lune') return;
+    if (S.v5) return this.scannerV6(p);
     Sons.jouer('scan');
     // 1. on choisit son pouvoir après avoir gagné une manche
     const choix = document.querySelector(`#fenetre.visible [data-p="${p.id}"]`);
@@ -704,6 +724,19 @@ const Pouvoirs = {
     const bouton = [...$$('#actions-pouvoirs button')].find(b => b.dataset.id === p.id) || document.createElement('button');
     this.utiliser(p.id, bouton);
     this.message(p, p.app ? 'Pouvoir activé !' : 'Pouvoir validé : applique-le à la table.');
+  },
+  // Règles de 2 à 4 : n'importe quelle sorcière joue le pouvoir posé devant elle, une fois par tour, avant de jeter ses cartes
+  scannerV6(p) {
+    Sons.jouer('scan');
+    if (!S.pouvoirsPartie.includes(p.id)) return this.message(p, "Ce pouvoir n'est pas dans la pioche de cette partie.");
+    if (p.id === 'amulette') return this.message(p, "Elle se joue quand on te demande une carte : montre-la, l'appel est refusé. Pas besoin de la scanner.");
+    if (S.pouvoirCeTour) return this.message(p, 'Un seul pouvoir par tour.');
+    if (S.phase !== 'brassage' || S.brassage.length) return this.message(p, 'Un pouvoir se joue au début du tour, avant de jeter ses cartes.');
+    S.pouvoirCeTour = true;
+    if (p.id === 'chouette') { S.secret = true; parler('chouette'); }
+    if (p.id === 'sablier') S.sablier = true;
+    if (p.id === 'serpent') { S.question = true; this.ouvrirSerpent(); return; }
+    this.message(p, (p.app ? 'Pouvoir activé ! ' : 'Applique-le à la table. ') + 'Puis défausse la carte.');
   },
   message(p, texte) {
     rideau(`<div class="icone">${p.emoji}</div><div class="grand-titre">${p.nom}</div><div class="sous-titre">${texte}</div>`, 1800);
@@ -724,7 +757,8 @@ const Pouvoirs = {
     fenetre(`<p style="font-size:3rem">🐍</p><p>Le chaudron chuchote…</p>`, true);
     const oui = S.recette.includes(n);
     Sons.jouer(oui ? 'bulle' : 'pschitt');
-    await parler(oui ? 'serpentOui' : 'serpentNon', {}, true);
+    if (oui && S.v5) await parler('serpentPlace', { place: ['première', 'deuxième', 'troisième', 'quatrième', 'cinquième'][S.recette.indexOf(n)] }, true);
+    else await parler(oui ? 'serpentOui' : 'serpentNon', {}, true);
     await attendre(500);
     fermerFenetre();
     ajouterJournal({ qui: S.joueurs[S.courant].nom, serpent: true });

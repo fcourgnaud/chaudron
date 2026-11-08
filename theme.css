@@ -1020,3 +1020,11 @@ body.eclairage::after { opacity: 1; }
 .rideau .actions { margin-top: 6px; }
 .rideau .actions .bouton-or { min-width: 180px; }
 .rideau .grand-titre { font-size: clamp(2.2rem, calc(11 * var(--vw)), 2.8rem); }
+
+/* --- 6.4.0 : pouvoirs de la partie (écran de début de partie) --- */
+.pouvoirs-partie { display: grid; gap: 8px; width: 100%; text-align: left; }
+.pouvoir-partie { display: grid; grid-template-columns: 34px 1fr; column-gap: 10px; align-items: center; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid rgba(233, 184, 102, .55); background: rgba(42, 9, 20, .6); }
+.pouvoir-partie .emoji { grid-row: span 2; font-size: 1.7rem; text-align: center; }
+.pouvoir-partie b { font-family: var(--police-ui); font-size: .9rem; letter-spacing: .04em; color: var(--or-maquette, #e9b866); }
+.pouvoir-partie small { font-family: var(--police-texte); font-size: 1rem; line-height: 1.2; color: var(--creme); }
