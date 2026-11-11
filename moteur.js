@@ -442,7 +442,7 @@ async function brasser() {
   const { couleur, texte: texteFumee } = fumeeDe(ids, gagne);
   S.derniere = { res, secret, ids };
   // les cartes à défausser (croix rouge) ne peuvent plus être choisies avec la main pendant cette manche
-  if (S.v5 && !secret) ids.forEach((n, i) => { if (res[i] === 'pschitt') S.defausse.add(n); });
+  if ((S.v5 || S.mode === 'lune') && !secret) ids.forEach((n, i) => { if (res[i] === 'pschitt') S.defausse.add(n); });
   if (S.v5) {
     await jouerReponses(res, secret);                       // chaque son avec son icône…
     colorerPotion(couleur, secret ? '' : texteFumee); Fumee.bouffee(couleur, 70);   // …puis la fumée : une famille qui manque à sa recette
@@ -502,6 +502,9 @@ async function finDuBrassage() {
     if (reste <= 0) { await parler('lunePerdu', { recette: S.recette.map(n => ING(n).nom).join(', ') }); return finPartie(false); }
     await (reste === 1 ? parler('luneDerniere') : parler('lune', { n: reste }));
     await attendre(600);
+    // comme au Concours : les cartes qui ne sont pas dans la recette sont éliminées
+    const def = cartesADefausser();
+    await rideauBouton(`<div class="grand-titre">${def.length ? 'Défausse' : 'Rien à défausser'}</div>${def.length ? cartesVisuels(def) : ''}<div class="sous-titre grand">Plus que ${reste} essai${reste > 1 ? 's' : ''}.</div>`, 'Brasser');
     S.brassage = []; S.phase = 'brassage'; S.annonceCeTour = false; colorerPotion(null); majPlateau(); majActions('brassage');
     return;
   }
@@ -832,6 +835,7 @@ function ajusterNoms() {
   });
 }
 function majPlateau() {
+  $('#scene').classList.toggle('expert', !!S.expert);
   const box = $('#plateau'); box.innerHTML = '';
   box.style.setProperty('--nb', S.max);
   for (let i = 0; i < S.max; i++) {
@@ -862,7 +866,7 @@ function majActions(quoi) {
   $('#btn-suivant').disabled = quoi !== 'suite';
   // le bouton d'annonce reste toujours à sa place : grisé quand on ne peut pas annoncer
   $('#actions-annonce').hidden = false;
-  $('#actions-annonce').style.visibility = S.v5 ? 'hidden' : '';
+  $('#actions-annonce').style.visibility = 'hidden';            // plus d'annonce, dans aucun mode
   $('#btn-annonce').disabled = !(quoi === 'brassage' || quoi === 'suite') || !!S.annonceCeTour;
   $('#btn-annonce').textContent = quoi === 'suite' ? "J'annonce maintenant" : "J'annonce la recette";
 
@@ -915,7 +919,7 @@ function remplirLegendeFumees() {
 function remplirEtagere(box = $('#etagere')) {
   box.innerHTML = Object.entries(FAMILLES).filter(([id]) => !S.familles || S.familles.includes(id)).map(([id, f]) =>
     `<h4><img src="${imgFamille(id)}" alt="">${f.nom}</h4>` +
-    INGREDIENTS.filter(i => i.fam === id).map(i => `<button data-n="${i.n}" style="--c:${couleurFamille(id)}">${i.nom}</button>`).join('')
+    INGREDIENTS.filter(i => i.fam === id).map(i => `<button class="carte-main" data-n="${i.n}" style="--c:${couleurFamille(id)}" aria-label="${i.nom}"><img src="images/cartes-ingredients/${encodeURIComponent(i.nom.normalize('NFC'))}.jpg" alt="${i.nom}" loading="lazy"></button>`).join('')
   ).join('');
   box.querySelectorAll('button').forEach(b => b.onclick = () => ajouterIngredient(+b.dataset.n));
 }

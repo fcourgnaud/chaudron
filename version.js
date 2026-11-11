@@ -9,9 +9,14 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.6.2', date: '2026-11-09' };
+const VERSION = { numero: '6.7.0', date: '2026-11-11' };
 
 const HISTORIQUE = [
+  { numero: '6.7.0', date: '2026-11-11', nouveautes: [
+    "Pleine Lune et solo : comme au Concours, les cartes qui ne sont pas dans la recette sont éliminées (écran Défausse après chaque essai, cartes grisées dans la main). Plus de bouton d'annonce.",
+    "La main ✋ montre les visuels des cartes, avec leur petit chiffre.",
+    "Mode expert : les icônes de réponse remontent juste sous les cartes, centrées.",
+  ]},
   { numero: '6.6.2', date: '2026-11-09', nouveautes: [
     "Icônes de réponse sous les cartes 10 % plus petites.",
   ]},

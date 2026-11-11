@@ -1056,3 +1056,17 @@ body.eclairage::after { opacity: 1; }
 .rappel-instables .barre { display: inline-block; width: 1.5px; height: 20px; margin: 0 4px; background: rgba(233, 184, 102, .75); border-radius: 1px; }
 /* --- 6.6.2 : icônes de réponse 10 % plus petites --- */
 .emplacement .reponse { width: calc(var(--lc) * .72); height: calc(var(--lc) * .72); }
+
+/* --- 6.7.0 : la main montre les visuels des cartes (ceux de la recette, avec le petit chiffre) --- */
+.etagere button.carte-main { padding: 0; aspect-ratio: 63 / 88; border-radius: 6px; overflow: hidden; background: #1a060d; box-shadow: 0 3px 8px rgba(0,0,0,.5), 0 0 0 1.5px color-mix(in srgb, var(--c) 70%, transparent); }
+.etagere button.carte-main img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.etagere button.carte-main:active { transform: scale(.96); }
+.etagere button.carte-main.dedans { opacity: .35; }
+.etagere button.carte-main.defaussee, .etagere button.carte-main:disabled { opacity: .25; filter: grayscale(1); text-decoration: none; }
+.etagere h4 { margin-top: 10px; }
+
+/* --- 6.7.0 : mode expert, les icônes remontent juste sous les cartes, centrées --- */
+.scene.expert .plateau { padding-bottom: 0; }
+.scene.expert .reponses-expert { position: static; height: auto; margin: 12px 0 0; display: flex; justify-content: center; align-items: flex-start; gap: 12px; }
+.scene.expert .reponses-expert figure { width: auto; }
+.scene.expert .reponses-expert img { width: calc(var(--lc, 100px) * .72); height: calc(var(--lc, 100px) * .72); max-width: 80px; max-height: 80px; object-fit: contain; }
