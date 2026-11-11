@@ -86,7 +86,7 @@ function carteIngredient(i) {
     <div class="titre${taille}">${i.nom}</div>
     <div class="num">N° ${String(i.n).padStart(2, '0')}</div>
     <div class="fenetre-illu"></div>
-    ${imgIngredient(i, 'illu')}
+    
     <div class="medaillon"><img src="${imgFamille(i.fam)}" alt="${FAMILLES[i.fam].nom}"></div>
     <img class="carte-photo" src="images/cartes-ingredients/${encodeURIComponent(i.nom.normalize('NFC'))}.jpg" data-nfd="images/cartes-ingredients/${encodeURIComponent(i.nom.normalize('NFD'))}.jpg" alt="${i.nom}" onerror="if(this.dataset.nfd){this.src=this.dataset.nfd;this.dataset.nfd=''}else this.remove()">
   </div>`;
@@ -135,7 +135,7 @@ garderPortrait();
 try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
 
 // Portrait de chaque sorcière, selon sa place (1 à 4) : images/sorcieres/sorciere-1.png …
-const portraitSorciere = k => `<img class="portrait-sorciere" src="images/sorcieres/sorciere-${(k % 4) + 1}.png" alt="" onerror="this.replaceWith('🧙‍♀️')">`;
+const portraitSorciere = k => `<img class="portrait-sorciere" loading="lazy" src="images/sorcieres/sorciere-${(k % 4) + 1}.png" alt="" onerror="this.replaceWith('🧙‍♀️')">`;
 let R = { mode: 'concours', nb: 2, taille: 4, familles: Object.keys(FAMILLES) };   // réglages choisis
 try { const f = JSON.parse(localStorage.getItem('chaudron-familles')); if (Array.isArray(f) && f.length) R.familles = Object.keys(FAMILLES).filter(id => f.includes(id)); } catch (e) {}
 let S = {};                                         // état de la partie
@@ -331,6 +331,8 @@ async function debutTour(avecRideau = true) {
 }
 
 async function tourSuivant() {
+  if (S.phase !== 'suite') return;          // évite un double appui sur « Au suivant »
+  S.phase = 'transition'; majActions('aucune');
   // après un tour de table complet, le marché se refait
   if (S.v5) await finDeTourV6();
   else {
@@ -692,6 +694,7 @@ async function verifierAnnonce(proposition) {
 const meilleure = () => S.joueurs.reduce((a, b) => b.victoires > a.victoires ? b : a);
 
 function finPartie(gagne) {
+  if (horsPartie()) return;                 // partie quittée entre-temps
   let html;
   if (S.mode === 'lune') {
     html = gagne ? `<h2>🌕 Potion réussie !</h2><p>En ${S.essais} essai(s), avant le lever de la lune.</p>${recetteHTML()}`
@@ -933,6 +936,7 @@ function majEtagere() {
 
 /* ---------- 8. RIDEAU, FENÊTRES, TIROIRS ---------- */
 function rideau(html, duree) {
+  if (horsPartie()) return new Promise(() => {});
   return new Promise(r => {
     $('#rideau-contenu').innerHTML = html; $('#rideau').classList.add('visible');
     const n = Partie.numero;
@@ -941,7 +945,10 @@ function rideau(html, duree) {
   });
 }
 // Écran de passage qui reste affiché jusqu'à ce qu'on touche son bouton
+// partie quittée entre-temps : on n'affiche plus rien par-dessus l'accueil
+const horsPartie = () => !$('#ecran-jeu').classList.contains('actif');
 function rideauBouton(html, texte) {
+  if (horsPartie()) return new Promise(() => {});
   return new Promise(r => {
     $('#rideau-contenu').innerHTML = html + `<div class="actions"><button class="bouton-or" id="rideau-ok">${texte}</button></div>`;
     $('#rideau').classList.add('visible'); $('#rideau').onclick = null;

@@ -9,9 +9,13 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.7.0', date: '2026-11-11' };
+const VERSION = { numero: '6.7.1', date: '2026-11-11' };
 
 const HISTORIQUE = [
+  { numero: '6.7.1', date: '2026-11-11', nouveautes: [
+    "Plus rapide : images du chaudron, du titre, des sorcières et des icônes allégées (5 Mo → 0,8 Mo), et les anciennes illustrations cachées derrière les cartes ne sont plus téléchargées.",
+    "Corrections : plus d'écran de passage ni d'écran de fin qui s'affiche par-dessus l'accueil quand on quitte une partie au mauvais moment ; un double appui sur « Au suivant » ne saute plus de joueuse ; plus d'image manquante au démarrage.",
+  ]},
   { numero: '6.7.0', date: '2026-11-11', nouveautes: [
     "Pleine Lune et solo : comme au Concours, les cartes qui ne sont pas dans la recette sont éliminées (écran Défausse après chaque essai, cartes grisées dans la main). Plus de bouton d'annonce.",
     "La main ✋ montre les visuels des cartes, avec leur petit chiffre.",
