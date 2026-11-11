@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.7.1', date: '2026-11-11' };
+const VERSION = { numero: '6.7.2', date: '2026-11-11' };
 
 const HISTORIQUE = [
+  { numero: '6.7.2', date: '2026-11-11', nouveautes: [
+    "Rythme plus rapide : 1 seconde avant les sons, entre deux icônes, après le dernier son et entre deux phrases du chaudron.",
+  ]},
   { numero: '6.7.1', date: '2026-11-11', nouveautes: [
     "Plus rapide : images du chaudron, du titre, des sorcières et des icônes allégées (5 Mo → 0,8 Mo), et les anciennes illustrations cachées derrière les cartes ne sont plus téléchargées.",
     "Corrections : plus d'écran de passage ni d'écran de fin qui s'affiche par-dessus l'accueil quand on quitte une partie au mauvais moment ; un double appui sur « Au suivant » ne saute plus de joueuse ; plus d'image manquante au démarrage.",

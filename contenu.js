@@ -12,9 +12,9 @@ const CONFIG = {
   essaisPleineLune: 8,
   penaliteAnnonceSolo: 3,     // en solo, une annonce fausse compte comme 3 brassages de plus
   penaliteAnnonceLune: 2,     // en Pleine Lune, une annonce fausse coûte 2 essais
-  pauseEntreSons: 900,        // millisecondes entre deux réponses
-  pauseAvantSons: 3000,       // pause quand toutes les cartes sont jetées, avant les sons
-  pauseApresSons: 3000,       // pause après le dernier son, avant que le chaudron parle
+  pauseEntreSons: 1000,        // millisecondes entre deux réponses
+  pauseAvantSons: 1000,       // pause quand toutes les cartes sont jetées, avant les sons
+  pauseApresSons: 1000,       // pause après le dernier son, avant que le chaudron parle
   veilleMinutes: 3,           // sans carte scannée pendant ce temps, l'app s'endort (caméra, sons et écran)
   voixVitesse: 0.9,           // 0.5 à 2
   voixHauteur: 0.55,          // 0 (grave) à 2 (aigu)
@@ -27,7 +27,7 @@ const CONFIG = {
   dossierVoix: 'voix/',
   formatVoix: 'mp3',
   volumeVoix: 1,              // 0 à 1
-  pauseEntrePhrases: 2000,    // silence entre deux phrases du chaudron (millisecondes)
+  pauseEntrePhrases: 1000,    // silence entre deux phrases du chaudron (millisecondes)
 
   // Musique de fond : mets tes morceaux (mp3) dans le dossier "musique"
   // et liste-les ici. Plusieurs morceaux = ils s'enchaînent au hasard.
