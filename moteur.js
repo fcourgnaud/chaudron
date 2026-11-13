@@ -284,7 +284,6 @@ async function nouvelleManche(premiere) {
   if (S.mode === 'lune') {
     await rideau(`<div class="icone">🌕</div><div class="petit-titre">${S.solo ? 'Seule face au chaudron' : 'Mode coopératif'}</div><div class="grand-titre">La Pleine Lune</div><div class="sous-titre">${taille} ingrédients · ${CONFIG.essaisPleineLune} essais</div>`, CONFIG.dureeRideau + 600);
     await parler('luneDebut', { n: taille, essais: CONFIG.essaisPleineLune });
-    if (S.instables.length) await parler('instables', { f1: FAMILLES[ING(S.instables[0]).fam].nom, f2: FAMILLES[ING(S.instables[1]).fam].nom });
     S.phase = 'brassage'; majPlateau();
     $('#consigne').innerHTML = 'Jetez vos cartes une par une, <b>dans l\'ordre</b>';
     return;
@@ -300,10 +299,8 @@ async function nouvelleManche(premiere) {
       <div class="sous-titre">Pioché, un pouvoir se pose devant soi et on pioche une carte pour le remplacer. Un pouvoir par tour au maximum.</div>`, "C'est fait");
   }
   if (premiere) await parler('accueil');
-  const annoncerInstables = () => S.instables.length ? parler('instables', { f1: FAMILLES[ING(S.instables[0]).fam].nom, f2: FAMILLES[ING(S.instables[1]).fam].nom }) : null;
   // la voix enregistrée correspond au nombre d'ingrédients (l'Archimage v5 en a 4, comme la Sorcière)
   await parler('manche', { manche: S.v5 ? (taille === 4 ? 'Sorcière' : taille === 3 ? 'Apprentie' : m.nom) : m.nom, n: taille });
-  await annoncerInstables();
   S.toursDepuisMarche = 0;
   if (S.joueurs.length > 1 && !S.v5) await distribuerSecrets();
   await debutTour(S.v5);              // règles de 2 à 4 : le rideau rappelle l'appel de carte dès le premier tour

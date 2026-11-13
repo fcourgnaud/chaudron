@@ -9,9 +9,12 @@
      X = grosse refonte, Y = nouvelle fonction, Z = petite correction
    ========================================================= */
 
-const VERSION = { numero: '6.7.2', date: '2026-11-11' };
+const VERSION = { numero: '6.7.3', date: '2026-11-13' };
 
 const HISTORIQUE = [
+  { numero: '6.7.3', date: '2026-11-13', nouveautes: [
+    "Le chaudron ne dit plus la phrase des ingrédients instables en début de manche : la partie enchaîne directement. Le rappel reste affiché en bas de sa boîte de dialogue.",
+  ]},
   { numero: '6.7.2', date: '2026-11-11', nouveautes: [
     "Rythme plus rapide : 1 seconde avant les sons, entre deux icônes, après le dernier son et entre deux phrases du chaudron.",
   ]},
